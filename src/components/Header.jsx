@@ -11,14 +11,14 @@ export default function Header({
     <header className="bg-white border-b border-gray-200 sticky top-0 z-20">
 
       {/* ── Main row ─────────────────────────────────────────────── */}
-      <div className="max-w-7xl mx-auto px-3 sm:px-6 h-[52px] flex items-center gap-2 sm:gap-3">
+      <div className="max-w-7xl mx-auto px-3 sm:px-6 h-[58px] flex items-center gap-2 sm:gap-3">
 
         {/* Logo */}
-        <div className="flex items-center gap-2 mr-1 sm:mr-3 flex-shrink-0">
-          <CalendappLogo height={38} />
-          <div className="hidden md:block leading-none">
-            <div className="text-sm font-black text-gray-900 tracking-tight">CALENDAPP</div>
-            <div className="text-[10px] text-gray-400 font-medium mt-0.5">by El Chandrio Group</div>
+        <div className="flex items-center gap-2 sm:gap-2.5 mr-1 sm:mr-3 flex-shrink-0">
+          <CalendappLogo height={44} />
+          <div className="leading-none">
+            <div className="text-[11px] sm:text-sm font-black text-gray-900 tracking-tight">CALENDAPP</div>
+            <div className="text-[8px] sm:text-[10px] text-gray-400 font-medium mt-0.5">by El Chandrio Group</div>
           </div>
         </div>
 
