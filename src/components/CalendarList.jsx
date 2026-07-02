@@ -70,7 +70,6 @@ export default function CalendarList({ year, month, publications, onSelect, acti
             >
               <span className="text-xs font-bold uppercase tracking-wider" style={isCurrentWeek ? { color: '#732442' } : { color: '#6b7280' }}>
                 {label}
-                {isCurrentWeek && <span className="ml-2 font-semibold normal-case tracking-normal opacity-70">semana actual</span>}
               </span>
               <span className="text-xs text-gray-400">{pubs.length} publicación{pubs.length > 1 ? 'es' : ''}</span>
             </div>
