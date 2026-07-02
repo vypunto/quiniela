@@ -4,6 +4,8 @@ import { getProjectColor } from '../utils/colors'
 import { DAYS_ES, MONTHS_ES } from '../utils/dateUtils'
 import { parseDate } from '../utils/dateUtils'
 import PublicationModal from './PublicationModal'
+import { fetchRequestsData } from '../utils/googleSheets'
+import { REQUESTS_SHEET_URL } from '../config'
 
 const STATUS_STYLES = {
   'Pendiente':   { bg: '#FFF3CC', text: '#7A5500', dot: '#FFBE00' },
@@ -32,31 +34,45 @@ const DEMO_REQUESTS = [
 export default function RequestsView({ config, isDemo }) {
   const [requests, setRequests] = useState([])
   const [selected, setSelected] = useState(null)
+  const [loadingSheet, setLoadingSheet] = useState(false)
 
   const projects = useMemo(() => {
     const set = new Set(requests.map(r => r.proyecto).filter(Boolean))
     return Array.from(set).sort()
   }, [requests])
 
-  useEffect(() => {
+  const loadRequests = async () => {
     if (isDemo) {
       setRequests(DEMO_REQUESTS)
       return
     }
-    try {
-      const saved = JSON.parse(localStorage.getItem('pubcal_requests') || '[]')
-      const parsed = saved.map((r, i) => ({ ...r, fecha: parseDate(r.fecha) || new Date(), id: r.id || String(i) }))
-      setRequests(parsed)
-    } catch { setRequests([]) }
-  }, [isDemo])
 
-  const handleSubmitted = (payload) => {
+    let local = []
     try {
       const saved = JSON.parse(localStorage.getItem('pubcal_requests') || '[]')
-      const parsed = saved.map((r, i) => ({ ...r, fecha: parseDate(r.fecha) || new Date(), id: r.id || String(i) }))
-      setRequests(parsed)
+      local = saved.map((r, i) => ({ ...r, fecha: parseDate(r.fecha) || new Date(), id: r.id || String(i) }))
     } catch { /* ignore */ }
+
+    if (REQUESTS_SHEET_URL) {
+      setLoadingSheet(true)
+      try {
+        const sheetData = await fetchRequestsData(REQUESTS_SHEET_URL)
+        const sheetKeys = new Set(sheetData.map(r => `${r.proyecto}||${r.titulo}`))
+        const localOnly = local.filter(r => !sheetKeys.has(`${r.proyecto}||${r.titulo}`))
+        setRequests([...sheetData, ...localOnly].sort((a, b) => (a.fecha || 0) - (b.fecha || 0)))
+      } catch {
+        setRequests(local)
+      } finally {
+        setLoadingSheet(false)
+      }
+    } else {
+      setRequests(local)
+    }
   }
+
+  useEffect(() => { loadRequests() }, [isDemo])
+
+  const handleSubmitted = () => { loadRequests() }
 
   const sorted = [...requests].sort((a, b) => (a.fecha || 0) - (b.fecha || 0))
 
@@ -79,17 +95,17 @@ export default function RequestsView({ config, isDemo }) {
       {/* List */}
       <div className="lg:col-span-2">
         {sorted.length === 0 ? (
-          <div className="bg-white rounded-2xl shadow-sm border border-gray-100 flex flex-col items-center justify-center py-16 text-gray-400">
+          <div className="bg-white rounded-2xl shadow border border-gray-200 flex flex-col items-center justify-center py-16 text-gray-400">
             <div className="text-4xl mb-3">📬</div>
             <p className="text-sm">Aún no hay peticiones enviadas</p>
           </div>
         ) : (
-          <div className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
-            <div className="flex items-center justify-between px-4 py-3 border-b border-gray-100 bg-gray-50">
+          <div className="bg-white rounded-2xl shadow border border-gray-200 overflow-hidden">
+            <div className="flex items-center justify-between px-4 py-3 border-b border-gray-200 bg-gray-50">
               <span className="text-xs font-bold text-gray-500 uppercase tracking-wider">Peticiones recibidas</span>
               <span className="text-xs text-gray-400">{sorted.length} total</span>
             </div>
-            <div className="divide-y divide-gray-50">
+            <div className="divide-y divide-gray-100">
               {sorted.map(req => {
                 const color = getProjectColor(req.proyecto)
                 const d = req.fecha instanceof Date ? req.fecha : new Date()

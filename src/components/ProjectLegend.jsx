@@ -22,8 +22,7 @@ export default function ProjectLegend({ publications, activeFilter, onFilter }) 
             style={{
               backgroundColor: isActive ? color.dot : color.bg,
               color: isActive ? '#fff' : color.text,
-              outline: isActive ? `2px solid ${color.dot}` : 'none',
-              outlineOffset: '1px',
+              boxShadow: isActive ? `0 0 0 2px #fff, 0 0 0 4px ${color.dot}` : 'none',
             }}
           >
             <span className="w-1.5 h-1.5 rounded-full flex-shrink-0"

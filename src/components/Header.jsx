@@ -4,13 +4,14 @@ import { CalendappLogo } from './Icons'
 export default function Header({
   year, month, activeTab, setActiveTab,
   viewMode, setViewMode,
-  onPrev, onNext, onSettings, onSync, loading, hasConfig
+  onPrev, onNext, onSettings, onSync, loading, hasConfig,
+  isDemo, onDemo, onExitDemo
 }) {
   return (
-    <header className="bg-white border-b border-gray-100 sticky top-0 z-20">
+    <header className="bg-white border-b border-gray-200 sticky top-0 z-20">
 
       {/* ── Main row ─────────────────────────────────────────────── */}
-      <div className="max-w-7xl mx-auto px-3 sm:px-6 h-13 flex items-center gap-2 sm:gap-3" style={{ height: '52px' }}>
+      <div className="max-w-7xl mx-auto px-3 sm:px-6 h-[52px] flex items-center gap-2 sm:gap-3">
 
         {/* Logo */}
         <div className="flex items-center gap-2 mr-1 sm:mr-3 flex-shrink-0">
@@ -68,9 +69,24 @@ export default function Header({
           </div>
         )}
 
+        {/* Demo toggle — desktop only */}
+        {activeTab === 'publicaciones' && (
+          <div className="hidden sm:block">
+            {isDemo ? (
+              <button onClick={onExitDemo} className="px-2.5 py-1 rounded-lg border border-amber-300 bg-amber-50 text-amber-700 text-xs font-semibold hover:bg-amber-100 transition-colors">
+                Salir del demo
+              </button>
+            ) : (
+              <button onClick={onDemo} className="px-2.5 py-1 rounded-lg border border-gray-200 text-gray-500 text-xs font-medium hover:bg-gray-50 transition-colors">
+                Ver demo
+              </button>
+            )}
+          </div>
+        )}
+
         {/* Sync — desktop only */}
         {hasConfig && activeTab === 'publicaciones' && (
-          <button onClick={onSync} disabled={loading} title="Sincronizar" className="hidden sm:flex w-8 h-8 rounded-lg border border-gray-200 items-center justify-center hover:bg-gray-50 transition-colors text-gray-600 disabled:opacity-50">
+          <button onClick={onSync} disabled={loading} title="Sincronizar" className="hidden sm:flex w-9 h-9 rounded-lg border border-gray-200 items-center justify-center hover:bg-gray-50 transition-colors text-gray-600 disabled:opacity-50">
             <svg width="14" height="14" viewBox="0 0 14 14" fill="none" className={loading ? 'animate-spin' : ''}>
               <path d="M12 7A5 5 0 1 1 7 2" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/>
               <path d="M10 2h2v2" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
@@ -79,7 +95,7 @@ export default function Header({
         )}
 
         {/* Settings */}
-        <button onClick={onSettings} title="Configuración" className="w-8 h-8 rounded-lg border border-gray-200 flex items-center justify-center hover:bg-gray-50 transition-colors text-gray-600 flex-shrink-0">
+        <button onClick={onSettings} title="Configuración" className="w-9 h-9 rounded-lg border border-gray-200 flex items-center justify-center hover:bg-gray-50 transition-colors text-gray-600 flex-shrink-0">
           <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
             <circle cx="7" cy="7" r="2" stroke="currentColor" strokeWidth="1.3"/>
             <path d="M7 1v1.5M7 11.5V13M1 7h1.5M11.5 7H13M2.6 2.6l1.1 1.1M10.3 10.3l1.1 1.1M2.6 11.4l1.1-1.1M10.3 3.7l1.1-1.1" stroke="currentColor" strokeWidth="1.3" strokeLinecap="round"/>
@@ -117,9 +133,20 @@ export default function Header({
               ))}
             </div>
 
+            {/* Demo toggle mobile */}
+            {isDemo ? (
+              <button onClick={onExitDemo} className="px-2 py-1 rounded-lg border border-amber-300 bg-amber-50 text-amber-700 text-[10px] font-semibold active:bg-amber-100">
+                Salir demo
+              </button>
+            ) : (
+              <button onClick={onDemo} className="px-2 py-1 rounded-lg border border-gray-200 text-gray-500 text-[10px] font-medium active:bg-gray-100">
+                Demo
+              </button>
+            )}
+
             {/* Sync */}
             {hasConfig && (
-              <button onClick={onSync} disabled={loading} className="w-7 h-7 rounded-lg border border-gray-200 flex items-center justify-center text-gray-600 disabled:opacity-50 active:bg-gray-100">
+              <button onClick={onSync} disabled={loading} className="w-8 h-8 rounded-lg border border-gray-200 flex items-center justify-center text-gray-600 disabled:opacity-50 active:bg-gray-100">
                 <svg width="13" height="13" viewBox="0 0 14 14" fill="none" className={loading ? 'animate-spin' : ''}>
                   <path d="M12 7A5 5 0 1 1 7 2" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/>
                   <path d="M10 2h2v2" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>

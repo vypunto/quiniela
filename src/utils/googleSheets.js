@@ -56,6 +56,25 @@ export async function fetchSheetData(sheetUrl) {
   return data.map(parseRow).filter(p => p.proyecto && p.fecha)
 }
 
+export async function fetchRequestsData(sheetUrl) {
+  const csv = await fetchCsv(sheetUrl)
+  const { data } = Papa.parse(csv, {
+    header: true,
+    skipEmptyLines: true,
+    transformHeader: h => h.trim().toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g, ''),
+  })
+  return data.map((row, i) => ({
+    id: `sheet-${i}`,
+    proyecto: row.proyecto || row.project || '',
+    fecha: parseDate(row.fecha || row.date || '') || new Date(),
+    titulo: row.titulo || row['titulo del post'] || row.title || '',
+    info: row.info || row['informacion adicional'] || row.descripcion || '',
+    tipo: (row.tipo || row.type || 'imagen').toLowerCase().trim(),
+    solicitante: row.solicitante || row.nombre || row.name || '',
+    estado: row.estado || row.status || 'Pendiente',
+  })).filter(r => r.proyecto)
+}
+
 export async function submitRequest(scriptUrl, payload) {
   const res = await fetch(scriptUrl, {
     method: 'POST',

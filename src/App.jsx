@@ -37,6 +37,7 @@ export default function App() {
   const [activeFilter, setActiveFilter] = useState(null)
   const [publications, setPublications] = useState([])
   const [isDemo, setIsDemo]     = useState(false)
+  const [realPublications, setRealPublications] = useState([])
   const [selectedPub, setSelectedPub] = useState(null)
   const [showSettings, setShowSettings] = useState(false)
   const [loading, setLoading]   = useState(false)
@@ -58,9 +59,9 @@ export default function App() {
     if (!config.spreadsheetId) return
     setLoading(true)
     setError(null)
-    setIsDemo(false)
     try {
       const data = await fetchSheetData(config.spreadsheetId)
+      setRealPublications(data)
       setPublications(data)
     } catch (e) {
       setError(e.message)
@@ -77,7 +78,10 @@ export default function App() {
     setShowSettings(false)
   }
 
-  const loadDemo = () => { setPublications(DEMO); setIsDemo(true); setYear(Y); setMonth(M); setActiveFilter(null) }
+  const loadDemo = () => { setIsDemo(true); setYear(Y); setMonth(M); setActiveFilter(null) }
+  const exitDemo = () => { setIsDemo(false); setPublications(realPublications) }
+
+  const displayPubs = isDemo ? DEMO : publications
 
   const prevMonth = () => { if (month === 0) { setYear(y => y-1); setMonth(11) } else setMonth(m => m-1) }
   const nextMonth = () => { if (month === 11) { setYear(y => y+1); setMonth(0) } else setMonth(m => m+1) }
@@ -90,7 +94,7 @@ export default function App() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen" style={{ background: 'linear-gradient(150deg, #fdfcfd 0%, #f9f7fb 50%, #f5f5f7 100%)' }}>
       <Header
         year={year} month={month}
         activeTab={activeTab} setActiveTab={setActiveTab}
@@ -98,6 +102,7 @@ export default function App() {
         onPrev={prevMonth} onNext={nextMonth}
         onSettings={() => setShowSettings(true)}
         onSync={syncData} loading={loading} hasConfig={hasConfig}
+        isDemo={isDemo} onDemo={loadDemo} onExitDemo={exitDemo}
       />
 
       <main className="max-w-7xl mx-auto px-3 sm:px-6 py-3 sm:py-5">
@@ -106,8 +111,15 @@ export default function App() {
         {isDemo && activeTab === 'publicaciones' && (
           <div className="mb-4 p-3 bg-amber-50 border border-amber-100 rounded-xl text-amber-800 text-xs flex items-center gap-2">
             <span>✦</span>
-            <span>Estás viendo datos de ejemplo. Conecta tu Google Sheet para ver tus publicaciones reales.</span>
-            <button onClick={() => setShowSettings(true)} className="ml-auto font-semibold underline hover:no-underline flex-shrink-0">Conectar</button>
+            <span>Modo ejemplo activo. Los datos reales siguen guardados.</span>
+            <div className="ml-auto flex items-center gap-2 flex-shrink-0">
+              {realPublications.length > 0 && (
+                <button onClick={exitDemo} className="font-semibold underline hover:no-underline">Volver a datos reales</button>
+              )}
+              {!hasConfig && (
+                <button onClick={() => setShowSettings(true)} className="font-semibold underline hover:no-underline">Conectar</button>
+              )}
+            </div>
           </div>
         )}
 
@@ -153,7 +165,7 @@ export default function App() {
 
             {showCalendar && (
               <>
-                <ProjectLegend publications={publications} activeFilter={activeFilter} onFilter={handleFilter} />
+                <ProjectLegend publications={displayPubs} activeFilter={activeFilter} onFilter={handleFilter} />
 
                 {loading && publications.length === 0 && (
                   <div className="text-center py-16 text-gray-400 text-sm">
@@ -162,10 +174,10 @@ export default function App() {
                   </div>
                 )}
 
-                {(!loading || publications.length > 0) && (
+                {(!loading || displayPubs.length > 0) && (
                   viewMode === 'grid'
-                    ? <CalendarGrid year={year} month={month} publications={publications} onSelect={setSelectedPub} activeFilter={activeFilter} />
-                    : <CalendarList year={year} month={month} publications={publications} onSelect={setSelectedPub} activeFilter={activeFilter} />
+                    ? <CalendarGrid year={year} month={month} publications={displayPubs} onSelect={setSelectedPub} activeFilter={activeFilter} />
+                    : <CalendarList year={year} month={month} publications={displayPubs} onSelect={setSelectedPub} activeFilter={activeFilter} />
                 )}
               </>
             )}

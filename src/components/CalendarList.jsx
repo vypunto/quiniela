@@ -48,15 +48,15 @@ export default function CalendarList({ year, month, publications, onSelect, acti
         const label = `${weekStart.getDate()}–${Math.min(weekEnd.getDate(), new Date(year, month + 1, 0).getDate())} ${MONTHS_ES[month]}`
 
         return (
-          <div key={weekStart.getTime()} className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
+          <div key={weekStart.getTime()} className="bg-white rounded-2xl shadow border border-gray-200 overflow-hidden">
             {/* Week header */}
-            <div className="flex items-center justify-between px-4 py-2.5 bg-gray-50 border-b border-gray-100">
+            <div className="flex items-center justify-between px-4 py-2.5 bg-gray-50 border-b border-gray-200">
               <span className="text-xs font-bold text-gray-500 uppercase tracking-wider">{label}</span>
               <span className="text-xs text-gray-400">{pubs.length} publicación{pubs.length > 1 ? 'es' : ''}</span>
             </div>
 
             {/* Rows */}
-            <div className="divide-y divide-gray-50">
+            <div className="divide-y divide-gray-100">
               {pubs.map(pub => {
                 const color = getProjectColor(pub.proyecto)
                 const day = pub.fecha.getDate()
@@ -75,11 +75,11 @@ export default function CalendarList({ year, month, publications, onSelect, acti
                     </div>
 
                     {/* Color bar */}
-                    <div className="w-1 h-8 rounded-full flex-shrink-0" style={{ backgroundColor: color.dot }} />
+                    <div className="w-1 h-9 rounded-full flex-shrink-0" style={{ backgroundColor: color.dot }} />
 
                     {/* Project chip */}
                     <div
-                      className="px-2 py-0.5 rounded-full text-xs font-semibold flex-shrink-0 hidden sm:block"
+                      className="px-2 py-0.5 rounded-full text-xs font-semibold flex-shrink-0"
                       style={{ backgroundColor: color.bg, color: color.text }}
                     >
                       {pub.proyecto}

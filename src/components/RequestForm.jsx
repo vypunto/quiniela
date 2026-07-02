@@ -4,6 +4,15 @@ import { TypeIcon } from './Icons'
 
 const TIPOS = ['imagen', 'video', 'reel', 'carrusel', 'historia', 'texto']
 
+const TIPO_ACTIVE = {
+  imagen:   'bg-violet-600 text-white border-violet-600',
+  video:    'bg-amber-500 text-white border-amber-500',
+  reel:     'bg-pink-600 text-white border-pink-600',
+  carrusel: 'bg-sky-600 text-white border-sky-600',
+  historia: 'bg-emerald-600 text-white border-emerald-600',
+  texto:    'bg-gray-700 text-white border-gray-700',
+}
+
 export default function RequestForm({ projects, scriptUrl, onSubmitted }) {
   const [form, setForm] = useState({ proyecto: '', fecha: '', titulo: '', info: '', solicitante: '', tipo: 'imagen' })
   const [sending, setSending] = useState(false)
@@ -47,7 +56,7 @@ export default function RequestForm({ projects, scriptUrl, onSubmitted }) {
   }
 
   return (
-    <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-5">
+    <div className="bg-white rounded-2xl shadow border border-gray-200 p-5">
       <h3 className="text-sm font-bold text-gray-900 mb-4">Nueva petición de publicación</h3>
 
       {sent ? (
@@ -66,7 +75,7 @@ export default function RequestForm({ projects, scriptUrl, onSubmitted }) {
                 value={form.proyecto}
                 onChange={e => set('proyecto', e.target.value)}
                 required
-                className="w-full px-3 py-2 text-sm border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-black/10 bg-white"
+                className="w-full px-3 py-2 text-sm border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#732442]/20 bg-white"
               >
                 <option value="">Selecciona un proyecto</option>
                 {projects.map(p => <option key={p} value={p}>{p}</option>)}
@@ -78,7 +87,7 @@ export default function RequestForm({ projects, scriptUrl, onSubmitted }) {
                 onChange={e => set('proyecto', e.target.value)}
                 placeholder="Nombre del proyecto"
                 required
-                className="w-full px-3 py-2 text-sm border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-black/10"
+                className="w-full px-3 py-2 text-sm border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#732442]/20"
               />
             )}
           </div>
@@ -91,7 +100,7 @@ export default function RequestForm({ projects, scriptUrl, onSubmitted }) {
               value={form.fecha}
               onChange={e => set('fecha', e.target.value)}
               required
-              className="w-full px-3 py-2 text-sm border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-black/10"
+              className="w-full px-3 py-2 text-sm border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#732442]/20"
             />
           </div>
 
@@ -104,7 +113,7 @@ export default function RequestForm({ projects, scriptUrl, onSubmitted }) {
               onChange={e => set('titulo', e.target.value)}
               placeholder="¿De qué trata el post?"
               required
-              className="w-full px-3 py-2 text-sm border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-black/10"
+              className="w-full px-3 py-2 text-sm border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#732442]/20"
             />
           </div>
 
@@ -116,7 +125,7 @@ export default function RequestForm({ projects, scriptUrl, onSubmitted }) {
               onChange={e => set('info', e.target.value)}
               placeholder="Contexto, mensajes clave, links, referencias..."
               rows={3}
-              className="w-full px-3 py-2 text-sm border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-black/10 resize-none"
+              className="w-full px-3 py-2 text-sm border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#732442]/20 resize-none"
             />
           </div>
 
@@ -131,7 +140,7 @@ export default function RequestForm({ projects, scriptUrl, onSubmitted }) {
                   onClick={() => set('tipo', t)}
                   className={`flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-medium border transition-all capitalize ${
                     form.tipo === t
-                      ? 'bg-black text-white border-black'
+                      ? (TIPO_ACTIVE[t] || 'bg-black text-white border-black')
                       : 'bg-white text-gray-600 border-gray-200 hover:border-gray-400'
                   }`}
                 >
@@ -150,7 +159,7 @@ export default function RequestForm({ projects, scriptUrl, onSubmitted }) {
               value={form.solicitante}
               onChange={e => set('solicitante', e.target.value)}
               placeholder="¿Quién hace la petición?"
-              className="w-full px-3 py-2 text-sm border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-black/10"
+              className="w-full px-3 py-2 text-sm border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#732442]/20"
             />
           </div>
 

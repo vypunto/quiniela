@@ -26,26 +26,27 @@ export default function CalendarGrid({ year, month, publications, onSelect, acti
   const today = new Date()
 
   return (
-    <div className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
-      <div className="grid grid-cols-7 border-b border-gray-100 bg-gray-50/50">
+    <div className="bg-white rounded-2xl shadow border border-gray-200 overflow-hidden">
+      <div className="grid grid-cols-7 border-b border-gray-200 bg-gray-50">
         {DAYS.map(d => (
-          <div key={d} className="py-2.5 text-center text-xs font-semibold text-gray-400 uppercase tracking-wider">{d}</div>
+          <div key={d} className="py-2.5 text-center text-xs font-semibold text-gray-500 uppercase tracking-wider">{d}</div>
         ))}
       </div>
       <div className="grid grid-cols-7 divide-x divide-y divide-gray-100">
         {cells.map((cell, i) => {
-          if (!cell) return <div key={i} className="min-h-[110px] bg-gray-50/30" />
+          if (!cell) return <div key={i} className="min-h-[110px] bg-gray-100/40" />
 
           const isToday = sameDay(cell.date, today)
+          const isPast = cell.date < today && !isToday
           const pubs = filtered.filter(p => p.fecha && sameDay(p.fecha, cell.date))
           const visible = pubs.slice(0, MAX_VISIBLE)
           const overflow = pubs.length - MAX_VISIBLE
 
           return (
-            <div key={i} className="min-h-[72px] sm:min-h-[110px] p-1 sm:p-1.5">
+            <div key={i} className={`min-h-[72px] sm:min-h-[110px] p-1 sm:p-1.5 ${isToday ? 'bg-rose-50/60' : isPast ? 'bg-gray-50/50' : ''}`}>
               <div className="mb-0.5 sm:mb-1 flex justify-start">
                 <span className={`text-[10px] sm:text-xs font-semibold w-5 h-5 sm:w-6 sm:h-6 flex items-center justify-center rounded-full
-                  ${isToday ? 'bg-black text-white' : 'text-gray-500'}`}>
+                  ${isToday ? 'bg-[#732442] text-white' : 'text-gray-500'}`}>
                   {cell.day}
                 </span>
               </div>

@@ -47,52 +47,53 @@ export default function PublicationModal({ publication: pub, onClose }) {
       {/* Modal — bottom sheet on mobile, centered on desktop */}
       <div className="relative bg-white rounded-t-2xl sm:rounded-2xl shadow-2xl sm:max-w-lg w-full overflow-hidden max-h-[92vh] sm:max-h-[90vh] flex flex-col">
         {/* Mobile drag handle */}
-        <div className="sm:hidden flex justify-center pt-2 pb-1 flex-shrink-0">
-          <div className="w-8 h-1 rounded-full bg-gray-200" />
+        <div className="sm:hidden flex justify-center pt-2 pb-1 flex-shrink-0" style={{ backgroundColor: color.bg }}>
+          <div className="w-8 h-1 rounded-full" style={{ backgroundColor: color.dot, opacity: 0.4 }} />
         </div>
-        {/* Colored top bar */}
-        <div className="h-1.5" style={{ backgroundColor: color.dot }} />
 
-        {/* Header */}
-        <div className="flex items-start justify-between p-5 pb-3">
-          <div>
-            <div className="flex items-center gap-2 flex-wrap mb-2">
-              <div
-                className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-semibold"
-                style={{ backgroundColor: color.bg, color: color.text }}
-              >
-                <span className="w-1.5 h-1.5 rounded-full" style={{ backgroundColor: color.dot }} />
-                {pub.proyecto}
+        {/* Colored header zone */}
+        <div style={{ backgroundColor: color.bg }} className="flex-shrink-0">
+          <div className="flex items-start justify-between px-5 pt-4 pb-4">
+            <div>
+              <div className="flex items-center gap-2 flex-wrap mb-2">
+                <div
+                  className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-semibold"
+                  style={{ backgroundColor: color.dot, color: '#fff' }}
+                >
+                  <span className="w-1.5 h-1.5 rounded-full bg-white/60" />
+                  {pub.proyecto}
+                </div>
+                {pub.tipo && (
+                  <div className="inline-flex items-center gap-1 px-2 py-1 rounded-full text-xs font-medium" style={{ backgroundColor: 'rgba(0,0,0,0.08)', color: color.text }}>
+                    <TypeIcon tipo={pub.tipo} size={12} />
+                    <span className="capitalize">{pub.tipo}</span>
+                  </div>
+                )}
               </div>
-              {pub.tipo && (
-                <div className="inline-flex items-center gap-1 px-2 py-1 rounded-full text-xs font-medium bg-gray-100 text-gray-500">
-                  <TypeIcon tipo={pub.tipo} size={12} />
-                  <span className="capitalize">{pub.tipo}</span>
+              {pub.fecha && (
+                <div className="text-xs capitalize" style={{ color: color.text, opacity: 0.7 }}>
+                  {formatDate(pub.fecha)}
                 </div>
               )}
             </div>
-            {pub.fecha && (
-              <div className="text-xs text-gray-400 capitalize">
-                {formatDate(pub.fecha)}
-              </div>
-            )}
+            <button
+              onClick={onClose}
+              className="w-10 h-10 rounded-xl flex items-center justify-center ml-3 flex-shrink-0 transition-colors"
+              style={{ backgroundColor: 'rgba(0,0,0,0.08)', color: color.text }}
+            >
+              <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
+                <path d="M1 1l12 12M13 1L1 13" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/>
+              </svg>
+            </button>
           </div>
-          <button
-            onClick={onClose}
-            className="w-8 h-8 rounded-lg hover:bg-gray-100 flex items-center justify-center text-gray-400 hover:text-gray-600 transition-colors ml-3 flex-shrink-0"
-          >
-            <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
-              <path d="M1 1l12 12M13 1L1 13" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/>
-            </svg>
-          </button>
         </div>
 
         {/* Scrollable content */}
         <div className="overflow-y-auto flex-1">
           {/* Title */}
           {pub.titulo && (
-            <div className="px-5 pb-3">
-              <h2 className="text-lg font-bold text-gray-900 leading-snug">{pub.titulo}</h2>
+            <div className="px-5 pt-4 pb-3">
+              <h2 className="text-xl font-bold text-gray-900 leading-snug">{pub.titulo}</h2>
             </div>
           )}
 

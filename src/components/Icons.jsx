@@ -41,6 +41,23 @@ export function CarouselIcon({ size = 18 }) {
   )
 }
 
+export function HistoriaIcon({ size = 18 }) {
+  return (
+    <svg width={size} height={size} viewBox="0 0 24 24" fill="none">
+      <circle cx="12" cy="12" r="9" stroke="currentColor" strokeWidth="1.5" strokeDasharray="3 1.5"/>
+      <circle cx="12" cy="12" r="5" stroke="currentColor" strokeWidth="1.5"/>
+    </svg>
+  )
+}
+
+export function TextoIcon({ size = 18 }) {
+  return (
+    <svg width={size} height={size} viewBox="0 0 24 24" fill="none">
+      <path d="M4 6h16M4 10h10M4 14h12M4 18h8" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/>
+    </svg>
+  )
+}
+
 // ── Type dispatcher ──────────────────────────────────────────────────────
 
 export function TypeIcon({ tipo, size = 18 }) {
@@ -49,7 +66,9 @@ export function TypeIcon({ tipo, size = 18 }) {
   if (t === 'imagen' || t === 'image' || t === 'foto') return <ImageIcon size={size} />
   if (t === 'video') return <VideoIcon size={size} />
   if (t === 'reel') return <ReelIcon size={size} />
-  if (t === 'carrusel' || t === 'carousel' || t === 'carrusel') return <CarouselIcon size={size} />
+  if (t === 'carrusel' || t === 'carousel') return <CarouselIcon size={size} />
+  if (t === 'historia' || t === 'story') return <HistoriaIcon size={size} />
+  if (t === 'texto' || t === 'text') return <TextoIcon size={size} />
   return null
 }
 
