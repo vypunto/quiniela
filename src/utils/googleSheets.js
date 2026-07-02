@@ -36,7 +36,7 @@ async function fetchCsv(url) {
 function parseRow(row, i) {
   return {
     id: String(i),
-    proyecto: row['proyecto'] || row['project'] || '',
+    proyecto: (row['proyecto'] || row['project'] || '').toUpperCase(),
     fecha: parseDate(row['fecha'] || row['date'] || ''),
     titulo: row['titulo'] || row['title'] || '',
     copy: row['copy'] || row['descripcion'] || '',
@@ -66,7 +66,7 @@ export async function fetchRequestsData(sheetUrl) {
   })
   return data.map((row, i) => ({
     id: `sheet-${i}`,
-    proyecto: row.proyecto || row.project || '',
+    proyecto: (row.proyecto || row.project || '').toUpperCase(),
     fecha: parseDate(row.fecha || row.date || '') || new Date(),
     titulo: row.titulo || row['titulo del post'] || row.title || '',
     info: row.info || row['informacion adicional'] || row.descripcion || '',

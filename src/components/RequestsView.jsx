@@ -31,7 +31,7 @@ const DEMO_REQUESTS = [
   { id: 'r3', proyecto: 'prevenidos y accion', fecha: new Date(new Date().setDate(new Date().getDate() + 15)), titulo: 'Infografía prevención verano', info: 'Medidas de seguridad en la playa. Estilo visual limpio, colores claros.', solicitante: 'María G.', estado: 'Pendiente', tipo: 'imagen' },
 ]
 
-export default function RequestsView({ config, isDemo, calendarPubs = [] }) {
+export default function RequestsView({ config, isDemo, calendarPubs = [], onCountChange }) {
   const [requests, setRequests] = useState([])
   const [selected, setSelected] = useState(null)
   const [loadingSheet, setLoadingSheet] = useState(false)
@@ -46,6 +46,8 @@ export default function RequestsView({ config, isDemo, calendarPubs = [] }) {
   const loadRequests = async () => {
     if (isDemo) {
       setRequests(DEMO_REQUESTS)
+      const pending = DEMO_REQUESTS.filter(r => !r.estado || r.estado === 'Pendiente').length
+      onCountChange && onCountChange(pending)
       return
     }
 
@@ -61,14 +63,21 @@ export default function RequestsView({ config, isDemo, calendarPubs = [] }) {
         const sheetData = await fetchRequestsData(REQUESTS_SHEET_URL)
         const sheetKeys = new Set(sheetData.map(r => `${r.proyecto}||${r.titulo}`))
         const localOnly = local.filter(r => !sheetKeys.has(`${r.proyecto}||${r.titulo}`))
-        setRequests([...sheetData, ...localOnly].sort((a, b) => (a.fecha || 0) - (b.fecha || 0)))
+        const loadedRequests = [...sheetData, ...localOnly].sort((a, b) => (a.fecha || 0) - (b.fecha || 0))
+        setRequests(loadedRequests)
+        const pending = loadedRequests.filter(r => !r.estado || r.estado === 'Pendiente').length
+        onCountChange && onCountChange(pending)
       } catch {
         setRequests(local)
+        const pending = local.filter(r => !r.estado || r.estado === 'Pendiente').length
+        onCountChange && onCountChange(pending)
       } finally {
         setLoadingSheet(false)
       }
     } else {
       setRequests(local)
+      const pending = local.filter(r => !r.estado || r.estado === 'Pendiente').length
+      onCountChange && onCountChange(pending)
     }
   }
 
