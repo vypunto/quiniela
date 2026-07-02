@@ -387,7 +387,6 @@ export default function VisualFeed({ publications, onSelect, selectedPub, active
   const [showDropdown, setShowDropdown] = useState(false)
   const [gridTab, setGridTab] = useState(TAB_POSTS)
   const [openPost, setOpenPost] = useState(null)
-  const [expanded, setExpanded] = useState(false)
 
   const project = selectedProject || projects[0] || null
   const color = project ? getProjectColor(project) : { bg: '#F3F4F6', dot: '#9CA3AF', text: '#6B7280' }
@@ -408,10 +407,6 @@ export default function VisualFeed({ publications, onSelect, selectedPub, active
     {
       icon: <svg width="13" height="13" viewBox="0 0 14 14" fill="none"><rect x="1" y="1" width="5" height="5" rx="1" fill="currentColor"/><rect x="8" y="1" width="5" height="5" rx="1" fill="currentColor" opacity="0.5"/><rect x="1" y="8" width="5" height="5" rx="1" fill="currentColor" opacity="0.5"/><rect x="8" y="8" width="5" height="5" rx="1" fill="currentColor" opacity="0.25"/></svg>,
       text: 'Toca una publicación para abrirla como post de Instagram',
-    },
-    {
-      icon: <svg width="13" height="13" viewBox="0 0 14 14" fill="none"><path d="M1 5V1h4M9 1h4v4M13 9v4H9M5 13H1V9" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/></svg>,
-      text: 'Toca el icono de pantalla completa para expandir el móvil',
     },
   ]
 
@@ -438,26 +433,7 @@ export default function VisualFeed({ publications, onSelect, selectedPub, active
       {/* iPhone mockup */}
       <div className="relative flex-shrink-0" style={{ width: '320px', height: '690px' }}>
 
-        {/* Fullscreen button — bottom-right corner of the phone */}
-        <button
-          onClick={() => setExpanded(true)}
-          title="Pantalla completa"
-          className="absolute z-10 flex items-center justify-center transition-all duration-150 hover:scale-110 active:scale-95"
-          style={{
-            bottom: '18px', right: '-14px',
-            width: '32px', height: '32px',
-            borderRadius: '50%',
-            backgroundColor: '#111',
-            boxShadow: '0 2px 8px rgba(0,0,0,0.4)',
-            color: '#fff',
-          }}
-        >
-          <svg width="13" height="13" viewBox="0 0 14 14" fill="none">
-            <path d="M1 5V1h4M9 1h4v4M13 9v4H9M5 13H1V9" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
-          </svg>
-        </button>
-
-        <div className="absolute inset-0 rounded-[48px]" style={{
+<div className="absolute inset-0 rounded-[48px]" style={{
           background: 'linear-gradient(145deg, #2a2a2a 0%, #1a1a1a 50%, #111 100%)',
           boxShadow: '0 0 0 1px rgba(255,255,255,0.08) inset, 0 0 0 1.5px #111, 0 32px 80px rgba(0,0,0,0.45), 0 8px 20px rgba(0,0,0,0.35)',
         }} />
@@ -598,107 +574,6 @@ export default function VisualFeed({ publications, onSelect, selectedPub, active
         </div>
       </div>
 
-      {/* ── Fullscreen overlay ── */}
-      {expanded && (
-        <div
-          className="fixed inset-0 z-[60] flex items-center justify-center"
-          style={{ backgroundColor: 'rgba(0,0,0,0.85)', backdropFilter: 'blur(8px)', animation: 'fadeIn 180ms ease' }}
-          onClick={e => { if (e.target === e.currentTarget) setExpanded(false) }}
-        >
-          <div className="relative" style={{ width: 'min(390px, 90vw)', height: 'min(844px, 90vh)' }}>
-            <div className="absolute inset-0 rounded-[52px]" style={{
-              background: 'linear-gradient(145deg, #2a2a2a 0%, #1a1a1a 50%, #111 100%)',
-              boxShadow: '0 0 0 1px rgba(255,255,255,0.08) inset, 0 0 0 1.5px #111, 0 48px 120px rgba(0,0,0,0.6)',
-            }} />
-            <div className="absolute rounded-r-sm" style={{ left: '-4px', top: '160px', width: '4px', height: '44px', backgroundColor: '#333' }} />
-            <div className="absolute rounded-r-sm" style={{ left: '-4px', top: '216px', width: '4px', height: '44px', backgroundColor: '#333' }} />
-            <div className="absolute rounded-r-sm" style={{ left: '-4px', top: '110px', width: '4px', height: '32px', backgroundColor: '#333' }} />
-            <div className="absolute rounded-l-sm" style={{ right: '-4px', top: '190px', width: '4px', height: '76px', backgroundColor: '#333' }} />
-
-            <div className="absolute bg-white" style={{ top: '14px', left: '14px', right: '14px', bottom: '14px', borderRadius: '40px', overflow: 'hidden' }}>
-              <div className="absolute z-20" style={{ top: '16px', left: '50%', transform: 'translateX(-50%)', width: '126px', height: '37px', backgroundColor: '#000', borderRadius: '22px' }} />
-              <StatusBar />
-
-              <div className="absolute left-0 right-0 bottom-0 overflow-y-auto" style={{ top: '54px', paddingBottom: '24px' }}>
-                <div className="flex items-center justify-between px-4 py-3">
-                  <button onClick={() => setShowDropdown(d => !d)} className="flex items-center gap-1.5">
-                    <span className="text-[14px] font-black text-black">{project ? project.toLowerCase() : 'perfil'}</span>
-                    <svg width="12" height="12" viewBox="0 0 12 12" fill="none" style={{ transform: showDropdown ? 'rotate(180deg)' : 'rotate(0deg)', transition: 'transform 180ms' }}>
-                      <path d="M3 4.5l3 3 3-3" stroke="#111" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round"/>
-                    </svg>
-                  </button>
-                  <svg width="22" height="22" viewBox="0 0 24 24" fill="none">
-                    <circle cx="12" cy="5" r="1.5" fill="#111"/>
-                    <circle cx="12" cy="12" r="1.5" fill="#111"/>
-                    <circle cx="12" cy="19" r="1.5" fill="#111"/>
-                  </svg>
-                </div>
-
-                <div className="px-5 pb-4">
-                  <div className="flex items-center justify-between mb-5">
-                    <div className="w-[80px] h-[80px] rounded-full flex items-center justify-center text-xl font-black flex-shrink-0"
-                      style={{ backgroundColor: color.bg, color: color.dot, border: `3px solid ${color.dot}` }}>
-                      {project ? getInitials(project) : '?'}
-                    </div>
-                    <div className="flex gap-5 flex-1 justify-around ml-5">
-                      {[{ val: postCount, label: 'publicaciones' }, { val: '—', label: 'seguidores' }, { val: '—', label: 'seguidos' }].map(({ val, label }) => (
-                        <div key={label} className="flex flex-col items-center">
-                          <span className="text-base font-black text-black">{val}</span>
-                          <span className="text-[10px] text-gray-500 leading-tight text-center">{label}</span>
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-                  <div className="text-[13px] font-black text-black mb-1">{project}</div>
-                  <div className="text-[11px] text-gray-500 mb-3">
-                    {allForProject.length > 0 ? `${allForProject.length} contenidos planificados en tu calendario` : 'Sin publicaciones planificadas'}
-                  </div>
-                  <div className="flex gap-2">
-                    <button className="flex-1 py-1.5 rounded-lg text-[12px] font-bold" style={{ backgroundColor: color.dot, color: '#fff' }}>Seguir</button>
-                    <button className="flex-1 py-1.5 rounded-lg text-[12px] font-semibold bg-gray-100 text-black">Mensaje</button>
-                    <button className="w-9 py-1.5 rounded-lg bg-gray-100 flex items-center justify-center">
-                      <svg width="13" height="13" viewBox="0 0 14 14" fill="none"><path d="M5 3l4 4-4 4" stroke="#111" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round"/></svg>
-                    </button>
-                  </div>
-                </div>
-
-                <div className="flex border-t border-gray-200 mb-0.5">
-                  {[TAB_POSTS, TAB_REELS, TAB_STORIES].map(tab => (
-                    <button key={tab} onClick={() => setGridTab(tab)} className="flex-1 py-2.5 flex items-center justify-center relative">
-                      <GridTabIcon tab={tab} active={gridTab === tab} />
-                      {gridTab === tab && <div className="absolute top-0 left-1/2 -translate-x-1/2 w-10 h-[1.5px] bg-black rounded-full" />}
-                    </button>
-                  ))}
-                </div>
-
-                {filtered.length === 0 ? (
-                  <div className="flex flex-col items-center justify-center py-16 text-center">
-                    <p className="text-[12px] text-gray-400 font-medium">Sin {gridTab} para este proyecto</p>
-                  </div>
-                ) : (
-                  <div className="grid grid-cols-3 gap-[2px]">
-                    {filtered.map(pub => (
-                      <GridCell key={pub.id} pub={pub} onClick={p => { setOpenPost(p); setExpanded(false) }} isSelected={selectedPub?.id === pub.id} />
-                    ))}
-                  </div>
-                )}
-              </div>
-
-              <div className="absolute bottom-2 left-1/2 -translate-x-1/2 rounded-full" style={{ width: '130px', height: '5px', backgroundColor: '#111', opacity: 0.18 }} />
-            </div>
-          </div>
-
-          <button
-            onClick={() => setExpanded(false)}
-            className="absolute top-4 right-4 w-10 h-10 rounded-full flex items-center justify-center text-white transition-all duration-150 hover:bg-white/10"
-            style={{ backgroundColor: 'rgba(255,255,255,0.12)' }}
-          >
-            <svg width="13" height="13" viewBox="0 0 14 14" fill="none">
-              <path d="M1 1l12 12M13 1L1 13" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round"/>
-            </svg>
-          </button>
-        </div>
-      )}
     </div>
   )
 }
