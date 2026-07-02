@@ -1,7 +1,8 @@
 import { useState } from 'react'
 import { submitRequest } from '../utils/googleSheets'
+import { TypeIcon } from './Icons'
 
-const TIPOS = ['imagen', 'video', 'texto', 'historia', 'reel']
+const TIPOS = ['imagen', 'video', 'reel', 'carrusel', 'historia', 'texto']
 
 export default function RequestForm({ projects, scriptUrl, onSubmitted }) {
   const [form, setForm] = useState({ proyecto: '', fecha: '', titulo: '', info: '', solicitante: '', tipo: 'imagen' })
@@ -128,13 +129,13 @@ export default function RequestForm({ projects, scriptUrl, onSubmitted }) {
                   key={t}
                   type="button"
                   onClick={() => set('tipo', t)}
-                  className={`px-3 py-1 rounded-full text-xs font-medium border transition-all capitalize ${
+                  className={`flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-medium border transition-all capitalize ${
                     form.tipo === t
                       ? 'bg-black text-white border-black'
                       : 'bg-white text-gray-600 border-gray-200 hover:border-gray-400'
                   }`}
                 >
-                  {t === 'imagen' ? '🖼️ ' : t === 'video' ? '🎬 ' : t === 'reel' ? '📱 ' : t === 'historia' ? '⭕ ' : '📄 '}
+                  <TypeIcon tipo={t} size={13} />
                   {t}
                 </button>
               ))}

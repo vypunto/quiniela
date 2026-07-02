@@ -1,18 +1,13 @@
 import { useMemo } from 'react'
 import { getProjectColor } from '../utils/colors'
 import { DAYS_ES, MONTHS_ES } from '../utils/dateUtils'
+import { TypeIcon } from './Icons'
 
 function getWeekNumber(date) {
   const d = new Date(date.getFullYear(), date.getMonth(), date.getDate())
   const dayOfWeek = d.getDay() === 0 ? 6 : d.getDay() - 1 // Mon=0
   d.setDate(d.getDate() - dayOfWeek)
   return d.getDate()
-}
-
-function TypeIcon({ tipo }) {
-  if (tipo === 'video') return <span title="Vídeo" className="text-sm">🎬</span>
-  if (tipo === 'imagen') return <span title="Imagen" className="text-sm">🖼️</span>
-  return <span className="text-sm opacity-30">📄</span>
 }
 
 export default function CalendarList({ year, month, publications, onSelect, activeFilter }) {
@@ -101,8 +96,8 @@ export default function CalendarList({ year, month, publications, onSelect, acti
                     </div>
 
                     {/* Type icon */}
-                    <div className="flex-shrink-0">
-                      <TypeIcon tipo={pub.tipo} />
+                    <div className="flex-shrink-0 text-gray-400">
+                      <TypeIcon tipo={pub.tipo} size={16} />
                     </div>
 
                     {/* Arrow */}

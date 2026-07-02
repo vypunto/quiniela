@@ -1,15 +1,10 @@
 import { useMemo } from 'react'
 import { getProjectColor } from '../utils/colors'
 import { sameDay } from '../utils/dateUtils'
+import { TypeIcon } from './Icons'
 
 const DAYS = ['Lun', 'Mar', 'Mié', 'Jue', 'Vie', 'Sáb', 'Dom']
 const MAX_VISIBLE = 3
-
-function TypeIcon({ tipo }) {
-  if (tipo === 'video') return <span title="Vídeo">🎬</span>
-  if (tipo === 'imagen') return <span title="Imagen">🖼️</span>
-  return null
-}
 
 export default function CalendarGrid({ year, month, publications, onSelect, activeFilter }) {
   const filtered = activeFilter ? publications.filter(p => p.proyecto === activeFilter) : publications
@@ -69,8 +64,8 @@ export default function CalendarGrid({ year, month, publications, onSelect, acti
                         {pub.titulo || pub.proyecto}
                       </span>
                       {pub.tipo && (
-                        <span className="text-xs leading-none flex-shrink-0">
-                          {pub.tipo === 'video' ? '🎬' : pub.tipo === 'imagen' ? '🖼️' : ''}
+                        <span className="flex-shrink-0 opacity-60" style={{ color: color.text }}>
+                          <TypeIcon tipo={pub.tipo} size={11} />
                         </span>
                       )}
                     </button>
