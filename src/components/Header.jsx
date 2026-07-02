@@ -9,21 +9,20 @@ export default function Header({
   pendingCount,
 }) {
   const tabBar = (extraClass = '') => (
-    <div className={`flex items-center bg-gray-100 rounded-xl p-0.5 flex-shrink-0 ${extraClass}`}>
+    <div className={`flex items-center gap-0.5 p-1 bg-gray-100/70 rounded-xl flex-shrink-0 ${extraClass}`}>
       {['publicaciones', 'peticiones'].map(tab => (
         <button
           key={tab}
           onClick={() => setActiveTab(tab)}
-          className={`relative px-3 sm:px-3.5 py-2 sm:py-1.5 rounded-[10px] text-xs sm:text-xs font-black transition-all tracking-wide ${
+          className={`relative px-3 sm:px-3.5 py-1.5 sm:py-2 rounded-[10px] text-[11px] sm:text-[11px] font-bold tracking-wide transition-all duration-150 ${
             activeTab === tab
-              ? 'bg-white shadow-sm'
+              ? 'bg-white text-gray-900 shadow-sm'
               : 'text-gray-500 hover:text-gray-700'
           }`}
-          style={activeTab === tab ? { color: '#732442' } : {}}
         >
           {tab === 'publicaciones' ? 'PUBLICACIONES' : 'PETICIONES'}
           {tab === 'peticiones' && pendingCount > 0 && (
-            <span className="absolute -top-1 -right-1 w-4 h-4 bg-red-500 text-white text-[8px] font-black rounded-full flex items-center justify-center">
+            <span className="absolute -top-1 -right-1 min-w-[16px] h-4 px-1 bg-[#732442] text-white text-[8px] font-black rounded-full flex items-center justify-center">
               {pendingCount > 9 ? '9+' : pendingCount}
             </span>
           )}
@@ -33,57 +32,68 @@ export default function Header({
   )
 
   return (
-    <header className="sticky top-0 z-20 bg-white border-b border-gray-200">
+    <header className="sticky top-0 z-20 bg-white/95 backdrop-blur-md border-b border-gray-200/80" style={{ boxShadow: '0 1px 0 rgba(0,0,0,0.04)' }}>
 
       {/* ── Main row ─────────────────────────────────────────────── */}
-      <div className="max-w-7xl mx-auto px-3 sm:px-6 h-[62px] sm:h-[58px] flex items-center gap-2 sm:gap-3">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 h-[64px] sm:h-[60px] flex items-center gap-2 sm:gap-4">
 
         {/* Logo */}
-        <div className="flex items-center gap-2 sm:gap-2.5 flex-shrink-0">
+        <div className="flex items-center gap-2.5 flex-shrink-0">
           <CalendappLogo height={52} />
           <div className="leading-none">
-            <div className="text-sm font-black tracking-tight" style={{ color: '#732442' }}>CALENDAPP</div>
-            <div className="text-[10px] font-medium mt-0.5 text-gray-400">by El Chandrio Group</div>
+            <div className="text-[13px] font-black tracking-tight" style={{ color: '#732442' }}>CALENDAPP</div>
+            <div className="text-[10px] font-medium mt-0.5 text-gray-400 tracking-wide">by El Chandrio Group</div>
           </div>
         </div>
 
-        {/* Desktop tabs (after logo) */}
-        <div className="hidden sm:block ml-1">
+        {/* Desktop tabs */}
+        <div className="hidden sm:block ml-2">
           {tabBar()}
         </div>
 
-        {/* Spacer — pushes mobile tabs right, separates desktop controls */}
         <div className="flex-1" />
 
-        {/* Mobile tabs (right-aligned) */}
+        {/* Mobile tabs (right) */}
         <div className="sm:hidden">
           {tabBar()}
         </div>
 
-        {/* Month nav — desktop only */}
+        {/* Month nav — desktop */}
         {activeTab === 'publicaciones' && viewMode !== 'week' && (
-          <div className="hidden sm:flex items-center gap-1.5">
-            <button onClick={onPrev} className="w-8 h-8 rounded-xl border border-gray-200 flex items-center justify-center hover:bg-gray-50 transition-colors text-gray-600">
-              <svg width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M9 11L5 7l4-4" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/></svg>
+          <div className="hidden sm:flex items-center gap-1">
+            <button
+              onClick={onPrev}
+              className="w-8 h-8 rounded-xl flex items-center justify-center text-gray-500 hover:text-gray-800 hover:bg-gray-100 transition-all duration-150"
+            >
+              <svg width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M9 11L5 7l4-4" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round"/></svg>
             </button>
-            <span className="font-black tracking-tight text-gray-900 text-sm min-w-[140px] text-center">{MONTHS_ES_UPPER[month]} {year}</span>
-            <button onClick={onNext} className="w-8 h-8 rounded-xl border border-gray-200 flex items-center justify-center hover:bg-gray-50 transition-colors text-gray-600">
-              <svg width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M5 3l4 4-4 4" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/></svg>
+            <span className="font-bold text-gray-900 text-sm min-w-[150px] text-center tracking-tight">{MONTHS_ES_UPPER[month]} {year}</span>
+            <button
+              onClick={onNext}
+              className="w-8 h-8 rounded-xl flex items-center justify-center text-gray-500 hover:text-gray-800 hover:bg-gray-100 transition-all duration-150"
+            >
+              <svg width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M5 3l4 4-4 4" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round"/></svg>
             </button>
           </div>
         )}
 
-        {/* View toggle — desktop only */}
+        {/* Divider */}
         {activeTab === 'publicaciones' && (
-          <div className="hidden sm:flex items-center bg-gray-100 rounded-lg p-0.5">
+          <div className="hidden sm:block w-px h-5 bg-gray-200" />
+        )}
+
+        {/* View toggle — desktop */}
+        {activeTab === 'publicaciones' && (
+          <div className="hidden sm:flex items-center gap-0.5 p-1 bg-gray-100/70 rounded-xl">
             {[['grid','Mes'],['week','Semana'],['list','Lista']].map(([mode, label]) => (
               <button
                 key={mode}
                 onClick={() => setViewMode(mode)}
-                className={`px-2.5 py-1.5 rounded-md text-xs font-semibold transition-all ${
-                  viewMode === mode ? 'bg-white shadow-sm' : 'text-gray-500 hover:text-gray-700'
+                className={`px-2.5 py-1.5 rounded-[9px] text-xs font-semibold transition-all duration-150 ${
+                  viewMode === mode
+                    ? 'bg-white text-gray-900 shadow-sm'
+                    : 'text-gray-500 hover:text-gray-700'
                 }`}
-                style={viewMode === mode ? { color: '#732442' } : {}}
               >
                 {label}
               </button>
@@ -91,24 +101,36 @@ export default function Header({
           </div>
         )}
 
-        {/* Demo toggle — desktop only */}
+        {/* Demo toggle — desktop */}
         {activeTab === 'publicaciones' && (
           <div className="hidden sm:block">
             {isDemo ? (
-              <button onClick={onExitDemo} className="px-3 py-1.5 rounded-xl text-xs font-semibold transition-colors" style={{ border: '1px solid #732442', color: '#732442', backgroundColor: '#fdf0f3' }}>
+              <button
+                onClick={onExitDemo}
+                className="px-3 py-1.5 rounded-xl text-xs font-semibold transition-all duration-150"
+                style={{ border: '1px solid rgba(115,36,66,0.3)', color: '#732442', backgroundColor: 'rgba(115,36,66,0.06)' }}
+              >
                 Salir del demo
               </button>
             ) : (
-              <button onClick={onDemo} className="px-3 py-1.5 rounded-xl border border-gray-200 text-gray-400 text-xs font-medium hover:bg-gray-50 transition-colors">
+              <button
+                onClick={onDemo}
+                className="px-3 py-1.5 rounded-xl border border-gray-200 text-gray-400 text-xs font-medium hover:bg-gray-50 hover:text-gray-600 transition-all duration-150"
+              >
                 Ver demo
               </button>
             )}
           </div>
         )}
 
-        {/* Sync — desktop only */}
+        {/* Sync — desktop */}
         {hasConfig && activeTab === 'publicaciones' && (
-          <button onClick={onSync} disabled={loading} title="Sincronizar" className="hidden sm:flex w-8 h-8 rounded-xl border border-gray-200 items-center justify-center hover:bg-gray-50 transition-colors text-gray-500 disabled:opacity-50">
+          <button
+            onClick={onSync}
+            disabled={loading}
+            title="Sincronizar"
+            className="hidden sm:flex w-8 h-8 rounded-xl border border-gray-200 items-center justify-center hover:bg-gray-50 transition-all duration-150 text-gray-400 hover:text-gray-600 disabled:opacity-40"
+          >
             <svg width="13" height="13" viewBox="0 0 14 14" fill="none" className={loading ? 'animate-spin' : ''}>
               <path d="M12 7A5 5 0 1 1 7 2" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/>
               <path d="M10 2h2v2" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
@@ -117,36 +139,41 @@ export default function Header({
         )}
       </div>
 
-      {/* ── Mobile second row (publicaciones only) ───────────────── */}
+      {/* ── Mobile second row ─────────────────────────────────────── */}
       {activeTab === 'publicaciones' && (
-        <div className="sm:hidden flex items-center justify-between px-3 pb-2.5 gap-2">
+        <div className="sm:hidden flex items-center justify-between px-4 pb-3 gap-2">
           {viewMode !== 'week' && (
             <div className="flex items-center gap-1">
-              <button onClick={onPrev} className="w-9 h-9 rounded-xl border border-gray-200 bg-white flex items-center justify-center text-gray-700 active:bg-gray-100 shadow-sm">
-                <svg width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M9 11L5 7l4-4" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/></svg>
+              <button
+                onClick={onPrev}
+                className="w-8 h-8 rounded-xl bg-white border border-gray-200 flex items-center justify-center text-gray-600 hover:bg-gray-50 active:bg-gray-100 shadow-sm transition-all"
+              >
+                <svg width="13" height="13" viewBox="0 0 14 14" fill="none"><path d="M9 11L5 7l4-4" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round"/></svg>
               </button>
-              <span className="font-black tracking-tight text-gray-900 text-sm px-2 min-w-[72px] text-center">
+              <span className="font-bold text-gray-900 text-sm px-2 min-w-[68px] text-center">
                 <span className="sm:hidden">{MONTHS_ES_SHORT[month]}</span>
                 <span className="hidden sm:inline">{MONTHS_ES_UPPER[month]}</span>
                 {' '}{year}
               </span>
-              <button onClick={onNext} className="w-9 h-9 rounded-xl border border-gray-200 bg-white flex items-center justify-center text-gray-700 active:bg-gray-100 shadow-sm">
-                <svg width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M5 3l4 4-4 4" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/></svg>
+              <button
+                onClick={onNext}
+                className="w-8 h-8 rounded-xl bg-white border border-gray-200 flex items-center justify-center text-gray-600 hover:bg-gray-50 active:bg-gray-100 shadow-sm transition-all"
+              >
+                <svg width="13" height="13" viewBox="0 0 14 14" fill="none"><path d="M5 3l4 4-4 4" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round"/></svg>
               </button>
             </div>
           )}
           {viewMode === 'week' && <div className="flex-1" />}
 
           <div className="flex items-center gap-1.5">
-            <div className="flex items-center bg-gray-100 rounded-lg p-0.5">
+            <div className="flex items-center gap-0.5 p-1 bg-gray-100/70 rounded-xl">
               {[['grid','Mes'],['week','Sem'],['list','Lista']].map(([mode, label]) => (
                 <button
                   key={mode}
                   onClick={() => setViewMode(mode)}
-                  className={`px-2 py-1 rounded-md text-xs font-semibold transition-all ${
-                    viewMode === mode ? 'bg-white shadow-sm' : 'text-gray-500'
+                  className={`px-2 py-1 rounded-[8px] text-xs font-semibold transition-all duration-150 ${
+                    viewMode === mode ? 'bg-white text-gray-900 shadow-sm' : 'text-gray-500'
                   }`}
-                  style={viewMode === mode ? { color: '#732442' } : {}}
                 >
                   {label}
                 </button>
@@ -154,17 +181,28 @@ export default function Header({
             </div>
 
             {isDemo ? (
-              <button onClick={onExitDemo} className="px-2 py-1.5 rounded-xl text-[10px] font-semibold" style={{ border: '1px solid #732442', color: '#732442', backgroundColor: '#fdf0f3' }}>
+              <button
+                onClick={onExitDemo}
+                className="px-2.5 py-1.5 rounded-xl text-[10px] font-semibold"
+                style={{ border: '1px solid rgba(115,36,66,0.3)', color: '#732442', backgroundColor: 'rgba(115,36,66,0.06)' }}
+              >
                 Salir
               </button>
             ) : (
-              <button onClick={onDemo} className="px-2 py-1.5 rounded-xl border border-gray-200 text-gray-400 text-[10px] font-medium">
+              <button
+                onClick={onDemo}
+                className="px-2.5 py-1.5 rounded-xl border border-gray-200 text-gray-400 text-[10px] font-medium"
+              >
                 Demo
               </button>
             )}
 
             {hasConfig && (
-              <button onClick={onSync} disabled={loading} className="w-8 h-8 rounded-xl border border-gray-200 flex items-center justify-center text-gray-500 disabled:opacity-50">
+              <button
+                onClick={onSync}
+                disabled={loading}
+                className="w-8 h-8 rounded-xl border border-gray-200 flex items-center justify-center text-gray-400 disabled:opacity-40"
+              >
                 <svg width="13" height="13" viewBox="0 0 14 14" fill="none" className={loading ? 'animate-spin' : ''}>
                   <path d="M12 7A5 5 0 1 1 7 2" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/>
                   <path d="M10 2h2v2" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>

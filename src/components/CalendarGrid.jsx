@@ -38,28 +38,55 @@ export default function CalendarGrid({ year, month, publications, onSelect, acti
 
   return (
     <div
-      className="bg-white rounded-2xl shadow border border-gray-200 overflow-hidden flex flex-col"
-      style={{ height: 'calc(100dvh - 260px)', minHeight: '340px', maxHeight: '780px' }}
+      className="bg-white rounded-2xl overflow-hidden flex flex-col"
+      style={{
+        height: 'calc(100dvh - 270px)',
+        minHeight: '360px',
+        maxHeight: '800px',
+        border: '1px solid #E8EAED',
+        boxShadow: '0 1px 3px rgba(0,0,0,0.04), 0 8px 24px rgba(0,0,0,0.05)',
+      }}
     >
       {/* Day headers */}
-      <div className="grid grid-cols-7 border-b border-gray-200 bg-gray-50 flex-shrink-0">
-        {DAYS.map(d => (
-          <div key={d} className="py-2.5 sm:py-3 text-center text-[11px] sm:text-xs font-black text-gray-500 uppercase tracking-widest">{d}</div>
+      <div className="grid grid-cols-7 border-b border-gray-100 flex-shrink-0">
+        {DAYS.map((d, i) => (
+          <div
+            key={d}
+            className="py-3 text-center text-[10px] sm:text-[11px] font-semibold text-gray-400 uppercase tracking-[0.1em]"
+            style={{ borderRight: i < 6 ? '1px solid #F3F4F6' : 'none' }}
+          >
+            {d}
+          </div>
         ))}
       </div>
 
       {/* Grid */}
       <div
-        className="grid grid-cols-7 divide-x divide-y divide-gray-100 flex-1"
+        className="grid grid-cols-7 flex-1"
         style={{ gridTemplateRows: `repeat(${numRows}, 1fr)` }}
       >
         {cells.map((cell, i) => {
+          const colIndex = i % 7
           const rowIndex = Math.floor(i / 7)
           const isCurrentWeekRow = rowIndex === todayRowIndex
+          const isLastRow = rowIndex === numRows - 1
+          const isLastCol = colIndex === 6
 
-          if (!cell) return (
-            <div key={i} className={isCurrentWeekRow ? 'bg-[#732442]/[0.03]' : 'bg-gray-100/40'} />
-          )
+          const borderBottom = !isLastRow ? '1px solid #F3F4F6' : 'none'
+          const borderRight = !isLastCol ? '1px solid #F3F4F6' : 'none'
+
+          if (!cell) {
+            return (
+              <div
+                key={i}
+                style={{
+                  backgroundColor: isCurrentWeekRow ? 'rgba(115,36,66,0.015)' : '#F9FAFB',
+                  borderBottom,
+                  borderRight,
+                }}
+              />
+            )
+          }
 
           const isToday = sameDay(cell.date, today)
           const isPast = cell.date < today && !isToday
@@ -68,40 +95,54 @@ export default function CalendarGrid({ year, month, publications, onSelect, acti
           const visible = pubs.slice(0, MAX_VISIBLE)
           const overflow = pubs.length - MAX_VISIBLE
 
-          let cellClassName = 'flex flex-col p-1 sm:p-1.5 overflow-hidden relative'
-          let cellStyle = {}
-
+          let bgColor = 'transparent'
           if (isToday) {
-            cellClassName += ' bg-rose-50/70'
+            bgColor = 'rgba(253,242,245,0.8)'
           } else if (hasFilter && pubs.length > 0 && singleFilterColor) {
-            cellStyle = { backgroundColor: singleFilterColor.bg + '55' }
+            bgColor = singleFilterColor.bg + '44'
           } else if (hasFilter && pubs.length > 0) {
-            cellClassName += ' bg-gray-50/80'
-          } else if (hasFilter && allPubs.length > 0 && pubs.length === 0) {
-            cellClassName += ' opacity-30'
+            bgColor = 'rgba(0,0,0,0.018)'
           } else if (isCurrentWeekRow) {
-            cellClassName += ' bg-[#732442]/[0.03]'
+            bgColor = 'rgba(115,36,66,0.015)'
           } else if (isPast) {
-            cellClassName += ' bg-gray-50/50'
+            bgColor = 'rgba(0,0,0,0.012)'
           }
 
+          const dimOpacity = hasFilter && allPubs.length > 0 && pubs.length === 0
+
           return (
-            <div key={i} className={cellClassName} style={cellStyle}>
-              <div className="mb-0.5 flex justify-start flex-shrink-0">
-                <span className={`relative text-xs sm:text-sm font-black w-6 h-6 sm:w-7 sm:h-7 flex items-center justify-center rounded-full ${
-                  isToday ? 'bg-[#732442] text-white' : isCurrentWeekRow ? 'text-[#732442]' : 'text-gray-600'
-                }`}>
+            <div
+              key={i}
+              className="flex flex-col p-1.5 sm:p-2 overflow-hidden"
+              style={{
+                backgroundColor: bgColor,
+                opacity: dimOpacity ? 0.3 : 1,
+                borderBottom,
+                borderRight,
+              }}
+            >
+              {/* Day number */}
+              <div className="mb-1 flex justify-start flex-shrink-0">
+                <span
+                  className={`text-[11px] sm:text-xs font-semibold w-[22px] h-[22px] sm:w-6 sm:h-6 flex items-center justify-center rounded-full transition-colors ${
+                    isToday
+                      ? 'text-white font-black'
+                      : isCurrentWeekRow
+                      ? 'text-[#732442] font-bold'
+                      : isPast
+                      ? 'text-gray-300'
+                      : 'text-gray-700'
+                  }`}
+                  style={isToday ? { backgroundColor: '#732442' } : {}}
+                >
                   {cell.day}
                   {isToday && (
-                    <span className="absolute -bottom-1 left-1/2 -translate-x-1/2">
-                      <span className="relative flex h-1.5 w-1.5">
-                        <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-[#732442] opacity-60" />
-                        <span className="relative inline-flex rounded-full h-1.5 w-1.5 bg-[#732442]" />
-                      </span>
-                    </span>
+                    <span className="sr-only">hoy</span>
                   )}
                 </span>
               </div>
+
+              {/* Publications */}
               <div className="space-y-0.5 flex-1 min-h-0 overflow-hidden">
                 {visible.map(pub => {
                   const color = getProjectColor(pub.proyecto)
@@ -109,26 +150,37 @@ export default function CalendarGrid({ year, month, publications, onSelect, acti
                     <button
                       key={pub.id}
                       onClick={() => onSelect(pub)}
-                      className="w-full text-left px-1 sm:px-1.5 py-0.5 rounded-md text-[10px] sm:text-xs flex items-center gap-0.5 sm:gap-1 active:brightness-90 hover:brightness-90 transition-all"
+                      className="w-full text-left px-1.5 py-[3px] sm:py-1 rounded-md text-[9px] sm:text-[10px] flex items-center gap-1 transition-all duration-150 hover:brightness-95 active:brightness-90"
                       style={{ backgroundColor: color.bg }}
                     >
-                      <span className="w-1 h-1 sm:w-1.5 sm:h-1.5 rounded-full flex-shrink-0" style={{ backgroundColor: color.dot }} />
-                      <span className="truncate flex-1 font-semibold leading-tight hidden sm:block" style={{ color: color.text }}>
+                      <span
+                        className="w-1 h-1 sm:w-1.5 sm:h-1.5 rounded-full flex-shrink-0"
+                        style={{ backgroundColor: color.dot }}
+                      />
+                      <span
+                        className="truncate flex-1 font-semibold leading-tight hidden sm:block"
+                        style={{ color: color.text }}
+                      >
                         {pub.titulo || pub.proyecto}
                       </span>
-                      <span className="truncate flex-1 font-semibold leading-tight sm:hidden" style={{ color: color.text }}>
+                      <span
+                        className="truncate flex-1 font-semibold leading-tight sm:hidden"
+                        style={{ color: color.text }}
+                      >
                         {pub.proyecto}
                       </span>
                       {pub.tipo && (
-                        <span className="flex-shrink-0 opacity-60 hidden sm:block" style={{ color: color.text }}>
-                          <TypeIcon tipo={pub.tipo} size={11} />
+                        <span className="flex-shrink-0 opacity-50 hidden sm:block" style={{ color: color.text }}>
+                          <TypeIcon tipo={pub.tipo} size={10} />
                         </span>
                       )}
                     </button>
                   )
                 })}
                 {overflow > 0 && (
-                  <div className="text-[10px] text-gray-400 pl-0.5 font-medium">+{overflow} más</div>
+                  <div className="text-[9px] sm:text-[10px] text-gray-400 pl-1 font-medium">
+                    +{overflow}
+                  </div>
                 )}
               </div>
             </div>

@@ -102,7 +102,7 @@ export default function App() {
   const sortedPubs = [...displayPubs].sort((a, b) => (a.fecha || 0) - (b.fecha || 0))
 
   return (
-    <div className="min-h-screen" style={{ background: 'linear-gradient(150deg, #fdfcfd 0%, #f9f7fb 50%, #f5f5f7 100%)' }}>
+    <div className="min-h-screen bg-[#F7F8FA]">
       <Header
         year={year} month={month}
         activeTab={activeTab} setActiveTab={setActiveTab}
@@ -114,7 +114,7 @@ export default function App() {
         pendingCount={pendingCount}
       />
 
-      <main className="max-w-7xl mx-auto px-3 sm:px-6 py-3 sm:py-5">
+      <main className="max-w-7xl mx-auto px-4 sm:px-6 py-4 sm:py-6">
 
         {/* Error */}
         {error && activeTab === 'publicaciones' && (
@@ -138,20 +138,34 @@ export default function App() {
         {activeTab === 'publicaciones' && (
           <>
             {!showCalendar && (
-              <div className="flex flex-col items-center justify-center py-20">
-                <div className="w-16 h-16 bg-black rounded-2xl flex items-center justify-center mb-4">
-                  <svg width="28" height="28" viewBox="0 0 28 28" fill="none">
+              <div className="flex flex-col items-center justify-center py-24 px-4">
+                <div
+                  className="w-16 h-16 rounded-2xl flex items-center justify-center mb-5"
+                  style={{ backgroundColor: '#732442' }}
+                >
+                  <svg width="26" height="26" viewBox="0 0 28 28" fill="none">
                     <rect x="2" y="2" width="11" height="11" rx="2" fill="white"/>
                     <rect x="15" y="2" width="11" height="11" rx="2" fill="white"/>
                     <rect x="2" y="15" width="11" height="11" rx="2" fill="white"/>
-                    <rect x="15" y="15" width="11" height="11" rx="2" fill="white" opacity="0.3"/>
+                    <rect x="15" y="15" width="11" height="11" rx="2" fill="white" opacity="0.4"/>
                   </svg>
                 </div>
-                <h2 className="text-xl font-black tracking-tight text-gray-900 mb-1">Calendario de Publicaciones</h2>
-                <p className="text-sm text-gray-400 mb-6 text-center max-w-xs">Conecta tu Google Sheet o prueba el ejemplo para ver cómo funciona</p>
+                <h2 className="text-2xl font-black tracking-tight text-gray-900 mb-2">Calendario de publicaciones</h2>
+                <p className="text-sm text-gray-400 mb-8 text-center max-w-xs leading-relaxed">Conecta tu Google Sheet o prueba el modo demo para ver cómo funciona</p>
                 <div className="flex gap-3">
-                  <button onClick={loadDemo} className="px-5 py-2.5 border border-gray-200 text-gray-700 rounded-xl text-sm font-medium hover:bg-gray-50 transition-colors">Ver ejemplo</button>
-                  <button onClick={() => setShowSettings(true)} className="px-5 py-2.5 bg-black text-white rounded-xl text-sm font-semibold hover:bg-gray-800 transition-colors">Conectar Google Sheets</button>
+                  <button
+                    onClick={loadDemo}
+                    className="px-5 py-2.5 border border-gray-200 text-gray-600 rounded-xl text-sm font-semibold hover:bg-white hover:border-gray-300 transition-all duration-150"
+                  >
+                    Ver demo
+                  </button>
+                  <button
+                    onClick={() => setShowSettings(true)}
+                    className="px-5 py-2.5 rounded-xl text-sm font-bold text-white transition-all duration-150 hover:brightness-90"
+                    style={{ backgroundColor: '#732442' }}
+                  >
+                    Conectar Google Sheets
+                  </button>
                 </div>
               </div>
             )}
