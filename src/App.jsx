@@ -102,7 +102,26 @@ export default function App() {
   const sortedPubs = [...displayPubs].sort((a, b) => (a.fecha || 0) - (b.fecha || 0))
 
   return (
-    <div className="min-h-screen bg-[#F7F8FA]">
+    <div className="min-h-screen" style={{ backgroundColor: '#F7F8FA' }}>
+      {/* Ambient background orbs */}
+      <div aria-hidden="true" className="fixed inset-0 pointer-events-none overflow-hidden" style={{ zIndex: 0 }}>
+        <div style={{
+          position: 'absolute', top: '-180px', right: '-140px',
+          width: '700px', height: '700px', borderRadius: '50%',
+          background: 'radial-gradient(circle, rgba(115,36,66,0.07) 0%, rgba(115,36,66,0.02) 55%, transparent 75%)',
+        }} />
+        <div style={{
+          position: 'absolute', bottom: '-200px', left: '-160px',
+          width: '750px', height: '750px', borderRadius: '50%',
+          background: 'radial-gradient(circle, rgba(59,130,246,0.06) 0%, rgba(99,102,241,0.02) 55%, transparent 75%)',
+        }} />
+        <div style={{
+          position: 'absolute', top: '45%', left: '38%',
+          width: '500px', height: '500px', borderRadius: '50%',
+          background: 'radial-gradient(circle, rgba(16,185,129,0.04) 0%, transparent 70%)',
+        }} />
+      </div>
+      <div className="relative" style={{ zIndex: 1 }}>
       <Header
         year={year} month={month}
         activeTab={activeTab} setActiveTab={setActiveTab}
@@ -204,6 +223,7 @@ export default function App() {
         />
       )}
       {showSettings && <SettingsModal config={config} onClose={() => setShowSettings(false)} />}
+      </div>
     </div>
   )
 }
