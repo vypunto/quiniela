@@ -178,8 +178,53 @@ export default function VisualFeed({ publications, onSelect, selectedPub, active
   const postCount = filtered.length
   const latestDate = filtered.length > 0 ? filtered[filtered.length - 1].fecha : null
 
+  const steps = [
+    {
+      icon: (
+        <svg width="14" height="14" viewBox="0 0 16 16" fill="none">
+          <path d="M8 9.5l2.5 2.5 2.5-2.5" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+          <path d="M3 4h10M3 8h6" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/>
+        </svg>
+      ),
+      text: 'Toca el nombre de usuario para cambiar de proyecto',
+    },
+    {
+      icon: (
+        <svg width="14" height="14" viewBox="0 0 16 16" fill="none">
+          <rect x="1" y="1" width="6" height="6" rx="1.5" fill="currentColor" opacity="0.9"/>
+          <rect x="9" y="1" width="6" height="6" rx="1.5" fill="currentColor" opacity="0.6"/>
+          <rect x="1" y="9" width="6" height="6" rx="1.5" fill="currentColor" opacity="0.6"/>
+          <rect x="9" y="9" width="6" height="6" rx="1.5" fill="currentColor" opacity="0.3"/>
+        </svg>
+      ),
+      text: 'Toca cualquier publicación para ver su contenido completo',
+    },
+  ]
+
   return (
     <div className="flex flex-col items-center py-6 px-4 min-h-[500px]">
+
+      {/* How-to legend */}
+      <div className="mb-6 flex flex-col sm:flex-row gap-3 max-w-lg w-full">
+        {steps.map(({ icon, text }, i) => (
+          <div
+            key={i}
+            className="flex items-center gap-3 flex-1 px-4 py-3 rounded-2xl"
+            style={{ backgroundColor: '#fff', border: '1px solid #E8EAED', boxShadow: '0 1px 3px rgba(0,0,0,0.04)' }}
+          >
+            <div
+              className="w-7 h-7 rounded-full flex items-center justify-center flex-shrink-0 text-white font-black text-[11px]"
+              style={{ backgroundColor: '#732442' }}
+            >
+              {i + 1}
+            </div>
+            <div className="flex items-center gap-2 text-gray-500" style={{ color: '#6B7280' }}>
+              {icon}
+              <span className="text-[11px] font-medium leading-snug">{text}</span>
+            </div>
+          </div>
+        ))}
+      </div>
 
       {/* iPhone mockup */}
       <div className="relative flex-shrink-0" style={{ width: '320px', height: '690px' }}>
@@ -377,9 +422,6 @@ export default function VisualFeed({ publications, onSelect, selectedPub, active
         </div>
       </div>
 
-      <p className="mt-5 text-xs text-gray-400 font-medium text-center">
-        Toca una publicación para ver los detalles
-      </p>
     </div>
   )
 }
