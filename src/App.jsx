@@ -100,7 +100,7 @@ export default function App() {
         onSync={syncData} loading={loading} hasConfig={hasConfig}
       />
 
-      <main className="max-w-7xl mx-auto px-4 sm:px-6 py-5">
+      <main className="max-w-7xl mx-auto px-3 sm:px-6 py-3 sm:py-5">
 
         {/* Demo banner */}
         {isDemo && activeTab === 'publicaciones' && (

@@ -42,9 +42,9 @@ export default function CalendarGrid({ year, month, publications, onSelect, acti
           const overflow = pubs.length - MAX_VISIBLE
 
           return (
-            <div key={i} className="min-h-[110px] p-1.5">
-              <div className="mb-1 flex justify-start">
-                <span className={`text-xs font-semibold w-6 h-6 flex items-center justify-center rounded-full
+            <div key={i} className="min-h-[72px] sm:min-h-[110px] p-1 sm:p-1.5">
+              <div className="mb-0.5 sm:mb-1 flex justify-start">
+                <span className={`text-[10px] sm:text-xs font-semibold w-5 h-5 sm:w-6 sm:h-6 flex items-center justify-center rounded-full
                   ${isToday ? 'bg-black text-white' : 'text-gray-500'}`}>
                   {cell.day}
                 </span>
@@ -56,15 +56,18 @@ export default function CalendarGrid({ year, month, publications, onSelect, acti
                     <button
                       key={pub.id}
                       onClick={() => onSelect(pub)}
-                      className="w-full text-left px-1.5 py-0.5 rounded-md text-xs flex items-center gap-1 hover:brightness-90 transition-all"
+                      className="w-full text-left px-1 sm:px-1.5 py-0.5 rounded-md text-[10px] sm:text-xs flex items-center gap-0.5 sm:gap-1 active:brightness-90 hover:brightness-90 transition-all"
                       style={{ backgroundColor: color.bg }}
                     >
-                      <span className="w-1.5 h-1.5 rounded-full flex-shrink-0" style={{ backgroundColor: color.dot }} />
-                      <span className="truncate flex-1 font-medium leading-tight" style={{ color: color.text }}>
+                      <span className="w-1 h-1 sm:w-1.5 sm:h-1.5 rounded-full flex-shrink-0" style={{ backgroundColor: color.dot }} />
+                      <span className="truncate flex-1 font-medium leading-tight hidden sm:block" style={{ color: color.text }}>
                         {pub.titulo || pub.proyecto}
                       </span>
+                      <span className="truncate flex-1 font-medium leading-tight sm:hidden" style={{ color: color.text }}>
+                        {pub.proyecto}
+                      </span>
                       {pub.tipo && (
-                        <span className="flex-shrink-0 opacity-60" style={{ color: color.text }}>
+                        <span className="flex-shrink-0 opacity-60 hidden sm:block" style={{ color: color.text }}>
                           <TypeIcon tipo={pub.tipo} size={11} />
                         </span>
                       )}
@@ -72,7 +75,7 @@ export default function CalendarGrid({ year, month, publications, onSelect, acti
                   )
                 })}
                 {overflow > 0 && (
-                  <div className="text-xs text-gray-400 pl-1">+{overflow} más</div>
+                  <div className="text-[10px] text-gray-400 pl-0.5">+{overflow}</div>
                 )}
               </div>
             </div>

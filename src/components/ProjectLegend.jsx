@@ -10,7 +10,7 @@ export default function ProjectLegend({ publications, activeFilter, onFilter }) 
   if (projects.length === 0) return null
 
   return (
-    <div className="flex flex-wrap gap-2 mb-4">
+    <div className="flex gap-2 mb-4 overflow-x-auto pb-1 sm:flex-wrap sm:pb-0 scrollbar-none" style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}>
       {projects.map(name => {
         const color = getProjectColor(name)
         const isActive = activeFilter === name
@@ -18,7 +18,7 @@ export default function ProjectLegend({ publications, activeFilter, onFilter }) 
           <button
             key={name}
             onClick={() => onFilter(isActive ? null : name)}
-            className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-semibold transition-all"
+            className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-semibold transition-all flex-shrink-0"
             style={{
               backgroundColor: isActive ? color.dot : color.bg,
               color: isActive ? '#fff' : color.text,
