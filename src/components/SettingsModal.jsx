@@ -67,7 +67,7 @@ export default function SettingsModal({ config, onSave, onClose }) {
               </li>
               <li className="flex gap-2">
                 <span className="font-bold text-blue-500 flex-shrink-0">3.</span>
-                <span>Copia el ID de tu hoja desde la URL (la parte entre <code className="bg-blue-100 px-1 rounded">/d/</code> y <code className="bg-blue-100 px-1 rounded">/edit</code>)</span>
+                <span>Copia la <strong>URL del enlace</strong> que aparece en el diálogo de publicación (empieza por <code className="bg-blue-100 px-1 rounded">https://docs.google.com/spreadsheets/d/e/…</code>) y pégala abajo</span>
               </li>
             </ol>
           </div>
@@ -75,17 +75,17 @@ export default function SettingsModal({ config, onSave, onClose }) {
           {/* Input */}
           <div>
             <label className="block text-xs font-semibold text-gray-700 mb-1.5">
-              ID de Google Sheets o URL completa
+              URL de publicación o ID de la hoja
             </label>
             <input
               type="text"
               value={spreadsheetId}
               onChange={e => setSpreadsheetId(e.target.value)}
-              placeholder="1BxiMVs0XRA5nFMdKvBdBZjgmUUqptlbs74OgVE2upms"
+              placeholder="https://docs.google.com/spreadsheets/d/e/2PACX-…/pub?output=csv"
               className="w-full px-3 py-2.5 text-sm border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-black/10 focus:border-gray-400 transition-all font-mono"
             />
             <p className="text-xs text-gray-400 mt-1">
-              También puedes pegar la URL completa de la hoja
+              Pega la URL del paso 3, la URL de edición, o solo el ID
             </p>
           </div>
 

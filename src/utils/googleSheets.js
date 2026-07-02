@@ -1,9 +1,20 @@
 import Papa from 'papaparse'
 import { parseDate } from './dateUtils'
 
-function extractId(input) {
-  const m = input.match(/\/spreadsheets\/d\/([a-zA-Z0-9-_]+)/)
-  return m ? m[1] : input.trim()
+function buildCsvUrl(input) {
+  const s = input.trim()
+
+  // URL completa de publicación — usarla directamente
+  if (s.includes('/pub') && s.includes('output=csv')) return s
+
+  // URL publicada con formato /d/e/
+  const pubMatch = s.match(/\/spreadsheets\/d\/e\/([a-zA-Z0-9-_]+)/)
+  if (pubMatch) return `https://docs.google.com/spreadsheets/d/e/${pubMatch[1]}/pub?output=csv&gid=0`
+
+  // ID normal o URL de edición
+  const idMatch = s.match(/\/spreadsheets\/d\/([a-zA-Z0-9-_]+)/)
+  const id = idMatch ? idMatch[1] : s
+  return `https://docs.google.com/spreadsheets/d/${id}/pub?output=csv&gid=0`
 }
 
 async function fetchCsv(url) {
@@ -45,9 +56,7 @@ function parseCsv(csv) {
 }
 
 export async function fetchSheetData(spreadsheetId) {
-  const id = extractId(spreadsheetId)
-  const url = `https://docs.google.com/spreadsheets/d/${id}/pub?output=csv&gid=0`
-
+  const url = buildCsvUrl(spreadsheetId)
   const csv = await fetchCsv(url)
   const data = parseCsv(csv)
 
