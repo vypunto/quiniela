@@ -103,26 +103,9 @@ export default function App() {
         onPrev={prevMonth} onNext={nextMonth}
         onSettings={() => setShowSettings(true)}
         onSync={syncData} loading={loading} hasConfig={hasConfig}
-        isDemo={isDemo} onDemo={loadDemo} onExitDemo={exitDemo}
       />
 
       <main className="max-w-7xl mx-auto px-3 sm:px-6 py-3 sm:py-5">
-
-        {/* Demo banner */}
-        {isDemo && activeTab === 'publicaciones' && (
-          <div className="mb-4 p-3 bg-amber-50 border border-amber-100 rounded-xl text-amber-800 text-xs flex items-center gap-2">
-            <span>✦</span>
-            <span>Modo ejemplo activo. Los datos reales siguen guardados.</span>
-            <div className="ml-auto flex items-center gap-2 flex-shrink-0">
-              {realPublications.length > 0 && (
-                <button onClick={exitDemo} className="font-semibold underline hover:no-underline">Volver a datos reales</button>
-              )}
-              {!hasConfig && (
-                <button onClick={() => setShowSettings(true)} className="font-semibold underline hover:no-underline">Conectar</button>
-              )}
-            </div>
-          </div>
-        )}
 
         {/* Error */}
         {error && activeTab === 'publicaciones' && (
@@ -188,7 +171,7 @@ export default function App() {
 
         {/* Requests tab */}
         {activeTab === 'peticiones' && (
-          <RequestsView config={config} isDemo={isDemo} />
+          <RequestsView config={config} isDemo={isDemo} calendarPubs={displayPubs} />
         )}
       </main>
 

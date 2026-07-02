@@ -5,7 +5,6 @@ export default function Header({
   year, month, activeTab, setActiveTab,
   viewMode, setViewMode,
   onPrev, onNext, onSettings, onSync, loading, hasConfig,
-  isDemo, onDemo, onExitDemo
 }) {
   return (
     <header className="bg-white border-b border-gray-200 sticky top-0 z-20">
@@ -69,21 +68,6 @@ export default function Header({
           </div>
         )}
 
-        {/* Demo toggle — desktop only */}
-        {activeTab === 'publicaciones' && (
-          <div className="hidden sm:block">
-            {isDemo ? (
-              <button onClick={onExitDemo} className="px-2.5 py-1 rounded-lg border border-amber-300 bg-amber-50 text-amber-700 text-xs font-semibold hover:bg-amber-100 transition-colors">
-                Salir del demo
-              </button>
-            ) : (
-              <button onClick={onDemo} className="px-2.5 py-1 rounded-lg border border-gray-200 text-gray-500 text-xs font-medium hover:bg-gray-50 transition-colors">
-                Ver demo
-              </button>
-            )}
-          </div>
-        )}
-
         {/* Sync — desktop only */}
         {hasConfig && activeTab === 'publicaciones' && (
           <button onClick={onSync} disabled={loading} title="Sincronizar" className="hidden sm:flex w-9 h-9 rounded-lg border border-gray-200 items-center justify-center hover:bg-gray-50 transition-colors text-gray-600 disabled:opacity-50">
@@ -132,17 +116,6 @@ export default function Header({
                 </button>
               ))}
             </div>
-
-            {/* Demo toggle mobile */}
-            {isDemo ? (
-              <button onClick={onExitDemo} className="px-2 py-1 rounded-lg border border-amber-300 bg-amber-50 text-amber-700 text-[10px] font-semibold active:bg-amber-100">
-                Salir demo
-              </button>
-            ) : (
-              <button onClick={onDemo} className="px-2 py-1 rounded-lg border border-gray-200 text-gray-500 text-[10px] font-medium active:bg-gray-100">
-                Demo
-              </button>
-            )}
 
             {/* Sync */}
             {hasConfig && (

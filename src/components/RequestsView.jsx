@@ -31,15 +31,15 @@ const DEMO_REQUESTS = [
   { id: 'r3', proyecto: 'prevenidos y accion', fecha: new Date(new Date().setDate(new Date().getDate() + 15)), titulo: 'Infografía prevención verano', info: 'Medidas de seguridad en la playa. Estilo visual limpio, colores claros.', solicitante: 'María G.', estado: 'Pendiente', tipo: 'imagen' },
 ]
 
-export default function RequestsView({ config, isDemo }) {
+export default function RequestsView({ config, isDemo, calendarPubs = [] }) {
   const [requests, setRequests] = useState([])
   const [selected, setSelected] = useState(null)
   const [loadingSheet, setLoadingSheet] = useState(false)
 
   const projects = useMemo(() => {
-    const set = new Set(requests.map(r => r.proyecto).filter(Boolean))
+    const set = new Set(calendarPubs.map(p => p.proyecto).filter(Boolean))
     return Array.from(set).sort()
-  }, [requests])
+  }, [calendarPubs])
 
   const loadRequests = async () => {
     if (isDemo) {

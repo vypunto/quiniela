@@ -10,10 +10,11 @@ export default function ProjectLegend({ publications, activeFilter, onFilter }) 
   if (projects.length === 0) return null
 
   return (
-    <div className="flex gap-2 mb-4 overflow-x-auto pb-1 sm:flex-wrap sm:pb-0 scrollbar-none" style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}>
+    <div className="flex flex-wrap gap-1.5 mb-4">
       {projects.map(name => {
         const color = getProjectColor(name)
         const isActive = activeFilter === name
+        const isDimmed = !!activeFilter && !isActive
         return (
           <button
             key={name}
@@ -23,6 +24,7 @@ export default function ProjectLegend({ publications, activeFilter, onFilter }) 
               backgroundColor: isActive ? color.dot : color.bg,
               color: isActive ? '#fff' : color.text,
               boxShadow: isActive ? `0 0 0 2px #fff, 0 0 0 4px ${color.dot}` : 'none',
+              opacity: isDimmed ? 0.35 : 1,
             }}
           >
             <span className="w-1.5 h-1.5 rounded-full flex-shrink-0"
@@ -34,7 +36,7 @@ export default function ProjectLegend({ publications, activeFilter, onFilter }) 
       {activeFilter && (
         <button
           onClick={() => onFilter(null)}
-          className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs text-gray-400 border border-gray-200 hover:bg-gray-50 transition-colors"
+          className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs text-gray-400 border border-gray-200 hover:bg-gray-50 transition-colors flex-shrink-0"
         >
           ✕ Quitar filtro
         </button>
