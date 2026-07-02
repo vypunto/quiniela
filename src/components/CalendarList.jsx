@@ -3,21 +3,6 @@ import { getProjectColor } from '../utils/colors'
 import { DAYS_ES, MONTHS_ES } from '../utils/dateUtils'
 import { TypeIcon } from './Icons'
 
-function EstadoBadge({ estado }) {
-  if (estado === 'Publicado') return (
-    <span className="flex items-center gap-1 text-[10px] font-semibold text-emerald-600 flex-shrink-0">
-      <svg width="11" height="11" viewBox="0 0 11 11" fill="none">
-        <circle cx="5.5" cy="5.5" r="5" stroke="currentColor" strokeWidth="1.2"/>
-        <path d="M3 5.5l1.8 1.8L8 3.5" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round" strokeLinejoin="round"/>
-      </svg>
-      Publicado
-    </span>
-  )
-  if (estado === 'Borrador') return (
-    <span className="text-[10px] font-medium text-gray-400 flex-shrink-0">Borrador</span>
-  )
-  return null
-}
 
 export default function CalendarList({ year, month, publications, onSelect, activeFilter }) {
   const filtered = activeFilter ? publications.filter(p => p.proyecto === activeFilter) : publications
@@ -113,9 +98,6 @@ export default function CalendarList({ year, month, publications, onSelect, acti
                         <div className="text-xs text-gray-400 truncate mt-0.5">{pub.copy}</div>
                       )}
                     </div>
-
-                    {/* Estado */}
-                    <EstadoBadge estado={pub.estado} />
 
                     {/* Type icon */}
                     <div className="flex-shrink-0 text-gray-400">

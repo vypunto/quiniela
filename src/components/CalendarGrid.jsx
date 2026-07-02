@@ -6,12 +6,6 @@ import { TypeIcon } from './Icons'
 const DAYS = ['Lun', 'Mar', 'Mié', 'Jue', 'Vie', 'Sáb', 'Dom']
 const MAX_VISIBLE = 3
 
-function estadoMeta(estado) {
-  if (estado === 'Publicado') return { opacity: 'opacity-50', check: true }
-  if (estado === 'Borrador')  return { opacity: 'opacity-40', dash: true }
-  return {}
-}
-
 export default function CalendarGrid({ year, month, publications, onSelect, activeFilter }) {
   const filtered = activeFilter ? publications.filter(p => p.proyecto === activeFilter) : publications
 
@@ -32,7 +26,6 @@ export default function CalendarGrid({ year, month, publications, onSelect, acti
   const today = new Date()
   const numRows = cells.length / 7
 
-  // Which row contains today
   const todayRowIndex = useMemo(() => {
     for (let i = 0; i < cells.length; i++) {
       if (cells[i] && sameDay(cells[i].date, today)) return Math.floor(i / 7)
@@ -52,7 +45,7 @@ export default function CalendarGrid({ year, month, publications, onSelect, acti
         ))}
       </div>
 
-      {/* Grid — fills remaining height equally across rows */}
+      {/* Grid */}
       <div
         className="grid grid-cols-7 divide-x divide-y divide-gray-100 flex-1"
         style={{ gridTemplateRows: `repeat(${numRows}, 1fr)` }}
@@ -62,10 +55,7 @@ export default function CalendarGrid({ year, month, publications, onSelect, acti
           const isCurrentWeekRow = rowIndex === todayRowIndex
 
           if (!cell) return (
-            <div
-              key={i}
-              className={isCurrentWeekRow ? 'bg-[#732442]/[0.03]' : 'bg-gray-100/40'}
-            />
+            <div key={i} className={isCurrentWeekRow ? 'bg-[#732442]/[0.03]' : 'bg-gray-100/40'} />
           )
 
           const isToday = sameDay(cell.date, today)
@@ -90,29 +80,21 @@ export default function CalendarGrid({ year, month, publications, onSelect, acti
               <div className="space-y-0.5 flex-1 min-h-0 overflow-hidden">
                 {visible.map(pub => {
                   const color = getProjectColor(pub.proyecto)
-                  const { opacity, check, dash } = estadoMeta(pub.estado)
                   return (
                     <button
                       key={pub.id}
                       onClick={() => onSelect(pub)}
-                      className={`w-full text-left px-1 sm:px-1.5 py-0.5 rounded-md text-[10px] sm:text-xs flex items-center gap-0.5 sm:gap-1 active:brightness-90 hover:brightness-90 transition-all ${opacity || ''} ${dash ? 'border border-dashed border-current' : ''}`}
-                      style={{ backgroundColor: dash ? 'transparent' : color.bg }}
+                      className="w-full text-left px-1 sm:px-1.5 py-0.5 rounded-md text-[10px] sm:text-xs flex items-center gap-0.5 sm:gap-1 active:brightness-90 hover:brightness-90 transition-all"
+                      style={{ backgroundColor: color.bg }}
                     >
-                      {check ? (
-                        <svg width="10" height="10" viewBox="0 0 10 10" fill="none" className="flex-shrink-0" style={{ color: color.dot }}>
-                          <circle cx="5" cy="5" r="4.5" stroke="currentColor" strokeWidth="1"/>
-                          <path d="M2.5 5l1.5 1.5L7.5 3" stroke="currentColor" strokeWidth="1" strokeLinecap="round" strokeLinejoin="round"/>
-                        </svg>
-                      ) : (
-                        <span className="w-1 h-1 sm:w-1.5 sm:h-1.5 rounded-full flex-shrink-0" style={{ backgroundColor: color.dot }} />
-                      )}
-                      <span className="truncate flex-1 font-medium leading-tight hidden sm:block" style={{ color: dash ? color.dot : color.text }}>
+                      <span className="w-1 h-1 sm:w-1.5 sm:h-1.5 rounded-full flex-shrink-0" style={{ backgroundColor: color.dot }} />
+                      <span className="truncate flex-1 font-medium leading-tight hidden sm:block" style={{ color: color.text }}>
                         {pub.titulo || pub.proyecto}
                       </span>
-                      <span className="truncate flex-1 font-medium leading-tight sm:hidden" style={{ color: dash ? color.dot : color.text }}>
+                      <span className="truncate flex-1 font-medium leading-tight sm:hidden" style={{ color: color.text }}>
                         {pub.proyecto}
                       </span>
-                      {pub.tipo && !dash && (
+                      {pub.tipo && (
                         <span className="flex-shrink-0 opacity-60 hidden sm:block" style={{ color: color.text }}>
                           <TypeIcon tipo={pub.tipo} size={11} />
                         </span>

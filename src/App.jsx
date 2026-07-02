@@ -103,6 +103,7 @@ export default function App() {
         onPrev={prevMonth} onNext={nextMonth}
         onSettings={() => setShowSettings(true)}
         onSync={syncData} loading={loading} hasConfig={hasConfig}
+        isDemo={isDemo} onDemo={loadDemo} onExitDemo={exitDemo}
       />
 
       <main className="max-w-7xl mx-auto px-3 sm:px-6 py-3 sm:py-5">
