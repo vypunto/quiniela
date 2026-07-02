@@ -47,7 +47,7 @@ const CANAL_ICONS = {
   ),
 }
 
-const EMPTY_FORM = { proyecto: '', proyectoOtros: '', fecha: '', titulo: '', info: '', solicitante: '', tipo: 'imagen', canal: '' }
+const EMPTY_FORM = { proyecto: '', proyectoOtros: '', fecha: '', titulo: '', info: '', contenido: '', solicitante: '', tipo: 'imagen', canal: '' }
 
 export default function RequestForm({ projects, scriptUrl, onSubmitted }) {
   const [form, setForm] = useState(EMPTY_FORM)
@@ -205,6 +205,18 @@ export default function RequestForm({ projects, scriptUrl, onSubmitted }) {
               placeholder="Contexto, mensajes clave, links, referencias..."
               rows={3}
               className="w-full px-3 py-2 text-sm border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#732442]/20 resize-none"
+            />
+          </div>
+
+          {/* Contenido */}
+          <div>
+            <label className="block text-xs font-semibold text-gray-600 mb-1">Link de contenido (opcional)</label>
+            <input
+              type="url"
+              value={form.contenido}
+              onChange={e => set('contenido', e.target.value)}
+              placeholder="Link de Drive, imagen o vídeo..."
+              className="w-full px-3 py-2 text-sm border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#732442]/20"
             />
           </div>
 

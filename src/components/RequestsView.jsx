@@ -79,6 +79,7 @@ export default function RequestsView({ config, isDemo }) {
   const adaptedSelected = selected ? {
     ...selected,
     copy: selected.info,
+    media: selected.contenido || '',
   } : null
 
   return (

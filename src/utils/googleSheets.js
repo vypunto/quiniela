@@ -69,6 +69,7 @@ export async function fetchRequestsData(sheetUrl) {
     fecha: parseDate(row.fecha || row.date || '') || new Date(),
     titulo: row.titulo || row['titulo del post'] || row.title || '',
     info: row.info || row['informacion adicional'] || row.descripcion || '',
+    contenido: row.contenido || row.content || row['link contenido'] || '',
     tipo: (row.tipo || row.type || 'imagen').toLowerCase().trim(),
     solicitante: row.solicitante || row.nombre || row.name || '',
     canal: row.canal || row.channel || '',
