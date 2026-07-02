@@ -42,6 +42,7 @@ function parseRow(row, i) {
     copy: row['copy'] || row['descripcion'] || '',
     media: row['imagen/video'] || row['imagen'] || row['video'] || row['media'] || row['url'] || '',
     tipo: (row['tipo'] || row['type'] || '').toLowerCase().trim(),
+    estado: row['estado'] || row['status'] || '',
   }
 }
 

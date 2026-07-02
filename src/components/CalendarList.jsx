@@ -3,15 +3,25 @@ import { getProjectColor } from '../utils/colors'
 import { DAYS_ES, MONTHS_ES } from '../utils/dateUtils'
 import { TypeIcon } from './Icons'
 
-function getWeekNumber(date) {
-  const d = new Date(date.getFullYear(), date.getMonth(), date.getDate())
-  const dayOfWeek = d.getDay() === 0 ? 6 : d.getDay() - 1 // Mon=0
-  d.setDate(d.getDate() - dayOfWeek)
-  return d.getDate()
+function EstadoBadge({ estado }) {
+  if (estado === 'Publicado') return (
+    <span className="flex items-center gap-1 text-[10px] font-semibold text-emerald-600 flex-shrink-0">
+      <svg width="11" height="11" viewBox="0 0 11 11" fill="none">
+        <circle cx="5.5" cy="5.5" r="5" stroke="currentColor" strokeWidth="1.2"/>
+        <path d="M3 5.5l1.8 1.8L8 3.5" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round" strokeLinejoin="round"/>
+      </svg>
+      Publicado
+    </span>
+  )
+  if (estado === 'Borrador') return (
+    <span className="text-[10px] font-medium text-gray-400 flex-shrink-0">Borrador</span>
+  )
+  return null
 }
 
 export default function CalendarList({ year, month, publications, onSelect, activeFilter }) {
   const filtered = activeFilter ? publications.filter(p => p.proyecto === activeFilter) : publications
+  const today = new Date()
 
   const weeks = useMemo(() => {
     const inMonth = filtered
@@ -23,7 +33,7 @@ export default function CalendarList({ year, month, publications, onSelect, acti
       const d = new Date(pub.fecha.getFullYear(), pub.fecha.getMonth(), pub.fecha.getDate())
       const dayOfWeek = d.getDay() === 0 ? 6 : d.getDay() - 1
       d.setDate(d.getDate() - dayOfWeek)
-      const key = d.getDate()
+      const key = d.toISOString().slice(0, 10)
       if (!map.has(key)) map.set(key, { weekStart: new Date(d), pubs: [] })
       map.get(key).pubs.push(pub)
     })
@@ -45,13 +55,23 @@ export default function CalendarList({ year, month, publications, onSelect, acti
       {weeks.map(({ weekStart, pubs }) => {
         const weekEnd = new Date(weekStart)
         weekEnd.setDate(weekEnd.getDate() + 6)
+        const isCurrentWeek = today >= weekStart && today <= weekEnd
         const label = `${weekStart.getDate()}–${Math.min(weekEnd.getDate(), new Date(year, month + 1, 0).getDate())} ${MONTHS_ES[month]}`
 
         return (
           <div key={weekStart.getTime()} className="bg-white rounded-2xl shadow border border-gray-200 overflow-hidden">
             {/* Week header */}
-            <div className="flex items-center justify-between px-4 py-2.5 bg-gray-50 border-b border-gray-200">
-              <span className="text-xs font-bold text-gray-500 uppercase tracking-wider">{label}</span>
+            <div
+              className="flex items-center justify-between px-4 py-2.5 border-b"
+              style={isCurrentWeek
+                ? { backgroundColor: 'rgba(115,36,66,0.06)', borderColor: 'rgba(115,36,66,0.15)' }
+                : { backgroundColor: '#f9fafb', borderColor: '#e5e7eb' }
+              }
+            >
+              <span className="text-xs font-bold uppercase tracking-wider" style={isCurrentWeek ? { color: '#732442' } : { color: '#6b7280' }}>
+                {label}
+                {isCurrentWeek && <span className="ml-2 font-semibold normal-case tracking-normal opacity-70">semana actual</span>}
+              </span>
               <span className="text-xs text-gray-400">{pubs.length} publicación{pubs.length > 1 ? 'es' : ''}</span>
             </div>
 
@@ -94,6 +114,9 @@ export default function CalendarList({ year, month, publications, onSelect, acti
                         <div className="text-xs text-gray-400 truncate mt-0.5">{pub.copy}</div>
                       )}
                     </div>
+
+                    {/* Estado */}
+                    <EstadoBadge estado={pub.estado} />
 
                     {/* Type icon */}
                     <div className="flex-shrink-0 text-gray-400">

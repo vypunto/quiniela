@@ -41,11 +41,15 @@ export default function PublicationModal({ publication: pub, onClose }) {
       className="fixed inset-0 z-50 flex items-end sm:items-center justify-center sm:p-4"
       onClick={e => { if (e.target === e.currentTarget) onClose() }}
     >
+      <style>{`@keyframes modalIn{from{opacity:0;transform:scale(0.97) translateY(8px)}to{opacity:1;transform:scale(1) translateY(0)}}`}</style>
       {/* Backdrop */}
       <div className="absolute inset-0 bg-black/40 backdrop-blur-sm" onClick={onClose} />
 
       {/* Modal — bottom sheet on mobile, centered on desktop */}
-      <div className="relative bg-white rounded-t-2xl sm:rounded-2xl shadow-2xl sm:max-w-lg w-full overflow-hidden max-h-[92vh] sm:max-h-[90vh] flex flex-col">
+      <div
+        className="relative bg-white rounded-t-2xl sm:rounded-2xl shadow-2xl sm:max-w-lg w-full overflow-hidden max-h-[92vh] sm:max-h-[90vh] flex flex-col"
+        style={{ animation: 'modalIn 180ms cubic-bezier(0.16,1,0.3,1)' }}
+      >
         {/* Mobile drag handle */}
         <div className="sm:hidden flex justify-center pt-2 pb-1 flex-shrink-0" style={{ backgroundColor: color.bg }}>
           <div className="w-8 h-1 rounded-full" style={{ backgroundColor: color.dot, opacity: 0.4 }} />

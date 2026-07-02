@@ -6,6 +6,7 @@ import PublicationModal from './components/PublicationModal'
 import SettingsModal from './components/SettingsModal'
 import ProjectLegend from './components/ProjectLegend'
 import RequestsView from './components/RequestsView'
+import MonthSummary from './components/MonthSummary'
 import { fetchSheetData } from './utils/googleSheets'
 import { SPREADSHEET_URL, REQUESTS_SCRIPT_URL } from './config'
 
@@ -14,19 +15,19 @@ const Y = now.getFullYear()
 const M = now.getMonth()
 
 const DEMO = [
-  { id: 'd0',  proyecto: 'prevenidos y accion', fecha: new Date(Y,M,2),  titulo: '5 consejos para una vuelta al cole sin estrés', copy: '¿Preparados para el nuevo curso? Os compartimos los 5 consejos que más nos funcionan para arrancar septiembre con energía y sin agobios. 👇', media: '', tipo: 'imagen' },
-  { id: 'd1',  proyecto: 'plaza el chandrio',   fecha: new Date(Y,M,4),  titulo: 'La terraza más bonita del barrio ya está abierta', copy: 'Sol, buena compañía y las mejores tapas de la plaza. Nuestra terraza de verano abre esta semana. ¡Te esperamos! ☀️🍻', media: '', tipo: 'imagen' },
-  { id: 'd2',  proyecto: 'el chandrio group',   fecha: new Date(Y,M,7),  titulo: 'Nos expandimos: tres nuevas ciudades en 2026', copy: 'El Chandrio Group da el salto. Este año abrimos en Valencia, Málaga y Bilbao. 🚀', media: '', tipo: 'imagen' },
-  { id: 'd3',  proyecto: 'globaly live',        fecha: new Date(Y,M,9),  titulo: 'Concierto en directo este sábado — entrada libre', copy: '🎵 Este sábado música en vivo desde las 20h. Acceso libre hasta completar aforo.', media: '', tipo: 'video' },
-  { id: 'd4',  proyecto: 'del poble fest',      fecha: new Date(Y,M,12), titulo: 'Programa completo del festival — ¡ya disponible!', copy: '¡Por fin! Ya puedes consultar todos los artistas, horarios y escenarios. Corre que las entradas vuelan 🎪', media: '', tipo: 'imagen' },
-  { id: 'd5',  proyecto: 'gastro league',       fecha: new Date(Y,M,15), titulo: 'Menú especial de temporada: sabores de verano', copy: 'Tomate de huerta, gazpacho de la abuela y nuestro arroz caldoso de bogavante. 🦞🍅', media: '', tipo: 'imagen' },
-  { id: 'd6',  proyecto: 'teatro alicante',     fecha: new Date(Y,M,18), titulo: 'Estreno: "La noche de los sueños" — viernes 18', copy: 'Una historia de amor, memoria y segundas oportunidades. 🎭', media: '', tipo: 'video' },
-  { id: 'd7',  proyecto: 'teatro sevilla',        fecha: new Date(Y,M,22), titulo: 'Ruta por el casco histórico: 10 rincones que no conoces', copy: 'Sevilla tiene secretos que solo los que saben mirar encuentran. 🗺️', media: '', tipo: 'imagen' },
-  { id: 'd8',  proyecto: 'la cruz de celia',    fecha: new Date(Y,M,25), titulo: 'Nueva colección Otoño — disponible desde hoy', copy: 'Piezas únicas hechas a mano, con tejidos naturales. 🍂✨', media: '', tipo: 'imagen' },
-  { id: 'd9',  proyecto: 'gastro league',       fecha: new Date(Y,M,9),  titulo: 'El postre del mes: tarta de queso con membrillo', copy: 'Nuestra tarta de queso con membrillo casero se ha convertido en la más pedida del mes. 🧀', media: '', tipo: 'imagen' },
-  { id: 'd10', proyecto: 'prevenidos y accion', fecha: new Date(Y,M,16), titulo: 'Taller gratuito de primeros auxilios — plazas limitadas', copy: 'Aprende a actuar en los primeros minutos de una emergencia. 🚑', media: '', tipo: 'video' },
-  { id: 'd11', proyecto: 'globaly live',        fecha: new Date(Y,M,20), titulo: 'Recap del concierto del sábado 🔥', copy: 'Qué noche más especial. Gracias a todos los que vinisteis. ❤️🎶', media: '', tipo: 'video' },
-  { id: 'd12', proyecto: 'plaza el chandrio',   fecha: new Date(Y,M,27), titulo: 'Martes de vermut: 2x1 hasta las 14h', copy: 'Todos los martes, vermut de la casa al 2x1 hasta las 2 de la tarde. 🥂', media: '', tipo: 'imagen' },
+  { id: 'd0',  proyecto: 'prevenidos y accion', fecha: new Date(Y,M,2),  titulo: '5 consejos para una vuelta al cole sin estrés', copy: '¿Preparados para el nuevo curso? Os compartimos los 5 consejos que más nos funcionan para arrancar septiembre con energía y sin agobios. 👇', media: '', tipo: 'imagen',   estado: 'Publicado' },
+  { id: 'd1',  proyecto: 'plaza el chandrio',   fecha: new Date(Y,M,4),  titulo: 'La terraza más bonita del barrio ya está abierta', copy: 'Sol, buena compañía y las mejores tapas de la plaza. Nuestra terraza de verano abre esta semana. ¡Te esperamos! ☀️🍻', media: '', tipo: 'imagen',   estado: 'Publicado' },
+  { id: 'd2',  proyecto: 'el chandrio group',   fecha: new Date(Y,M,7),  titulo: 'Nos expandimos: tres nuevas ciudades en 2026', copy: 'El Chandrio Group da el salto. Este año abrimos en Valencia, Málaga y Bilbao. 🚀', media: '', tipo: 'imagen',   estado: 'Publicado' },
+  { id: 'd3',  proyecto: 'globaly live',        fecha: new Date(Y,M,9),  titulo: 'Concierto en directo este sábado — entrada libre', copy: '🎵 Este sábado música en vivo desde las 20h. Acceso libre hasta completar aforo.', media: '', tipo: 'video',    estado: 'Publicado' },
+  { id: 'd4',  proyecto: 'del poble fest',      fecha: new Date(Y,M,12), titulo: 'Programa completo del festival — ¡ya disponible!', copy: '¡Por fin! Ya puedes consultar todos los artistas, horarios y escenarios. Corre que las entradas vuelan 🎪', media: '', tipo: 'imagen',   estado: 'Borrador' },
+  { id: 'd5',  proyecto: 'gastro league',       fecha: new Date(Y,M,15), titulo: 'Menú especial de temporada: sabores de verano', copy: 'Tomate de huerta, gazpacho de la abuela y nuestro arroz caldoso de bogavante. 🦞🍅', media: '', tipo: 'imagen',   estado: 'Programado' },
+  { id: 'd6',  proyecto: 'teatro alicante',     fecha: new Date(Y,M,18), titulo: 'Estreno: "La noche de los sueños" — viernes 18', copy: 'Una historia de amor, memoria y segundas oportunidades. 🎭', media: '', tipo: 'video',    estado: 'Programado' },
+  { id: 'd7',  proyecto: 'teatro sevilla',      fecha: new Date(Y,M,22), titulo: 'Ruta por el casco histórico: 10 rincones que no conoces', copy: 'Sevilla tiene secretos que solo los que saben mirar encuentran. 🗺️', media: '', tipo: 'imagen',   estado: 'Programado' },
+  { id: 'd8',  proyecto: 'la cruz de celia',    fecha: new Date(Y,M,25), titulo: 'Nueva colección Otoño — disponible desde hoy', copy: 'Piezas únicas hechas a mano, con tejidos naturales. 🍂✨', media: '', tipo: 'imagen',   estado: 'Programado' },
+  { id: 'd9',  proyecto: 'gastro league',       fecha: new Date(Y,M,9),  titulo: 'El postre del mes: tarta de queso con membrillo', copy: 'Nuestra tarta de queso con membrillo casero se ha convertido en la más pedida del mes. 🧀', media: '', tipo: 'imagen',   estado: 'Publicado' },
+  { id: 'd10', proyecto: 'prevenidos y accion', fecha: new Date(Y,M,16), titulo: 'Taller gratuito de primeros auxilios — plazas limitadas', copy: 'Aprende a actuar en los primeros minutos de una emergencia. 🚑', media: '', tipo: 'video',    estado: 'Programado' },
+  { id: 'd11', proyecto: 'globaly live',        fecha: new Date(Y,M,20), titulo: 'Recap del concierto del sábado 🔥', copy: 'Qué noche más especial. Gracias a todos los que vinisteis. ❤️🎶', media: '', tipo: 'video',    estado: 'Programado' },
+  { id: 'd12', proyecto: 'plaza el chandrio',   fecha: new Date(Y,M,27), titulo: 'Martes de vermut: 2x1 hasta las 14h', copy: 'Todos los martes, vermut de la casa al 2x1 hasta las 2 de la tarde. 🥂', media: '', tipo: 'imagen',   estado: 'Borrador' },
 ]
 
 export default function App() {
@@ -166,6 +167,7 @@ export default function App() {
             {showCalendar && (
               <>
                 <ProjectLegend publications={displayPubs} activeFilter={activeFilter} onFilter={handleFilter} />
+                <MonthSummary publications={displayPubs} year={year} month={month} />
 
                 {loading && publications.length === 0 && (
                   <div className="text-center py-16 text-gray-400 text-sm">
