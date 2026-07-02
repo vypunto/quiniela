@@ -191,7 +191,7 @@ export default function App() {
       </main>
 
       {selectedPub && <PublicationModal publication={selectedPub} onClose={() => setSelectedPub(null)} />}
-      {showSettings && <SettingsModal config={config} onSave={saveConfig} onClose={() => setShowSettings(false)} />}
+      {showSettings && <SettingsModal config={config} onClose={() => setShowSettings(false)} />}
     </div>
   )
 }
