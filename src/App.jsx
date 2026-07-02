@@ -2,7 +2,7 @@ import { useState, useEffect, useCallback } from 'react'
 import Header from './components/Header'
 import CalendarGrid from './components/CalendarGrid'
 import CalendarList from './components/CalendarList'
-import WeekView from './components/WeekView'
+import VisualFeed from './components/VisualFeed'
 import CalendarSkeleton from './components/CalendarSkeleton'
 import PublicationModal from './components/PublicationModal'
 import SettingsModal from './components/SettingsModal'
@@ -181,7 +181,7 @@ export default function App() {
                   <div key={`${year}-${month}`} className={animClass}>
                     {viewMode === 'grid' && <CalendarGrid year={year} month={month} publications={displayPubs} onSelect={setSelectedPub} activeFilter={activeFilter} />}
                     {viewMode === 'list' && <CalendarList year={year} month={month} publications={displayPubs} onSelect={setSelectedPub} activeFilter={activeFilter} />}
-                    {viewMode === 'week' && <WeekView publications={displayPubs} onSelect={setSelectedPub} activeFilter={activeFilter} />}
+                    {viewMode === 'feed' && <VisualFeed publications={displayPubs} onSelect={setSelectedPub} selectedPub={selectedPub} activeFilter={activeFilter} />}
                   </div>
                 )}
               </>

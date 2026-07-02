@@ -59,7 +59,7 @@ export default function Header({
         </div>
 
         {/* Month nav — desktop */}
-        {activeTab === 'publicaciones' && viewMode !== 'week' && (
+        {activeTab === 'publicaciones' && viewMode !== 'feed' && (
           <div className="hidden sm:flex items-center gap-1">
             <button
               onClick={onPrev}
@@ -85,7 +85,7 @@ export default function Header({
         {/* View toggle — desktop */}
         {activeTab === 'publicaciones' && (
           <div className="hidden sm:flex items-center gap-0.5 p-1 bg-gray-100/70 rounded-xl">
-            {[['grid','Mes'],['week','Semana'],['list','Lista']].map(([mode, label]) => (
+            {[['grid','Mes'],['list','Lista'],['feed','Visual Feed']].map(([mode, label]) => (
               <button
                 key={mode}
                 onClick={() => setViewMode(mode)}
@@ -142,7 +142,7 @@ export default function Header({
       {/* ── Mobile second row ─────────────────────────────────────── */}
       {activeTab === 'publicaciones' && (
         <div className="sm:hidden flex items-center justify-between px-4 pb-3 gap-2">
-          {viewMode !== 'week' && (
+          {viewMode !== 'feed' && (
             <div className="flex items-center gap-1">
               <button
                 onClick={onPrev}
@@ -163,11 +163,11 @@ export default function Header({
               </button>
             </div>
           )}
-          {viewMode === 'week' && <div className="flex-1" />}
+          {viewMode === 'feed' && <div className="flex-1" />}
 
           <div className="flex items-center gap-1.5">
             <div className="flex items-center gap-0.5 p-1 bg-gray-100/70 rounded-xl">
-              {[['grid','Mes'],['week','Sem'],['list','Lista']].map(([mode, label]) => (
+              {[['grid','Mes'],['list','Lista'],['feed','Feed']].map(([mode, label]) => (
                 <button
                   key={mode}
                   onClick={() => setViewMode(mode)}
