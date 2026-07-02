@@ -172,8 +172,8 @@ export default function App() {
 
             {showCalendar && (
               <>
-                <ProjectLegend publications={displayPubs} activeFilter={activeFilter} onFilter={toggleFilter} onClear={clearFilter} />
-                <MonthSummary publications={displayPubs} year={year} month={month} />
+                {viewMode !== 'feed' && <ProjectLegend publications={displayPubs} activeFilter={activeFilter} onFilter={toggleFilter} onClear={clearFilter} />}
+                {viewMode !== 'feed' && <MonthSummary publications={displayPubs} year={year} month={month} />}
 
                 {loading && publications.length === 0 && <CalendarSkeleton />}
 
