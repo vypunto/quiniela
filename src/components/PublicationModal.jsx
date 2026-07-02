@@ -215,7 +215,7 @@ export default function PublicationModal({ publication: pub, allPublications = [
             <button
               onClick={() => prevPub && onNavigate(prevPub)}
               disabled={!prevPub}
-              className="flex-1 flex items-center gap-3 px-5 py-4 hover:bg-gray-100/60 transition-all duration-150 disabled:opacity-20 disabled:cursor-default"
+              className="flex-1 min-w-0 flex items-center gap-2.5 px-4 py-4 hover:bg-gray-100/60 transition-all duration-150 disabled:opacity-20 disabled:cursor-default"
             >
               <div
                 className="w-8 h-8 rounded-xl flex items-center justify-center flex-shrink-0 bg-white"
@@ -223,15 +223,15 @@ export default function PublicationModal({ publication: pub, allPublications = [
               >
                 <svg width="13" height="13" viewBox="0 0 14 14" fill="none"><path d="M9 11L5 7l4-4" stroke="#374151" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round"/></svg>
               </div>
-              <span className="text-xs font-semibold text-gray-500 truncate min-w-0">{prevPub?.titulo || prevPub?.proyecto || 'Anterior'}</span>
+              <span className="text-xs font-semibold text-gray-500 truncate">{prevPub?.titulo || prevPub?.proyecto || 'Anterior'}</span>
             </button>
-            <div className="w-px my-3" style={{ backgroundColor: '#ECEDEF' }} />
+            <div className="w-px my-3 flex-shrink-0" style={{ backgroundColor: '#ECEDEF' }} />
             <button
               onClick={() => nextPub && onNavigate(nextPub)}
               disabled={!nextPub}
-              className="flex-1 flex items-center justify-end gap-3 px-5 py-4 hover:bg-gray-100/60 transition-all duration-150 disabled:opacity-20 disabled:cursor-default"
+              className="flex-1 min-w-0 flex items-center justify-end gap-2.5 px-4 py-4 hover:bg-gray-100/60 transition-all duration-150 disabled:opacity-20 disabled:cursor-default"
             >
-              <span className="text-xs font-semibold text-gray-500 truncate min-w-0">{nextPub?.titulo || nextPub?.proyecto || 'Siguiente'}</span>
+              <span className="text-xs font-semibold text-gray-500 truncate">{nextPub?.titulo || nextPub?.proyecto || 'Siguiente'}</span>
               <div
                 className="w-8 h-8 rounded-xl flex items-center justify-center flex-shrink-0 bg-white"
                 style={{ border: '1px solid #E8EAED', boxShadow: '0 1px 3px rgba(0,0,0,0.06)' }}
