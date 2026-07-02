@@ -215,12 +215,20 @@ export default function App() {
               <div className="font-semibold text-xs mb-0.5">Error al sincronizar</div>
               <div className="text-xs text-red-600">{error}</div>
             </div>
-            <button
-              onClick={() => setShowSettings(true)}
-              className="ml-auto text-xs text-red-600 underline hover:no-underline flex-shrink-0"
-            >
-              Configurar
-            </button>
+            <div className="ml-auto flex gap-3 flex-shrink-0">
+              <button
+                onClick={loadDemo}
+                className="text-xs text-red-400 underline hover:no-underline"
+              >
+                Ver ejemplo
+              </button>
+              <button
+                onClick={() => setShowSettings(true)}
+                className="text-xs text-red-600 underline hover:no-underline"
+              >
+                Configurar
+              </button>
+            </div>
           </div>
         )}
 

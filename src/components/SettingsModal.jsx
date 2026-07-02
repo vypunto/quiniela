@@ -9,6 +9,10 @@ export default function SettingsModal({ config, onSave, onClose }) {
     onSave({ spreadsheetId: id })
   }
 
+  const handleClear = () => {
+    onSave({ spreadsheetId: '' })
+  }
+
   return (
     <div
       className="fixed inset-0 z-50 flex items-center justify-center p-4"
@@ -99,6 +103,15 @@ export default function SettingsModal({ config, onSave, onClose }) {
 
         {/* Footer */}
         <div className="flex items-center gap-2 p-5 pt-0">
+          {config.spreadsheetId && (
+            <button
+              onClick={handleClear}
+              className="px-3 py-2.5 text-gray-400 hover:text-gray-600 text-sm transition-colors"
+              title="Borrar configuración y ver ejemplo"
+            >
+              Limpiar
+            </button>
+          )}
           <button
             onClick={onClose}
             className="flex-1 px-4 py-2.5 border border-gray-200 text-gray-600 rounded-xl text-sm font-medium hover:bg-gray-50 transition-colors"
