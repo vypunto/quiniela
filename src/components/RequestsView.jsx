@@ -4,8 +4,8 @@ import { getProjectColor } from '../utils/colors'
 import { DAYS_ES, MONTHS_ES } from '../utils/dateUtils'
 import { parseDate } from '../utils/dateUtils'
 import PublicationModal from './PublicationModal'
-import { fetchRequestsData, fetchSheetData } from '../utils/googleSheets'
-import { REQUESTS_SHEET_URL, SPREADSHEET_URL } from '../config'
+import { fetchRequestsData } from '../utils/googleSheets'
+import { REQUESTS_SHEET_URL, PROJECTS } from '../config'
 
 const STATUS_STYLES = {
   'Pendiente':   { bg: '#FFF3CC', text: '#7A5500', dot: '#FFBE00' },
@@ -35,16 +35,13 @@ export default function RequestsView({ config, isDemo, calendarPubs = [] }) {
   const [requests, setRequests] = useState([])
   const [selected, setSelected] = useState(null)
   const [loadingSheet, setLoadingSheet] = useState(false)
-  const [fetchedProjects, setFetchedProjects] = useState([])
 
-  // Derive projects from calendarPubs prop when available, otherwise fetch independently
+  // Merge fixed list with any extra projects found in the sheet
   const projects = useMemo(() => {
-    if (calendarPubs.length > 0) {
-      const set = new Set(calendarPubs.map(p => p.proyecto).filter(Boolean))
-      return Array.from(set).sort()
-    }
-    return fetchedProjects
-  }, [calendarPubs, fetchedProjects])
+    const fromSheet = calendarPubs.map(p => p.proyecto).filter(Boolean)
+    const set = new Set([...PROJECTS, ...fromSheet])
+    return Array.from(set).sort()
+  }, [calendarPubs])
 
   const loadRequests = async () => {
     if (isDemo) {
@@ -76,17 +73,6 @@ export default function RequestsView({ config, isDemo, calendarPubs = [] }) {
   }
 
   useEffect(() => { loadRequests() }, [isDemo])
-
-  // If no calendarPubs passed yet, fetch project names directly from CALENDAPP sheet
-  useEffect(() => {
-    if (calendarPubs.length > 0 || !SPREADSHEET_URL) return
-    fetchSheetData(SPREADSHEET_URL)
-      .then(data => {
-        const set = new Set(data.map(p => p.proyecto).filter(Boolean))
-        setFetchedProjects(Array.from(set).sort())
-      })
-      .catch(() => {})
-  }, [calendarPubs.length, isDemo])
 
   const handleSubmitted = () => { loadRequests() }
 
