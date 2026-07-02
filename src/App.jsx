@@ -33,28 +33,20 @@ const DEMO = [
 ]
 
 export default function App() {
-  const [year, setYear]         = useState(Y)
-  const [month, setMonth]       = useState(M)
-  const [navDir, setNavDir]     = useState(0)
-  const [viewMode, setViewMode] = useState('grid')
+  const [year, setYear]           = useState(Y)
+  const [month, setMonth]         = useState(M)
+  const [navDir, setNavDir]       = useState(0)
+  const [viewMode, setViewMode]   = useState('grid')
   const [activeTab, setActiveTab] = useState('publicaciones')
   const [activeFilter, setActiveFilter] = useState(null)
   const [publications, setPublications] = useState([])
-  const [isDemo, setIsDemo]     = useState(false)
+  const [isDemo, setIsDemo]       = useState(false)
   const [realPublications, setRealPublications] = useState([])
   const [selectedPub, setSelectedPub] = useState(null)
   const [showSettings, setShowSettings] = useState(false)
-  const [loading, setLoading]   = useState(false)
-  const [error, setError]       = useState(null)
+  const [loading, setLoading]     = useState(false)
+  const [error, setError]         = useState(null)
   const [pendingCount, setPendingCount] = useState(0)
-  const [darkMode, setDarkMode] = useState(() => {
-    try { return localStorage.getItem('calendapp_theme') === 'dark' } catch { return false }
-  })
-
-  useEffect(() => {
-    document.documentElement.classList.toggle('dark', darkMode)
-    try { localStorage.setItem('calendapp_theme', darkMode ? 'dark' : 'light') } catch {}
-  }, [darkMode])
 
   const [config] = useState(() => {
     try {
@@ -92,20 +84,22 @@ export default function App() {
 
   const prevMonth = () => {
     setNavDir(-1)
-    if (month === 0) { setYear(y => y-1); setMonth(11) } else setMonth(m => m-1)
+    if (month === 0) { setYear(y => y - 1); setMonth(11) } else setMonth(m => m - 1)
   }
   const nextMonth = () => {
     setNavDir(1)
-    if (month === 11) { setYear(y => y+1); setMonth(0) } else setMonth(m => m+1)
+    if (month === 11) { setYear(y => y + 1); setMonth(0) } else setMonth(m => m + 1)
   }
 
-  const hasConfig   = !!config.spreadsheetId
+  const hasConfig    = !!config.spreadsheetId
   const showCalendar = hasConfig || isDemo
+  const animClass    = navDir > 0 ? 'slide-next' : navDir < 0 ? 'slide-prev' : ''
 
-  const animClass = navDir > 0 ? 'slide-next' : navDir < 0 ? 'slide-prev' : ''
+  // Publications list available for swipe navigation in modal (sorted by date)
+  const sortedPubs = [...displayPubs].sort((a, b) => (a.fecha || 0) - (b.fecha || 0))
 
   return (
-    <div className={`min-h-screen ${darkMode ? 'dark' : ''}`} style={{ background: darkMode ? '#0a0a0f' : 'linear-gradient(150deg, #fdfcfd 0%, #f9f7fb 50%, #f5f5f7 100%)' }}>
+    <div className="min-h-screen" style={{ background: 'linear-gradient(150deg, #fdfcfd 0%, #f9f7fb 50%, #f5f5f7 100%)' }}>
       <Header
         year={year} month={month}
         activeTab={activeTab} setActiveTab={setActiveTab}
@@ -115,14 +109,13 @@ export default function App() {
         onSync={syncData} loading={loading} hasConfig={hasConfig}
         isDemo={isDemo} onDemo={loadDemo} onExitDemo={exitDemo}
         pendingCount={pendingCount}
-        darkMode={darkMode} onToggleDark={() => setDarkMode(d => !d)}
       />
 
       <main className="max-w-7xl mx-auto px-3 sm:px-6 py-3 sm:py-5">
 
         {/* Error */}
         {error && activeTab === 'publicaciones' && (
-          <div className="mb-4 p-3 bg-red-50 dark:bg-red-950/40 border border-red-100 dark:border-red-900/50 rounded-xl text-red-700 dark:text-red-400 text-sm flex items-start gap-2">
+          <div className="mb-4 p-3 bg-red-50 border border-red-100 rounded-xl text-red-700 text-sm flex items-start gap-2">
             <svg width="16" height="16" viewBox="0 0 16 16" fill="none" className="flex-shrink-0 mt-0.5">
               <circle cx="8" cy="8" r="7" stroke="currentColor" strokeWidth="1.3"/>
               <path d="M8 5v3M8 10.5v.5" stroke="currentColor" strokeWidth="1.3" strokeLinecap="round"/>
@@ -151,11 +144,11 @@ export default function App() {
                     <rect x="15" y="15" width="11" height="11" rx="2" fill="white" opacity="0.3"/>
                   </svg>
                 </div>
-                <h2 className="text-xl font-black tracking-tight text-gray-900 dark:text-white mb-1">Calendario de Publicaciones</h2>
+                <h2 className="text-xl font-black tracking-tight text-gray-900 mb-1">Calendario de Publicaciones</h2>
                 <p className="text-sm text-gray-400 mb-6 text-center max-w-xs">Conecta tu Google Sheet o prueba el ejemplo para ver cómo funciona</p>
                 <div className="flex gap-3">
-                  <button onClick={loadDemo} className="px-5 py-2.5 border border-gray-200 dark:border-gray-700 text-gray-700 dark:text-gray-300 rounded-xl text-sm font-medium hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors">Ver ejemplo</button>
-                  <button onClick={() => setShowSettings(true)} className="px-5 py-2.5 bg-black dark:bg-white text-white dark:text-black rounded-xl text-sm font-semibold hover:bg-gray-800 dark:hover:bg-gray-100 transition-colors">Conectar Google Sheets</button>
+                  <button onClick={loadDemo} className="px-5 py-2.5 border border-gray-200 text-gray-700 rounded-xl text-sm font-medium hover:bg-gray-50 transition-colors">Ver ejemplo</button>
+                  <button onClick={() => setShowSettings(true)} className="px-5 py-2.5 bg-black text-white rounded-xl text-sm font-semibold hover:bg-gray-800 transition-colors">Conectar Google Sheets</button>
                 </div>
               </div>
             )}
@@ -185,7 +178,14 @@ export default function App() {
         )}
       </main>
 
-      {selectedPub && <PublicationModal publication={selectedPub} onClose={() => setSelectedPub(null)} />}
+      {selectedPub && (
+        <PublicationModal
+          publication={selectedPub}
+          allPublications={sortedPubs}
+          onNavigate={setSelectedPub}
+          onClose={() => setSelectedPub(null)}
+        />
+      )}
       {showSettings && <SettingsModal config={config} onClose={() => setShowSettings(false)} />}
     </div>
   )

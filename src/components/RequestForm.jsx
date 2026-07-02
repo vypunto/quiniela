@@ -118,7 +118,7 @@ export default function RequestForm({ projects, scriptUrl, onSubmitted }) {
             <div className="flex flex-wrap gap-1.5">
               {allProjects.map(p => {
                 const isOtros = p === '__otros__'
-                const label = isOtros ? 'Otros' : p
+                const label = isOtros ? 'OTROS' : p
                 const isActive = form.proyecto === p
                 return (
                   <button

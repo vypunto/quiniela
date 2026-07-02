@@ -37,19 +37,19 @@ export default function CalendarGrid({ year, month, publications, onSelect, acti
 
   return (
     <div
-      className="bg-white dark:bg-gray-900 rounded-2xl shadow border border-gray-200 dark:border-gray-800 overflow-hidden flex flex-col"
+      className="bg-white rounded-2xl shadow border border-gray-200 overflow-hidden flex flex-col"
       style={{ height: 'calc(100dvh - 260px)', minHeight: '340px', maxHeight: '780px' }}
     >
       {/* Day headers */}
-      <div className="grid grid-cols-7 border-b border-gray-200 dark:border-gray-800 bg-gray-50 dark:bg-gray-800/50 flex-shrink-0">
+      <div className="grid grid-cols-7 border-b border-gray-200 bg-gray-50 flex-shrink-0">
         {DAYS.map(d => (
-          <div key={d} className="py-2.5 sm:py-3 text-center text-[11px] sm:text-xs font-black text-gray-500 dark:text-gray-400 uppercase tracking-widest">{d}</div>
+          <div key={d} className="py-2.5 sm:py-3 text-center text-[11px] sm:text-xs font-black text-gray-500 uppercase tracking-widest">{d}</div>
         ))}
       </div>
 
       {/* Grid */}
       <div
-        className="grid grid-cols-7 divide-x divide-y divide-gray-100 dark:divide-gray-800 flex-1"
+        className="grid grid-cols-7 divide-x divide-y divide-gray-100 flex-1"
         style={{ gridTemplateRows: `repeat(${numRows}, 1fr)` }}
       >
         {cells.map((cell, i) => {
@@ -57,7 +57,7 @@ export default function CalendarGrid({ year, month, publications, onSelect, acti
           const isCurrentWeekRow = rowIndex === todayRowIndex
 
           if (!cell) return (
-            <div key={i} className={`${isCurrentWeekRow ? 'bg-[#732442]/[0.03] dark:bg-[#732442]/[0.06]' : 'bg-gray-100/40 dark:bg-gray-800/30'}`} />
+            <div key={i} className={isCurrentWeekRow ? 'bg-[#732442]/[0.03]' : 'bg-gray-100/40'} />
           )
 
           const isToday = sameDay(cell.date, today)
@@ -67,27 +67,27 @@ export default function CalendarGrid({ year, month, publications, onSelect, acti
           const visible = pubs.slice(0, MAX_VISIBLE)
           const overflow = pubs.length - MAX_VISIBLE
 
-          // Cell background
           let cellClassName = 'flex flex-col p-1 sm:p-1.5 overflow-hidden relative'
           let cellStyle = {}
 
           if (isToday) {
-            cellClassName += ' bg-rose-50/70 dark:bg-rose-950/20'
+            cellClassName += ' bg-rose-50/70'
           } else if (activeFilter && pubs.length > 0 && filterColor) {
             cellStyle = { backgroundColor: filterColor.bg + '55' }
           } else if (activeFilter && allPubs.length > 0 && pubs.length === 0) {
             cellClassName += ' opacity-30'
           } else if (isCurrentWeekRow) {
-            cellClassName += ' bg-[#732442]/[0.03] dark:bg-[#732442]/[0.06]'
+            cellClassName += ' bg-[#732442]/[0.03]'
           } else if (isPast) {
-            cellClassName += ' bg-gray-50/50 dark:bg-gray-800/20'
+            cellClassName += ' bg-gray-50/50'
           }
 
           return (
             <div key={i} className={cellClassName} style={cellStyle}>
               <div className="mb-0.5 flex justify-start flex-shrink-0">
-                <span className={`relative text-xs sm:text-sm font-black w-6 h-6 sm:w-7 sm:h-7 flex items-center justify-center rounded-full
-                  ${isToday ? 'bg-[#732442] text-white' : isCurrentWeekRow ? 'text-[#732442]' : 'text-gray-600 dark:text-gray-300'}`}>
+                <span className={`relative text-xs sm:text-sm font-black w-6 h-6 sm:w-7 sm:h-7 flex items-center justify-center rounded-full ${
+                  isToday ? 'bg-[#732442] text-white' : isCurrentWeekRow ? 'text-[#732442]' : 'text-gray-600'
+                }`}>
                   {cell.day}
                   {isToday && (
                     <span className="absolute -bottom-1 left-1/2 -translate-x-1/2">
@@ -125,7 +125,7 @@ export default function CalendarGrid({ year, month, publications, onSelect, acti
                   )
                 })}
                 {overflow > 0 && (
-                  <div className="text-[10px] text-gray-400 dark:text-gray-500 pl-0.5 font-medium">+{overflow} más</div>
+                  <div className="text-[10px] text-gray-400 pl-0.5 font-medium">+{overflow} más</div>
                 )}
               </div>
             </div>

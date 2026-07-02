@@ -42,7 +42,7 @@ export default function ProjectLegend({ publications, activeFilter, onFilter }) 
       {activeFilter && (
         <button
           onClick={() => onFilter(null)}
-          className="mt-2 inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs text-gray-400 border border-gray-200 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors"
+          className="mt-2 inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs text-gray-400 border border-gray-200 hover:bg-gray-50 transition-colors"
         >
           ✕ Quitar filtro
         </button>

@@ -15,12 +15,6 @@ def inline_css(m):
 html = re.sub(r'<link[^>]+rel="stylesheet"[^>]+href="([^"]+)"[^>]*>', inline_css, html)
 
 # Inline JS — move to before </body> with defer
-def inline_js(m):
-    src = m.group(1)
-    path = os.path.join(dist, src.lstrip('./'))
-    js = open(path).read()
-    return ''  # remove from <head>
-
 js_src_match = re.search(r'<script[^>]+src="([^"]+)"[^>]*></script>', html)
 if js_src_match:
     js_src = js_src_match.group(1)
@@ -34,6 +28,14 @@ favicon_path = os.path.join(dist, 'favicon.svg')
 if os.path.exists(favicon_path):
     favicon_data = base64.b64encode(open(favicon_path, 'rb').read()).decode()
     html = html.replace('./favicon.svg', f'data:image/svg+xml;base64,{favicon_data}')
+
+# Inject Google Fonts (Plus Jakarta Sans) in <head>
+font_link = (
+    '<link rel="preconnect" href="https://fonts.googleapis.com">'
+    '<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>'
+    '<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">'
+)
+html = html.replace('</head>', font_link + '\n</head>')
 
 out = os.path.join(dist, 'calendapp.html')
 open(out, 'w').write(html)

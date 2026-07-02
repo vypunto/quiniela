@@ -86,3 +86,12 @@ export async function submitRequest(scriptUrl, payload) {
   if (!res.ok) throw new Error(`Error ${res.status}`)
   return res.json()
 }
+
+export async function updateRequest(scriptUrl, rowIndex, data) {
+  const res = await fetch(scriptUrl, {
+    method: 'POST',
+    body: JSON.stringify({ action: 'update', rowIndex, data }),
+  })
+  if (!res.ok) throw new Error(`Error ${res.status}`)
+  return res.json()
+}
