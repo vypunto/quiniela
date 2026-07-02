@@ -13,7 +13,7 @@ const TIPO_ACTIVE = {
   texto:    'bg-gray-700 text-white border-gray-700',
 }
 
-const CANALES = ['Instagram', 'TikTok', 'LinkedIn', 'Facebook', 'Web']
+const CANALES = ['Instagram', 'TikTok', 'LinkedIn', 'Facebook', 'Web', 'Otros']
 
 const CANAL_ICONS = {
   Instagram: (
@@ -100,8 +100,6 @@ export default function RequestForm({ projects, scriptUrl, onSubmitted }) {
     }, 2500)
   }
 
-  const allProjects = [...(projects || []), '__otros__']
-
   return (
     <div
       className="bg-white rounded-2xl p-6"
@@ -131,28 +129,19 @@ export default function RequestForm({ projects, scriptUrl, onSubmitted }) {
           {/* Proyecto */}
           <div>
             <label className={labelClass}>Proyecto <span className="text-[#732442]">*</span></label>
-            <div className="flex flex-wrap gap-1.5">
-              {allProjects.map(p => {
-                const isOtros = p === '__otros__'
-                const label = isOtros ? 'OTROS' : p
-                const isActive = form.proyecto === p
-                return (
-                  <button
-                    key={p}
-                    type="button"
-                    onClick={() => set('proyecto', p)}
-                    className="px-2.5 py-1 rounded-full text-[11px] font-semibold border transition-all duration-150"
-                    style={
-                      isActive
-                        ? { backgroundColor: '#732442', color: '#fff', borderColor: '#732442' }
-                        : { backgroundColor: '#fff', color: '#6B7280', borderColor: '#E5E7EB' }
-                    }
-                  >
-                    {label}
-                  </button>
-                )
-              })}
-            </div>
+            <select
+              value={form.proyecto}
+              onChange={e => set('proyecto', e.target.value)}
+              required
+              className={inputClass}
+              style={{ cursor: 'pointer', appearance: 'none', backgroundImage: `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12' fill='none'%3E%3Cpath d='M2 4l4 4 4-4' stroke='%239CA3AF' stroke-width='1.5' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E")`, backgroundRepeat: 'no-repeat', backgroundPosition: 'right 12px center' }}
+            >
+              <option value="">Selecciona un proyecto…</option>
+              {(projects || []).map(p => (
+                <option key={p} value={p}>{p}</option>
+              ))}
+              <option value="__otros__">OTROS</option>
+            </select>
             {form.proyecto === '__otros__' && (
               <input
                 type="text"
@@ -170,22 +159,54 @@ export default function RequestForm({ projects, scriptUrl, onSubmitted }) {
           <div>
             <label className={labelClass}>Canal</label>
             <div className="flex flex-wrap gap-1.5">
-              {CANALES.map(c => (
-                <button
-                  key={c}
-                  type="button"
-                  onClick={() => set('canal', form.canal === c ? '' : c)}
-                  className="flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] font-medium border transition-all duration-150"
-                  style={
-                    form.canal === c
-                      ? { backgroundColor: '#111827', color: '#fff', borderColor: '#111827' }
-                      : { backgroundColor: '#fff', color: '#6B7280', borderColor: '#E5E7EB' }
-                  }
-                >
-                  {CANAL_ICONS[c]}
-                  {c}
-                </button>
-              ))}
+              {CANALES.map(c => {
+                const isActive = form.canal === c
+                const icon = CANAL_ICONS[c]
+                const isWeb = c === 'Web'
+                const isOtros = c === 'Otros'
+                const activeStyle = { backgroundColor: '#111827', color: '#fff', borderColor: '#111827' }
+                const idleStyle   = { backgroundColor: '#fff', color: '#6B7280', borderColor: '#E5E7EB' }
+                if (isOtros) {
+                  return (
+                    <button
+                      key={c}
+                      type="button"
+                      onClick={() => set('canal', isActive ? '' : c)}
+                      className="px-2.5 py-1 rounded-full text-[11px] font-medium border transition-all duration-150"
+                      style={isActive ? activeStyle : idleStyle}
+                    >
+                      Otros
+                    </button>
+                  )
+                }
+                if (isWeb) {
+                  return (
+                    <button
+                      key={c}
+                      type="button"
+                      title="Web"
+                      onClick={() => set('canal', isActive ? '' : c)}
+                      className="flex items-center gap-1 px-2.5 py-1 rounded-full text-[11px] font-medium border transition-all duration-150"
+                      style={isActive ? activeStyle : idleStyle}
+                    >
+                      {icon}
+                      WEB
+                    </button>
+                  )
+                }
+                return (
+                  <button
+                    key={c}
+                    type="button"
+                    title={c}
+                    onClick={() => set('canal', isActive ? '' : c)}
+                    className="w-7 h-7 flex items-center justify-center rounded-full border transition-all duration-150"
+                    style={isActive ? activeStyle : idleStyle}
+                  >
+                    {icon}
+                  </button>
+                )
+              })}
             </div>
           </div>
 
