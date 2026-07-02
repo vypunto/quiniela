@@ -1,124 +1,121 @@
 import { useMemo } from 'react'
 import { getProjectColor } from '../utils/colors'
-import { formatDate, DAYS_ES, MONTHS_ES } from '../utils/dateUtils'
+import { DAYS_ES, MONTHS_ES } from '../utils/dateUtils'
 
-export default function CalendarList({ year, month, publications, onSelect }) {
-  const grouped = useMemo(() => {
-    const inMonth = publications.filter(p => {
-      if (!p.fecha) return false
-      return p.fecha.getFullYear() === year && p.fecha.getMonth() === month
-    })
+function getWeekNumber(date) {
+  const d = new Date(date.getFullYear(), date.getMonth(), date.getDate())
+  const dayOfWeek = d.getDay() === 0 ? 6 : d.getDay() - 1 // Mon=0
+  d.setDate(d.getDate() - dayOfWeek)
+  return d.getDate()
+}
 
-    inMonth.sort((a, b) => a.fecha - b.fecha)
+function TypeIcon({ tipo }) {
+  if (tipo === 'video') return <span title="Vídeo" className="text-sm">🎬</span>
+  if (tipo === 'imagen') return <span title="Imagen" className="text-sm">🖼️</span>
+  return <span className="text-sm opacity-30">📄</span>
+}
+
+export default function CalendarList({ year, month, publications, onSelect, activeFilter }) {
+  const filtered = activeFilter ? publications.filter(p => p.proyecto === activeFilter) : publications
+
+  const weeks = useMemo(() => {
+    const inMonth = filtered
+      .filter(p => p.fecha && p.fecha.getFullYear() === year && p.fecha.getMonth() === month)
+      .sort((a, b) => a.fecha - b.fecha)
 
     const map = new Map()
     inMonth.forEach(pub => {
-      const key = pub.fecha.getDate()
-      if (!map.has(key)) map.set(key, { day: key, date: pub.fecha, pubs: [] })
+      const d = new Date(pub.fecha.getFullYear(), pub.fecha.getMonth(), pub.fecha.getDate())
+      const dayOfWeek = d.getDay() === 0 ? 6 : d.getDay() - 1
+      d.setDate(d.getDate() - dayOfWeek)
+      const key = d.getDate()
+      if (!map.has(key)) map.set(key, { weekStart: new Date(d), pubs: [] })
       map.get(key).pubs.push(pub)
     })
 
-    return Array.from(map.values()).sort((a, b) => a.day - b.day)
-  }, [year, month, publications])
+    return Array.from(map.values()).sort((a, b) => a.weekStart - b.weekStart)
+  }, [year, month, filtered])
 
-  if (grouped.length === 0) {
+  if (weeks.length === 0) {
     return (
       <div className="text-center py-20 text-gray-400">
         <div className="text-4xl mb-3">📭</div>
-        <p className="text-sm">No hay publicaciones este mes</p>
+        <p className="text-sm">{activeFilter ? `Sin publicaciones de "${activeFilter}" este mes` : 'No hay publicaciones este mes'}</p>
       </div>
     )
   }
 
   return (
-    <div className="space-y-6">
-      {grouped.map(({ day, date, pubs }) => (
-        <div key={day}>
-          {/* Date header */}
-          <div className="flex items-center gap-3 mb-3">
-            <div className="flex items-center gap-2">
-              <span className="text-2xl font-bold text-gray-900 leading-none">{day}</span>
-              <div>
-                <div className="text-xs font-semibold text-gray-500 leading-none">
-                  {DAYS_ES[date.getDay()].toUpperCase()}
-                </div>
-                <div className="text-xs text-gray-400 leading-none mt-0.5">
-                  {MONTHS_ES[date.getMonth()]}
-                </div>
-              </div>
+    <div className="space-y-4">
+      {weeks.map(({ weekStart, pubs }) => {
+        const weekEnd = new Date(weekStart)
+        weekEnd.setDate(weekEnd.getDate() + 6)
+        const label = `${weekStart.getDate()}–${Math.min(weekEnd.getDate(), new Date(year, month + 1, 0).getDate())} ${MONTHS_ES[month]}`
+
+        return (
+          <div key={weekStart.getTime()} className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
+            {/* Week header */}
+            <div className="flex items-center justify-between px-4 py-2.5 bg-gray-50 border-b border-gray-100">
+              <span className="text-xs font-bold text-gray-500 uppercase tracking-wider">{label}</span>
+              <span className="text-xs text-gray-400">{pubs.length} publicación{pubs.length > 1 ? 'es' : ''}</span>
             </div>
-            <div className="flex-1 h-px bg-gray-100" />
-            <span className="text-xs text-gray-400">{pubs.length} publicación{pubs.length > 1 ? 'es' : ''}</span>
-          </div>
 
-          {/* Publication cards */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
-            {pubs.map(pub => {
-              const color = getProjectColor(pub.proyecto)
-              const isVideo = pub.media && /\.(mp4|mov|avi|webm)$/i.test(pub.media)
-              const isImage = pub.media && /\.(jpg|jpeg|png|gif|webp|svg)$/i.test(pub.media)
-              const hasMedia = pub.media && (isVideo || isImage || pub.media.startsWith('http'))
+            {/* Rows */}
+            <div className="divide-y divide-gray-50">
+              {pubs.map(pub => {
+                const color = getProjectColor(pub.proyecto)
+                const day = pub.fecha.getDate()
+                const dayName = DAYS_ES[pub.fecha.getDay()].slice(0, 3).toUpperCase()
 
-              return (
-                <button
-                  key={pub.id}
-                  onClick={() => onSelect(pub)}
-                  className="text-left bg-white rounded-xl border border-gray-100 shadow-sm hover:shadow-md transition-all overflow-hidden group"
-                >
-                  {/* Colored top bar */}
-                  <div className="h-1" style={{ backgroundColor: color.dot }} />
-
-                  {/* Media preview */}
-                  {hasMedia && isImage && (
-                    <div className="h-32 overflow-hidden bg-gray-100">
-                      <img
-                        src={pub.media}
-                        alt=""
-                        className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
-                        onError={e => { e.target.parentElement.style.display = 'none' }}
-                      />
+                return (
+                  <button
+                    key={pub.id}
+                    onClick={() => onSelect(pub)}
+                    className="w-full text-left flex items-center gap-3 px-4 py-3 hover:bg-gray-50 transition-colors group"
+                  >
+                    {/* Date */}
+                    <div className="w-10 text-center flex-shrink-0">
+                      <div className="text-xs text-gray-400 leading-none">{dayName}</div>
+                      <div className="text-base font-bold text-gray-800 leading-tight">{day}</div>
                     </div>
-                  )}
-                  {hasMedia && isVideo && (
-                    <div className="h-32 bg-gray-900 flex items-center justify-center">
-                      <div className="w-10 h-10 rounded-full bg-white/20 flex items-center justify-center">
-                        <svg width="16" height="16" viewBox="0 0 16 16" fill="white">
-                          <path d="M6 4l6 4-6 4V4z"/>
-                        </svg>
-                      </div>
-                    </div>
-                  )}
 
-                  <div className="p-3">
-                    {/* Project tag */}
+                    {/* Color bar */}
+                    <div className="w-1 h-8 rounded-full flex-shrink-0" style={{ backgroundColor: color.dot }} />
+
+                    {/* Project chip */}
                     <div
-                      className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium mb-2"
+                      className="px-2 py-0.5 rounded-full text-xs font-semibold flex-shrink-0 hidden sm:block"
                       style={{ backgroundColor: color.bg, color: color.text }}
                     >
-                      <span className="w-1.5 h-1.5 rounded-full" style={{ backgroundColor: color.dot }} />
                       {pub.proyecto}
                     </div>
 
                     {/* Title */}
-                    {pub.titulo && (
-                      <div className="font-semibold text-gray-900 text-sm mb-1 line-clamp-2 leading-snug">
-                        {pub.titulo}
+                    <div className="flex-1 min-w-0">
+                      <div className="text-sm font-semibold text-gray-800 truncate group-hover:text-black transition-colors">
+                        {pub.titulo || pub.proyecto}
                       </div>
-                    )}
+                      {pub.copy && (
+                        <div className="text-xs text-gray-400 truncate mt-0.5">{pub.copy}</div>
+                      )}
+                    </div>
 
-                    {/* Copy preview */}
-                    {pub.copy && (
-                      <div className="text-xs text-gray-500 line-clamp-3 leading-relaxed">
-                        {pub.copy}
-                      </div>
-                    )}
-                  </div>
-                </button>
-              )
-            })}
+                    {/* Type icon */}
+                    <div className="flex-shrink-0">
+                      <TypeIcon tipo={pub.tipo} />
+                    </div>
+
+                    {/* Arrow */}
+                    <svg width="14" height="14" viewBox="0 0 14 14" fill="none" className="flex-shrink-0 text-gray-300 group-hover:text-gray-500 transition-colors">
+                      <path d="M5 3l4 4-4 4" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+                    </svg>
+                  </button>
+                )
+              })}
+            </div>
           </div>
-        </div>
-      ))}
+        )
+      })}
     </div>
   )
 }

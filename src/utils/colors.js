@@ -1,16 +1,16 @@
 const PALETTE = [
-  { bg: '#FEE2E2', text: '#991B1B', dot: '#EF4444' },
-  { bg: '#FEF3C7', text: '#92400E', dot: '#F59E0B' },
-  { bg: '#D1FAE5', text: '#065F46', dot: '#10B981' },
-  { bg: '#DBEAFE', text: '#1E40AF', dot: '#3B82F6' },
-  { bg: '#EDE9FE', text: '#5B21B6', dot: '#8B5CF6' },
-  { bg: '#FCE7F3', text: '#9D174D', dot: '#EC4899' },
-  { bg: '#CCFBF1', text: '#134E4A', dot: '#14B8A6' },
-  { bg: '#E0E7FF', text: '#3730A3', dot: '#6366F1' },
-  { bg: '#FED7AA', text: '#7C2D12', dot: '#F97316' },
-  { bg: '#D1FAE5', text: '#14532D', dot: '#22C55E' },
-  { bg: '#FDF4FF', text: '#701A75', dot: '#C026D3' },
-  { bg: '#F0FDF4', text: '#052E16', dot: '#16A34A' },
+  { bg: '#FFD6EC', text: '#B0005A', dot: '#FF0080' },  // neon pink
+  { bg: '#FFFFB8', text: '#7A6600', dot: '#FFE000' },  // neon yellow
+  { bg: '#B8FFD8', text: '#006633', dot: '#00EE55' },  // neon green
+  { bg: '#CCE5FF', text: '#003399', dot: '#0055FF' },  // neon blue
+  { bg: '#DDB8FF', text: '#5500AA', dot: '#9900FF' },  // neon purple
+  { bg: '#FFE4CC', text: '#B34400', dot: '#FF6600' },  // neon orange
+  { bg: '#B8FFFF', text: '#006666', dot: '#00CCCC' },  // neon cyan
+  { bg: '#FFB8B8', text: '#AA0000', dot: '#FF2200' },  // neon red
+  { bg: '#E0FFB8', text: '#3A6600', dot: '#88FF00' },  // neon lime
+  { bg: '#FFB8E8', text: '#880055', dot: '#FF00AA' },  // neon magenta
+  { bg: '#B8F0FF', text: '#004466', dot: '#00AAFF' },  // neon sky
+  { bg: '#FFE8B8', text: '#885500', dot: '#FF9900' },  // neon amber
 ]
 
 function hashString(str) {
@@ -24,6 +24,5 @@ function hashString(str) {
 
 export function getProjectColor(projectName) {
   const key = (projectName || '').toLowerCase().trim()
-  const index = hashString(key) % PALETTE.length
-  return PALETTE[index]
+  return PALETTE[hashString(key) % PALETTE.length]
 }
