@@ -71,7 +71,7 @@ export default function PublicationModal({ publication: pub, onClose }) {
                 )}
               </div>
               {pub.fecha && (
-                <div className="text-xs capitalize" style={{ color: color.text, opacity: 0.7 }}>
+                <div className="text-xs" style={{ color: color.text, opacity: 0.7 }}>
                   {formatDate(pub.fecha)}
                 </div>
               )}

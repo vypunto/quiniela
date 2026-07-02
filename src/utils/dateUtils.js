@@ -1,5 +1,5 @@
-const MONTHS_ES = ['Enero','Febrero','Marzo','Abril','Mayo','Junio','Julio','Agosto','Septiembre','Octubre','Noviembre','Diciembre']
-const DAYS_ES = ['Domingo','Lunes','Martes','Miércoles','Jueves','Viernes','Sábado']
+const MONTHS_ES = ['enero','febrero','marzo','abril','mayo','junio','julio','agosto','septiembre','octubre','noviembre','diciembre']
+const DAYS_ES = ['domingo','lunes','martes','miércoles','jueves','viernes','sábado']
 
 export function parseDate(str) {
   if (!str) return null
