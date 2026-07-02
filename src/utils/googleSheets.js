@@ -71,6 +71,7 @@ export async function fetchRequestsData(sheetUrl) {
     info: row.info || row['informacion adicional'] || row.descripcion || '',
     tipo: (row.tipo || row.type || 'imagen').toLowerCase().trim(),
     solicitante: row.solicitante || row.nombre || row.name || '',
+    canal: row.canal || row.channel || '',
     estado: row.estado || row.status || 'Pendiente',
   })).filter(r => r.proyecto)
 }

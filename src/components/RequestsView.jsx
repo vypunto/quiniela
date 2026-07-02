@@ -133,9 +133,11 @@ export default function RequestsView({ config, isDemo }) {
 
                     <div className="flex-1 min-w-0">
                       <div className="text-sm font-semibold text-gray-800 truncate">{req.titulo}</div>
-                      {req.solicitante && (
-                        <div className="text-xs text-gray-400 truncate">por {req.solicitante}</div>
-                      )}
+                      <div className="text-xs text-gray-400 truncate flex items-center gap-1.5 mt-0.5">
+                        {req.canal && <span className="font-medium text-gray-500">{req.canal}</span>}
+                        {req.canal && req.solicitante && <span>·</span>}
+                        {req.solicitante && <span>por {req.solicitante}</span>}
+                      </div>
                     </div>
 
                     <StatusBadge estado={req.estado} />
