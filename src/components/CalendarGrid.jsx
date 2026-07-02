@@ -43,7 +43,7 @@ export default function CalendarGrid({ year, month, publications, onSelect, acti
       {/* Day headers */}
       <div className="grid grid-cols-7 border-b border-gray-200 dark:border-gray-800 bg-gray-50 dark:bg-gray-800/50 flex-shrink-0">
         {DAYS.map(d => (
-          <div key={d} className="py-2 sm:py-2.5 text-center text-[10px] sm:text-xs font-semibold text-gray-400 dark:text-gray-500 uppercase tracking-wider">{d}</div>
+          <div key={d} className="py-2.5 sm:py-3 text-center text-[11px] sm:text-xs font-black text-gray-500 dark:text-gray-400 uppercase tracking-widest">{d}</div>
         ))}
       </div>
 
@@ -86,8 +86,8 @@ export default function CalendarGrid({ year, month, publications, onSelect, acti
           return (
             <div key={i} className={cellClassName} style={cellStyle}>
               <div className="mb-0.5 flex justify-start flex-shrink-0">
-                <span className={`relative text-[10px] sm:text-xs font-semibold w-5 h-5 sm:w-6 sm:h-6 flex items-center justify-center rounded-full
-                  ${isToday ? 'bg-[#732442] text-white' : isCurrentWeekRow ? 'text-[#732442] font-black' : 'text-gray-500 dark:text-gray-400'}`}>
+                <span className={`relative text-xs sm:text-sm font-black w-6 h-6 sm:w-7 sm:h-7 flex items-center justify-center rounded-full
+                  ${isToday ? 'bg-[#732442] text-white' : isCurrentWeekRow ? 'text-[#732442]' : 'text-gray-600 dark:text-gray-300'}`}>
                   {cell.day}
                   {isToday && (
                     <span className="absolute -bottom-1 left-1/2 -translate-x-1/2">

@@ -47,8 +47,11 @@ function getMediaEmbed(url, tipo) {
   // Direct video
   if (/\.(mp4|mov|avi|webm)$/i.test(url)) return { kind: 'video', src: url }
 
+  // Unsplash
+  if (url.includes('unsplash.com')) return { kind: 'image', src: url }
+
   // Direct image
-  if (/\.(jpg|jpeg|png|gif|webp|svg|avif|webp)$/i.test(url)) return { kind: 'image', src: url }
+  if (/\.(jpg|jpeg|png|gif|webp|svg|avif)$/i.test(url)) return { kind: 'image', src: url }
 
   // Any other http link
   return { kind: 'link', src: url }
