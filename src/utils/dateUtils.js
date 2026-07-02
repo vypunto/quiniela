@@ -1,4 +1,6 @@
 const MONTHS_ES = ['enero','febrero','marzo','abril','mayo','junio','julio','agosto','septiembre','octubre','noviembre','diciembre']
+const MONTHS_ES_UPPER = ['ENERO','FEBRERO','MARZO','ABRIL','MAYO','JUNIO','JULIO','AGOSTO','SEPTIEMBRE','OCTUBRE','NOVIEMBRE','DICIEMBRE']
+const MONTHS_ES_SHORT = ['ENE','FEB','MAR','ABR','MAY','JUN','JUL','AGO','SEP','OCT','NOV','DIC']
 const DAYS_ES = ['domingo','lunes','martes','miércoles','jueves','viernes','sábado']
 
 export function parseDate(str) {
@@ -47,4 +49,4 @@ export function formatShortDate(date) {
   return `${date.getDate()} ${MONTHS_ES[date.getMonth()]}`
 }
 
-export { MONTHS_ES, DAYS_ES }
+export { MONTHS_ES, MONTHS_ES_UPPER, MONTHS_ES_SHORT, DAYS_ES }

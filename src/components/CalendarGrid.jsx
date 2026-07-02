@@ -7,7 +7,8 @@ const DAYS = ['Lun', 'Mar', 'Mié', 'Jue', 'Vie', 'Sáb', 'Dom']
 const MAX_VISIBLE = 3
 
 export default function CalendarGrid({ year, month, publications, onSelect, activeFilter }) {
-  const filtered = activeFilter ? publications.filter(p => p.proyecto === activeFilter) : publications
+  const hasFilter = activeFilter.length > 0
+  const filtered = hasFilter ? publications.filter(p => activeFilter.includes(p.proyecto)) : publications
 
   const cells = useMemo(() => {
     const firstDay = new Date(year, month, 1)
@@ -33,7 +34,7 @@ export default function CalendarGrid({ year, month, publications, onSelect, acti
     return -1
   }, [cells, today])
 
-  const filterColor = activeFilter ? getProjectColor(activeFilter) : null
+  const singleFilterColor = activeFilter.length === 1 ? getProjectColor(activeFilter[0]) : null
 
   return (
     <div
@@ -72,9 +73,11 @@ export default function CalendarGrid({ year, month, publications, onSelect, acti
 
           if (isToday) {
             cellClassName += ' bg-rose-50/70'
-          } else if (activeFilter && pubs.length > 0 && filterColor) {
-            cellStyle = { backgroundColor: filterColor.bg + '55' }
-          } else if (activeFilter && allPubs.length > 0 && pubs.length === 0) {
+          } else if (hasFilter && pubs.length > 0 && singleFilterColor) {
+            cellStyle = { backgroundColor: singleFilterColor.bg + '55' }
+          } else if (hasFilter && pubs.length > 0) {
+            cellClassName += ' bg-gray-50/80'
+          } else if (hasFilter && allPubs.length > 0 && pubs.length === 0) {
             cellClassName += ' opacity-30'
           } else if (isCurrentWeekRow) {
             cellClassName += ' bg-[#732442]/[0.03]'

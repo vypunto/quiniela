@@ -16,7 +16,7 @@ function startOfWeek(date) {
 }
 
 export default function WeekView({ publications, onSelect, activeFilter }) {
-  const filtered = activeFilter ? publications.filter(p => p.proyecto === activeFilter) : publications
+  const filtered = activeFilter.length > 0 ? publications.filter(p => activeFilter.includes(p.proyecto)) : publications
   const today = new Date()
   const [weekStart, setWeekStart] = useState(() => startOfWeek(today))
 

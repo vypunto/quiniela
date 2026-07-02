@@ -187,23 +187,27 @@ export default function PublicationModal({ publication: pub, allPublications = [
 
         {/* Prev / Next navigation */}
         {(prevPub || nextPub) && (
-          <div className="flex border-t border-gray-100 flex-shrink-0">
+          <div className="flex border-t border-gray-100 flex-shrink-0 bg-gray-50/60">
             <button
               onClick={() => prevPub && onNavigate(prevPub)}
               disabled={!prevPub}
-              className="flex-1 flex items-center gap-2 px-4 py-3.5 text-xs font-semibold text-gray-500 hover:bg-gray-50 transition-colors disabled:opacity-30 disabled:cursor-default"
+              className="flex-1 flex items-center gap-3 px-4 py-4 hover:bg-gray-100/80 transition-colors disabled:opacity-25 disabled:cursor-default"
             >
-              <svg width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M9 11L5 7l4-4" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/></svg>
-              <span className="truncate">{prevPub?.titulo || prevPub?.proyecto || 'Anterior'}</span>
+              <div className="w-9 h-9 rounded-xl border border-gray-200 bg-white flex items-center justify-center flex-shrink-0 shadow-sm">
+                <svg width="15" height="15" viewBox="0 0 14 14" fill="none"><path d="M9 11L5 7l4-4" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"/></svg>
+              </div>
+              <span className="text-xs font-semibold text-gray-600 truncate min-w-0">{prevPub?.titulo || prevPub?.proyecto || 'Anterior'}</span>
             </button>
-            <div className="w-px bg-gray-100" />
+            <div className="w-px bg-gray-200 my-3" />
             <button
               onClick={() => nextPub && onNavigate(nextPub)}
               disabled={!nextPub}
-              className="flex-1 flex items-center justify-end gap-2 px-4 py-3.5 text-xs font-semibold text-gray-500 hover:bg-gray-50 transition-colors disabled:opacity-30 disabled:cursor-default"
+              className="flex-1 flex items-center justify-end gap-3 px-4 py-4 hover:bg-gray-100/80 transition-colors disabled:opacity-25 disabled:cursor-default"
             >
-              <span className="truncate">{nextPub?.titulo || nextPub?.proyecto || 'Siguiente'}</span>
-              <svg width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M5 3l4 4-4 4" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/></svg>
+              <span className="text-xs font-semibold text-gray-600 truncate min-w-0">{nextPub?.titulo || nextPub?.proyecto || 'Siguiente'}</span>
+              <div className="w-9 h-9 rounded-xl border border-gray-200 bg-white flex items-center justify-center flex-shrink-0 shadow-sm">
+                <svg width="15" height="15" viewBox="0 0 14 14" fill="none"><path d="M5 3l4 4-4 4" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"/></svg>
+              </div>
             </button>
           </div>
         )}

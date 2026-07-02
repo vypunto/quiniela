@@ -38,7 +38,7 @@ export default function App() {
   const [navDir, setNavDir]       = useState(0)
   const [viewMode, setViewMode]   = useState('grid')
   const [activeTab, setActiveTab] = useState('publicaciones')
-  const [activeFilter, setActiveFilter] = useState(null)
+  const [activeFilter, setActiveFilter] = useState([])
   const [publications, setPublications] = useState([])
   const [isDemo, setIsDemo]       = useState(false)
   const [realPublications, setRealPublications] = useState([])
@@ -77,7 +77,10 @@ export default function App() {
 
   useEffect(() => { syncData() }, [syncData])
 
-  const loadDemo = () => { setIsDemo(true); setYear(Y); setMonth(M); setActiveFilter(null) }
+  const toggleFilter = name => setActiveFilter(prev => prev.includes(name) ? prev.filter(n => n !== name) : [...prev, name])
+  const clearFilter = () => setActiveFilter([])
+
+  const loadDemo = () => { setIsDemo(true); setYear(Y); setMonth(M); setActiveFilter([]) }
   const exitDemo = () => { setIsDemo(false); setPublications(realPublications) }
 
   const displayPubs = isDemo ? DEMO : publications
@@ -155,7 +158,7 @@ export default function App() {
 
             {showCalendar && (
               <>
-                <ProjectLegend publications={displayPubs} activeFilter={activeFilter} onFilter={setActiveFilter} />
+                <ProjectLegend publications={displayPubs} activeFilter={activeFilter} onFilter={toggleFilter} onClear={clearFilter} />
                 <MonthSummary publications={displayPubs} year={year} month={month} />
 
                 {loading && publications.length === 0 && <CalendarSkeleton />}

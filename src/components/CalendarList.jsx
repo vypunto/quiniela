@@ -5,7 +5,7 @@ import { TypeIcon } from './Icons'
 
 
 export default function CalendarList({ year, month, publications, onSelect, activeFilter }) {
-  const filtered = activeFilter ? publications.filter(p => p.proyecto === activeFilter) : publications
+  const filtered = activeFilter.length > 0 ? publications.filter(p => activeFilter.includes(p.proyecto)) : publications
   const today = new Date()
 
   const weeks = useMemo(() => {
@@ -30,7 +30,7 @@ export default function CalendarList({ year, month, publications, onSelect, acti
     return (
       <div className="text-center py-20 text-gray-400">
         <div className="text-4xl mb-3">📭</div>
-        <p className="text-sm">{activeFilter ? `Sin publicaciones de "${activeFilter}" este mes` : 'No hay publicaciones este mes'}</p>
+        <p className="text-sm">{activeFilter.length > 0 ? `Sin publicaciones de los proyectos seleccionados este mes` : 'No hay publicaciones este mes'}</p>
       </div>
     )
   }
