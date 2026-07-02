@@ -107,18 +107,27 @@ export default function App() {
       <div aria-hidden="true" className="fixed inset-0 pointer-events-none overflow-hidden" style={{ zIndex: 0 }}>
         <div style={{
           position: 'absolute', top: '-180px', right: '-140px',
-          width: '700px', height: '700px', borderRadius: '50%',
-          background: 'radial-gradient(circle, rgba(115,36,66,0.07) 0%, rgba(115,36,66,0.02) 55%, transparent 75%)',
+          width: '800px', height: '800px', borderRadius: '50%',
+          background: 'radial-gradient(circle, rgba(115,36,66,0.18) 0%, rgba(115,36,66,0.07) 45%, transparent 72%)',
+          animation: 'orbFloat1 28s ease-in-out infinite',
         }} />
         <div style={{
           position: 'absolute', bottom: '-200px', left: '-160px',
-          width: '750px', height: '750px', borderRadius: '50%',
-          background: 'radial-gradient(circle, rgba(59,130,246,0.06) 0%, rgba(99,102,241,0.02) 55%, transparent 75%)',
+          width: '850px', height: '850px', borderRadius: '50%',
+          background: 'radial-gradient(circle, rgba(59,130,246,0.14) 0%, rgba(99,102,241,0.07) 45%, transparent 72%)',
+          animation: 'orbFloat2 36s ease-in-out infinite',
         }} />
         <div style={{
-          position: 'absolute', top: '45%', left: '38%',
+          position: 'absolute', top: '40%', left: '35%',
+          width: '620px', height: '620px', borderRadius: '50%',
+          background: 'radial-gradient(circle, rgba(16,185,129,0.10) 0%, rgba(6,182,212,0.04) 50%, transparent 72%)',
+          animation: 'orbFloat3 22s ease-in-out infinite',
+        }} />
+        <div style={{
+          position: 'absolute', top: '10%', left: '20%',
           width: '500px', height: '500px', borderRadius: '50%',
-          background: 'radial-gradient(circle, rgba(16,185,129,0.04) 0%, transparent 70%)',
+          background: 'radial-gradient(circle, rgba(245,158,11,0.07) 0%, transparent 68%)',
+          animation: 'orbFloat2 42s ease-in-out infinite reverse',
         }} />
       </div>
       <div className="relative" style={{ zIndex: 1 }}>
