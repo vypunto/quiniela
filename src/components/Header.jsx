@@ -41,7 +41,7 @@ export default function Header({
         <div className="flex items-center gap-2.5 flex-shrink-0">
           <CalendappLogo height={52} />
           <div className="leading-none">
-            <div className="text-[13px] font-black tracking-tight" style={{ color: '#732442' }}>CALENDAPP</div>
+            <div className="text-[20px] font-black" style={{ color: '#732442', letterSpacing: '0.08em', lineHeight: 1 }}>CALENDAPP</div>
             <div className="text-[10px] font-medium mt-0.5 text-gray-400 tracking-wide">by El Chandrio Group</div>
           </div>
         </div>
