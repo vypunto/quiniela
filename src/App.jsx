@@ -7,6 +7,7 @@ import SettingsModal from './components/SettingsModal'
 import ProjectLegend from './components/ProjectLegend'
 import RequestsView from './components/RequestsView'
 import { fetchSheetData } from './utils/googleSheets'
+import { SPREADSHEET_URL, REQUESTS_SCRIPT_URL } from './config'
 
 const now = new Date()
 const Y = now.getFullYear()
@@ -40,9 +41,17 @@ export default function App() {
   const [showSettings, setShowSettings] = useState(false)
   const [loading, setLoading]   = useState(false)
   const [error, setError]       = useState(null)
+  // Config: hardcoded values take priority over localStorage
   const [config, setConfig]     = useState(() => {
-    try { return JSON.parse(localStorage.getItem('pubcal_config') || '{}') }
-    catch { return {} }
+    try {
+      const saved = JSON.parse(localStorage.getItem('pubcal_config') || '{}')
+      return {
+        spreadsheetId: SPREADSHEET_URL || saved.spreadsheetId || '',
+        requestsScriptUrl: REQUESTS_SCRIPT_URL || saved.requestsScriptUrl || '',
+      }
+    } catch {
+      return { spreadsheetId: SPREADSHEET_URL, requestsScriptUrl: REQUESTS_SCRIPT_URL }
+    }
   })
 
   const syncData = useCallback(async () => {

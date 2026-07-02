@@ -9,9 +9,13 @@ export default function Header({
   return (
     <header className="bg-white border-b border-gray-100 sticky top-0 z-20">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 h-14 flex items-center gap-3">
-        {/* Logo */}
-        <div className="flex items-center gap-2 mr-2 flex-shrink-0">
-          <CalendappLogo height={34} />
+        {/* Logo + Brand */}
+        <div className="flex items-center gap-2.5 mr-3 flex-shrink-0">
+          <CalendappLogo height={44} />
+          <div className="hidden sm:block leading-none">
+            <div className="text-sm font-black text-gray-900 tracking-tight">CALENDAPP</div>
+            <div className="text-[10px] text-gray-400 font-medium mt-0.5">by El Chandrio Group</div>
+          </div>
         </div>
 
         {/* Tabs */}
@@ -20,11 +24,11 @@ export default function Header({
             <button
               key={tab}
               onClick={() => setActiveTab(tab)}
-              className={`px-3 py-1.5 rounded-md text-xs font-semibold transition-all capitalize ${
+              className={`px-3 py-1.5 rounded-md text-xs font-black transition-all tracking-wide ${
                 activeTab === tab ? 'bg-white text-gray-900 shadow-sm' : 'text-gray-500 hover:text-gray-700'
               }`}
             >
-              {tab === 'publicaciones' ? '📅 Publicaciones' : '📬 Peticiones'}
+              {tab === 'publicaciones' ? 'PUBLICACIONES' : 'PETICIONES'}
             </button>
           ))}
         </div>

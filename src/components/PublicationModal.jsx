@@ -1,12 +1,34 @@
 import { useEffect } from 'react'
 import { getProjectColor } from '../utils/colors'
 import { formatDate } from '../utils/dateUtils'
+import { TypeIcon } from './Icons'
+
+function getMediaEmbed(url, tipo) {
+  if (!url || !url.startsWith('http')) return null
+
+  // Google Drive: /file/d/ID/view or /open?id=ID
+  const driveFile = url.match(/drive\.google\.com\/file\/d\/([^/?]+)/)
+  if (driveFile) return { kind: 'iframe', src: `https://drive.google.com/file/d/${driveFile[1]}/preview` }
+  const driveOpen = url.match(/drive\.google\.com\/open\?id=([^&]+)/)
+  if (driveOpen) return { kind: 'iframe', src: `https://drive.google.com/file/d/${driveOpen[1]}/preview` }
+
+  // YouTube
+  const yt = url.match(/(?:youtube\.com\/watch\?v=|youtu\.be\/)([^&?]+)/)
+  if (yt) return { kind: 'iframe', src: `https://www.youtube.com/embed/${yt[1]}` }
+
+  // Direct video
+  if (/\.(mp4|mov|avi|webm)$/i.test(url)) return { kind: 'video', src: url }
+
+  // Direct image
+  if (/\.(jpg|jpeg|png|gif|webp|svg|avif|webp)$/i.test(url)) return { kind: 'image', src: url }
+
+  // Any other http link
+  return { kind: 'link', src: url }
+}
 
 export default function PublicationModal({ publication: pub, onClose }) {
   const color = getProjectColor(pub.proyecto)
-  const isVideo = pub.media && /\.(mp4|mov|avi|webm)$/i.test(pub.media)
-  const isImage = pub.media && /\.(jpg|jpeg|png|gif|webp|svg)$/i.test(pub.media)
-  const isUrl = pub.media && pub.media.startsWith('http')
+  const embed = getMediaEmbed(pub.media, pub.tipo)
 
   useEffect(() => {
     const handle = e => { if (e.key === 'Escape') onClose() }
@@ -30,12 +52,20 @@ export default function PublicationModal({ publication: pub, onClose }) {
         {/* Header */}
         <div className="flex items-start justify-between p-5 pb-3">
           <div>
-            <div
-              className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-semibold mb-2"
-              style={{ backgroundColor: color.bg, color: color.text }}
-            >
-              <span className="w-1.5 h-1.5 rounded-full" style={{ backgroundColor: color.dot }} />
-              {pub.proyecto}
+            <div className="flex items-center gap-2 flex-wrap mb-2">
+              <div
+                className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-semibold"
+                style={{ backgroundColor: color.bg, color: color.text }}
+              >
+                <span className="w-1.5 h-1.5 rounded-full" style={{ backgroundColor: color.dot }} />
+                {pub.proyecto}
+              </div>
+              {pub.tipo && (
+                <div className="inline-flex items-center gap-1 px-2 py-1 rounded-full text-xs font-medium bg-gray-100 text-gray-500">
+                  <TypeIcon tipo={pub.tipo} size={12} />
+                  <span className="capitalize">{pub.tipo}</span>
+                </div>
+              )}
             </div>
             {pub.fecha && (
               <div className="text-xs text-gray-400 capitalize">
@@ -63,24 +93,33 @@ export default function PublicationModal({ publication: pub, onClose }) {
           )}
 
           {/* Media */}
-          {pub.media && (
+          {embed && (
             <div className="px-5 pb-3">
-              {isImage ? (
+              {embed.kind === 'iframe' && (
+                <div className="rounded-xl overflow-hidden bg-gray-100" style={{ aspectRatio: '16/9' }}>
+                  <iframe
+                    src={embed.src}
+                    className="w-full h-full border-0"
+                    allow="autoplay; encrypted-media"
+                    allowFullScreen
+                    title="preview"
+                  />
+                </div>
+              )}
+              {embed.kind === 'image' && (
                 <img
-                  src={pub.media}
+                  src={embed.src}
                   alt=""
-                  className="w-full rounded-xl object-cover max-h-64"
+                  className="w-full rounded-xl object-cover max-h-72"
                   onError={e => { e.target.style.display = 'none' }}
                 />
-              ) : isVideo ? (
-                <video
-                  src={pub.media}
-                  controls
-                  className="w-full rounded-xl max-h-64"
-                />
-              ) : isUrl ? (
+              )}
+              {embed.kind === 'video' && (
+                <video src={embed.src} controls className="w-full rounded-xl max-h-72" />
+              )}
+              {embed.kind === 'link' && (
                 <a
-                  href={pub.media}
+                  href={embed.src}
                   target="_blank"
                   rel="noopener noreferrer"
                   className="flex items-center gap-2 p-3 bg-gray-50 rounded-xl text-sm text-blue-600 hover:bg-gray-100 transition-colors"
@@ -89,10 +128,8 @@ export default function PublicationModal({ publication: pub, onClose }) {
                     <path d="M5 7a4 4 0 0 0 5.66.75l1.5-1.5a4 4 0 0 0-5.66-5.66L5 2.09" stroke="currentColor" strokeWidth="1.3" strokeLinecap="round"/>
                     <path d="M9 7a4 4 0 0 0-5.66-.75L1.84 7.75A4 4 0 0 0 7.5 13.41L9 12" stroke="currentColor" strokeWidth="1.3" strokeLinecap="round"/>
                   </svg>
-                  <span className="truncate">{pub.media}</span>
+                  <span className="truncate">{embed.src}</span>
                 </a>
-              ) : (
-                <div className="text-sm text-gray-400 bg-gray-50 rounded-xl p-3">{pub.media}</div>
               )}
             </div>
           )}
