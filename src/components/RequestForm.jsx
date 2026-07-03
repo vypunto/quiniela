@@ -124,7 +124,7 @@ function CustomSelect({ value, onChange, options, placeholder }) {
   )
 }
 
-const EMPTY_FORM = { proyecto: '', proyectoOtros: '', fecha: '', titulo: '', info: '', contenido: '', solicitante: '', tipo: 'imagen', canal: '' }
+const EMPTY_FORM = { proyecto: '', proyectoOtros: '', fecha: '', titulo: '', info: '', contenido: '', solicitante: '', tipo: 'imagen', canal: '', promocionado: false, presupuesto: '' }
 
 export default function RequestForm({ projects, scriptUrl, onSubmitted }) {
   const [form, setForm] = useState(EMPTY_FORM)
@@ -148,6 +148,7 @@ export default function RequestForm({ projects, scriptUrl, onSubmitted }) {
       proyecto: proyectoFinal,
       fechaSolicitud: new Date().toLocaleDateString('es-ES'),
       estado: 'Pendiente',
+      promocionado: form.promocionado ? 'Sí' : 'No',
     }
     delete payload.proyectoOtros
 
@@ -352,6 +353,42 @@ export default function RequestForm({ projects, scriptUrl, onSubmitted }) {
               placeholder="¿Quién hace la petición?"
               className={inputClass}
             />
+          </div>
+
+          {/* Pauta */}
+          <div>
+            <label className={labelClass}>¿Va con pauta publicitaria?</label>
+            <div className="flex items-center gap-3">
+              <button
+                type="button"
+                onClick={() => set('promocionado', !form.promocionado)}
+                className="flex items-center gap-2 px-3 py-2 rounded-xl border text-xs font-semibold transition-all duration-150"
+                style={form.promocionado
+                  ? { backgroundColor: '#e84530', color: '#fff', borderColor: '#e84530' }
+                  : { backgroundColor: '#fff', color: '#6B7280', borderColor: '#E5E7EB' }
+                }
+              >
+                <svg width="14" height="14" viewBox="0 0 16 16" fill="none">
+                  <path d="M2 8h5M11 5l3 3-3 3" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+                  <path d="M4 5H2v6h2" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+                </svg>
+                {form.promocionado ? 'Sí, va con pauta' : 'Sin pauta'}
+              </button>
+            </div>
+            {form.promocionado && (
+              <div className="mt-2.5">
+                <label className={labelClass}>Presupuesto estimado (€)</label>
+                <input
+                  type="number"
+                  min="0"
+                  step="0.01"
+                  value={form.presupuesto}
+                  onChange={e => set('presupuesto', e.target.value)}
+                  placeholder="0.00"
+                  className={inputClass}
+                />
+              </div>
+            )}
           </div>
 
           {error && (

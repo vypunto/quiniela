@@ -60,8 +60,12 @@ function parseRow(row, i) {
     titulo: row['titulo'] || row['title'] || '',
     copy: row['copy'] || row['descripcion'] || '',
     media: row['imagen/video'] || row['imagen'] || row['video'] || row['media'] || row['url'] || '',
+    url_post: row['url_post'] || row['url post'] || row['urlpost'] || '',
     tipo: (row['tipo'] || row['type'] || '').toLowerCase().trim(),
+    canal: row['canal'] || row['channel'] || '',
     estado: row['estado'] || row['status'] || '',
+    promocionado: (row['promocionado'] || 'No').trim(),
+    presupuesto: row['presupuesto'] || '',
   }
 }
 
@@ -102,6 +106,8 @@ export async function fetchRequestsData(sheetUrl) {
     solicitante: row.solicitante || row.nombre || row.name || '',
     canal: row.canal || row.channel || '',
     estado: row.estado || row.status || 'Pendiente',
+    promocionado: (row.promocionado || 'No').trim(),
+    presupuesto: row.presupuesto || '',
   })).filter(r => r.proyecto)
 }
 

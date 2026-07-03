@@ -35,6 +35,8 @@ function EditModal({ req, scriptUrl, onSave, onClose }) {
     estado: req.estado || 'Pendiente',
     fecha: req.fecha instanceof Date ? req.fecha.toISOString().slice(0, 10) : '',
     canal: req.canal || '',
+    promocionado: (req.promocionado || 'No').startsWith('S') || (req.promocionado || 'No').startsWith('s'),
+    presupuesto: req.presupuesto || '',
   })
   const [saving, setSaving] = useState(false)
   const [error, setError] = useState(null)
@@ -43,7 +45,7 @@ function EditModal({ req, scriptUrl, onSave, onClose }) {
   const handleSave = async () => {
     setSaving(true)
     setError(null)
-    const updated = { ...req, ...form, fecha: new Date(form.fecha) }
+    const updated = { ...req, ...form, fecha: new Date(form.fecha), promocionado: form.promocionado ? 'Sí' : 'No' }
     try {
       if (scriptUrl && req.id.startsWith('sheet-')) {
         const rowIndex = parseInt(req.id.replace('sheet-', ''))
@@ -167,6 +169,37 @@ function EditModal({ req, scriptUrl, onSave, onClose }) {
               rows={3}
               className={`${inputClass} resize-none`}
             />
+          </div>
+
+          <div>
+            <label className="block text-xs font-semibold text-gray-400 uppercase tracking-[0.1em] mb-2">¿Va con pauta?</label>
+            <div className="flex items-center gap-3">
+              <button
+                type="button"
+                onClick={() => set('promocionado', !form.promocionado)}
+                className="flex items-center gap-2 px-3 py-2 rounded-xl border text-xs font-semibold transition-all duration-150"
+                style={form.promocionado
+                  ? { backgroundColor: '#e84530', color: '#fff', borderColor: '#e84530' }
+                  : { backgroundColor: '#fff', color: '#6B7280', borderColor: '#E5E7EB' }
+                }
+              >
+                {form.promocionado ? 'Sí, con pauta' : 'Sin pauta'}
+              </button>
+            </div>
+            {form.promocionado && (
+              <div className="mt-2.5">
+                <label className="block text-xs font-semibold text-gray-400 uppercase tracking-[0.1em] mb-2">Presupuesto (€)</label>
+                <input
+                  type="number"
+                  min="0"
+                  step="0.01"
+                  value={form.presupuesto}
+                  onChange={e => set('presupuesto', e.target.value)}
+                  placeholder="0.00"
+                  className={inputClass}
+                />
+              </div>
+            )}
           </div>
 
           {error && (
@@ -341,6 +374,17 @@ export default function RequestsView({ config, isDemo, calendarPubs = [], onCoun
                         {req.solicitante && <span>por {req.solicitante}</span>}
                       </div>
                     </div>
+
+                    {req.promocionado && (req.promocionado.startsWith('S') || req.promocionado.startsWith('s')) && (
+                      <span
+                        className="hidden sm:inline-flex items-center gap-1 px-2 py-1 rounded-full text-[10px] font-semibold flex-shrink-0"
+                        style={{ backgroundColor: '#FFF3CD', color: '#856404' }}
+                        title={req.presupuesto ? `Pauta: ${req.presupuesto} €` : 'Con pauta'}
+                      >
+                        <svg width="10" height="10" viewBox="0 0 16 16" fill="none"><path d="M2 8h5M11 5l3 3-3 3" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/><path d="M4 5H2v6h2" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/></svg>
+                        {req.presupuesto ? `${req.presupuesto} €` : 'Pauta'}
+                      </span>
+                    )}
 
                     <StatusBadge estado={req.estado} />
 

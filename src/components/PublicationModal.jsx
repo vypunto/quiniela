@@ -354,7 +354,23 @@ export default function PublicationModal({ publication: pub, allPublications = [
               </div>
             )}
 
-            {(pub.copy || pub.media) && (
+            {/* Promo badge */}
+            {pub.promocionado && pub.promocionado.toLowerCase().startsWith('s') && (
+              <div className="px-6 pb-3">
+                <div
+                  className="inline-flex items-center gap-2 px-3 py-1.5 rounded-xl text-xs font-semibold"
+                  style={{ backgroundColor: '#FFF3CD', color: '#856404', border: '1px solid #FFD700' }}
+                >
+                  <svg width="12" height="12" viewBox="0 0 16 16" fill="none">
+                    <path d="M2 8h5M11 5l3 3-3 3" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+                    <path d="M4 5H2v6h2" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+                  </svg>
+                  Post con pauta{pub.presupuesto ? ` · ${pub.presupuesto} €` : ''}
+                </div>
+              </div>
+            )}
+
+            {(pub.copy || pub.media || pub.url_post) && (
               <div className="px-6 pb-6 flex gap-2 flex-wrap">
                 {pub.copy && <CopyButton text={pub.copy} />}
                 {currentMedia && currentMedia.startsWith('http') && (
@@ -366,6 +382,18 @@ export default function PublicationModal({ publication: pub, allPublications = [
                   >
                     <svg width="12" height="12" viewBox="0 0 12 12" fill="none"><path d="M4 6a3 3 0 0 0 4.24.56l1.12-1.12a3 3 0 0 0-4.24-4.24L4 2.32" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round"/><path d="M8 6a3 3 0 0 0-4.24-.56L2.64 6.56A3 3 0 0 0 6.88 10.8L8 9.68" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round"/></svg>
                     {isCarousel ? `Abrir slide ${slide + 1}` : 'Abrir media'}
+                  </a>
+                )}
+                {pub.url_post && pub.url_post.startsWith('http') && (
+                  <a
+                    href={pub.url_post}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-semibold transition-all duration-150"
+                    style={{ backgroundColor: color.bg, color: color.text }}
+                  >
+                    <svg width="12" height="12" viewBox="0 0 12 12" fill="none"><path d="M9.5 2.5l-7 7M9.5 2.5H6M9.5 2.5V6" stroke="currentColor" strokeWidth="1.3" strokeLinecap="round" strokeLinejoin="round"/></svg>
+                    Ver post publicado
                   </a>
                 )}
               </div>
