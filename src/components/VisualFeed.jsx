@@ -42,9 +42,10 @@ function relativeDate(fecha) {
 
 function tabMatch(pub, tab) {
   const t = (pub.tipo || '').toLowerCase()
-  if (tab === 'reels') return t === 'reel' || t === 'video'
+  if (tab === 'reels') return t === 'reel'
   if (tab === 'stories') return t === 'historia'
-  return t === 'imagen' || t === 'carrusel' || t === '' || !pub.tipo
+  // posts: imagen + video + carrusel (everything except reel and historia)
+  return t === 'imagen' || t === 'video' || t === 'carrusel' || t === '' || !pub.tipo
 }
 
 function Avatar({ name, size = 28 }) {
@@ -307,11 +308,34 @@ function AccountSwitcherDropdown({ projects, activeProject, countMap, onSelect, 
   )
 }
 
+/* ── Corner type indicator (like Instagram) ── */
+function CornerTypeIcon({ tipo }) {
+  const t = (tipo || '').toLowerCase()
+  const s = { filter: 'drop-shadow(0 1px 2px rgba(0,0,0,0.8))' }
+  if (t === 'video') return (
+    <svg width="15" height="15" viewBox="0 0 12 12" fill="white" style={s}>
+      <path d="M3 1.5l7 4.5-7 4.5V1.5z"/>
+    </svg>
+  )
+  if (t === 'reel') return (
+    <svg width="15" height="15" viewBox="0 0 24 24" fill="white" style={s}>
+      <path d="M19 3H5a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V5a2 2 0 0 0-2-2zm-9 12.5v-7l6 3.5-6 3.5z"/>
+    </svg>
+  )
+  if (t === 'carrusel') return (
+    <svg width="15" height="15" viewBox="0 0 18 18" fill="none" style={s}>
+      <rect x="5" y="1" width="12" height="12" rx="2" fill="white" opacity="0.55"/>
+      <rect x="1" y="5" width="12" height="12" rx="2" fill="white"/>
+    </svg>
+  )
+  return null
+}
+
 /* ── Grid cell (4:5 portrait) ── */
 function GridCell({ pub, onClick, isSelected }) {
   const thumb = getThumb(pub.media)
   const color = getProjectColor(pub.proyecto)
-  const hasVideo = isVideoMedia(pub.media)
+  const t = (pub.tipo || '').toLowerCase()
 
   return (
     <button
@@ -335,9 +359,10 @@ function GridCell({ pub, onClick, isSelected }) {
           <TypeIcon tipo={pub.tipo} size={16} color={color.dot} />
         </div>
       )}
-      {hasVideo && (
-        <div className="absolute top-1 right-1 w-4 h-4 rounded-full flex items-center justify-center" style={{ backgroundColor: 'rgba(0,0,0,0.55)' }}>
-          <svg width="6" height="6" viewBox="0 0 10 10" fill="white"><path d="M3 2l5 3-5 3V2z"/></svg>
+      {/* Corner type indicator */}
+      {(t === 'video' || t === 'reel' || t === 'carrusel') && (
+        <div className="absolute top-1.5 right-1.5 flex items-center justify-center">
+          <CornerTypeIcon tipo={t} />
         </div>
       )}
       {isSelected && <div className="absolute inset-0 bg-black/10" />}
