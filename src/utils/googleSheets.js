@@ -11,26 +11,39 @@ function buildCsvUrl(input) {
   return `https://docs.google.com/spreadsheets/d/${id}/pub?output=csv&gid=0`
 }
 
+function isCsvText(t) {
+  return typeof t === 'string' && !t.includes('<!DOCTYPE') && !t.includes('<html')
+}
+
 async function fetchCsv(url) {
+  // 1. Direct fetch (works if Google publishes with CORS headers)
   try {
     const res = await fetch(url, { mode: 'cors' })
     if (res.ok) {
       const text = await res.text()
-      if (!text.includes('<!DOCTYPE') && !text.includes('<html')) return text
+      if (isCsvText(text)) return text
     }
-  } catch { /* fall through to proxy */ }
+  } catch { /* fall through */ }
 
-  const proxy = `https://corsproxy.io/?url=${encodeURIComponent(url)}`
-  const res = await fetch(proxy)
-  if (!res.ok) {
-    if (res.status === 404) throw new Error('La hoja no está publicada. Ve a Archivo → Compartir → Publicar en la web, elige Hoja 1 en formato CSV y pulsa Publicar.')
-    throw new Error(`Error ${res.status}: No se pudo acceder a la hoja. Asegúrate de haberla publicado.`)
-  }
-  const text = await res.text()
-  if (text.includes('<!DOCTYPE') || text.includes('<html')) {
-    throw new Error('La hoja no está publicada. Ve a Archivo → Compartir → Publicar en la web.')
-  }
-  return text
+  // 2. corsproxy.io
+  try {
+    const res = await fetch(`https://corsproxy.io/?url=${encodeURIComponent(url)}`)
+    if (res.ok) {
+      const text = await res.text()
+      if (isCsvText(text)) return text
+    }
+  } catch { /* fall through */ }
+
+  // 3. allorigins.win as second fallback
+  try {
+    const res = await fetch(`https://api.allorigins.win/raw?url=${encodeURIComponent(url)}`)
+    if (res.ok) {
+      const text = await res.text()
+      if (isCsvText(text)) return text
+    }
+  } catch { /* fall through */ }
+
+  throw new Error('No se pudo acceder a la hoja. Asegúrate de haberla publicado en Archivo → Compartir → Publicar en la web (formato CSV).')
 }
 
 function parseRow(row, i) {
@@ -46,24 +59,25 @@ function parseRow(row, i) {
   }
 }
 
+function safeParse(csv) {
+  if (typeof csv !== 'string' || !csv.trim()) return { data: [] }
+  return Papa.parse(csv, {
+    header: true,
+    skipEmptyLines: true,
+    transformHeader: h => (typeof h === 'string' ? h : String(h || '')).trim().toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g, ''),
+  })
+}
+
 export async function fetchSheetData(sheetUrl) {
   const url = buildCsvUrl(sheetUrl)
   const csv = await fetchCsv(url)
-  const { data } = Papa.parse(csv, {
-    header: true,
-    skipEmptyLines: true,
-    transformHeader: h => h.trim().toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g, ''),
-  })
+  const { data } = safeParse(csv)
   return data.map(parseRow).filter(p => p.proyecto && p.fecha)
 }
 
 export async function fetchRequestsData(sheetUrl) {
   const csv = await fetchCsv(sheetUrl)
-  const { data } = Papa.parse(csv, {
-    header: true,
-    skipEmptyLines: true,
-    transformHeader: h => h.trim().toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g, ''),
-  })
+  const { data } = safeParse(csv)
   return data.map((row, i) => ({
     id: `sheet-${i}`,
     proyecto: (row.proyecto || row.project || '').toUpperCase(),
