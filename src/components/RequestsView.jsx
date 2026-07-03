@@ -227,6 +227,10 @@ export default function RequestsView({ config, isDemo, calendarPubs = [], onCoun
       local = saved.map((r, i) => ({ ...r, fecha: parseDate(r.fecha) || new Date(), id: r.id || String(i) }))
     } catch { /* ignore */ }
 
+    // Show local items immediately so the list never appears empty while the sheet loads
+    setRequests(local)
+    onCountChange && onCountChange(local.filter(r => !r.estado || r.estado === 'Pendiente').length)
+
     if (REQUESTS_SHEET_URL) {
       setLoadingSheet(true)
       try {
@@ -237,14 +241,10 @@ export default function RequestsView({ config, isDemo, calendarPubs = [], onCoun
         setRequests(all)
         onCountChange && onCountChange(all.filter(r => !r.estado || r.estado === 'Pendiente').length)
       } catch {
-        setRequests(local)
-        onCountChange && onCountChange(local.filter(r => !r.estado || r.estado === 'Pendiente').length)
+        // local items already displayed; nothing extra to do
       } finally {
         setLoadingSheet(false)
       }
-    } else {
-      setRequests(local)
-      onCountChange && onCountChange(local.filter(r => !r.estado || r.estado === 'Pendiente').length)
     }
   }
 

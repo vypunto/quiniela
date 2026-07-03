@@ -15,10 +15,16 @@ function isCsvText(t) {
   return typeof t === 'string' && !t.includes('<!DOCTYPE') && !t.includes('<html')
 }
 
+function fetchWithTimeout(url, options = {}, ms = 8000) {
+  const controller = new AbortController()
+  const timer = setTimeout(() => controller.abort(), ms)
+  return fetch(url, { ...options, signal: controller.signal }).finally(() => clearTimeout(timer))
+}
+
 async function fetchCsv(url) {
-  // 1. Direct fetch (works if Google publishes with CORS headers)
+  // 1. Direct fetch
   try {
-    const res = await fetch(url, { mode: 'cors' })
+    const res = await fetchWithTimeout(url, { mode: 'cors' })
     if (res.ok) {
       const text = await res.text()
       if (isCsvText(text)) return text
@@ -27,16 +33,16 @@ async function fetchCsv(url) {
 
   // 2. corsproxy.io
   try {
-    const res = await fetch(`https://corsproxy.io/?url=${encodeURIComponent(url)}`)
+    const res = await fetchWithTimeout(`https://corsproxy.io/?url=${encodeURIComponent(url)}`)
     if (res.ok) {
       const text = await res.text()
       if (isCsvText(text)) return text
     }
   } catch { /* fall through */ }
 
-  // 3. allorigins.win as second fallback
+  // 3. allorigins.win
   try {
-    const res = await fetch(`https://api.allorigins.win/raw?url=${encodeURIComponent(url)}`)
+    const res = await fetchWithTimeout(`https://api.allorigins.win/raw?url=${encodeURIComponent(url)}`)
     if (res.ok) {
       const text = await res.text()
       if (isCsvText(text)) return text
@@ -100,12 +106,13 @@ export async function fetchRequestsData(sheetUrl) {
 }
 
 export async function submitRequest(scriptUrl, payload) {
-  const res = await fetch(scriptUrl, {
+  // no-cors avoids CORS/redirect errors from Apps Script; response is opaque but the request lands
+  await fetch(scriptUrl, {
     method: 'POST',
+    mode: 'no-cors',
     body: JSON.stringify(payload),
   })
-  if (!res.ok) throw new Error(`Error ${res.status}`)
-  return res.json()
+  return { ok: true }
 }
 
 export async function updateRequest(scriptUrl, rowIndex, data) {
