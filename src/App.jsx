@@ -108,26 +108,26 @@ export default function App() {
         <div style={{
           position: 'absolute', top: '-180px', right: '-140px',
           width: '800px', height: '800px', borderRadius: '50%',
-          background: 'radial-gradient(circle, rgba(115,36,66,0.18) 0%, rgba(115,36,66,0.07) 45%, transparent 72%)',
-          animation: 'orbFloat1 28s ease-in-out infinite',
+          background: 'radial-gradient(circle, rgba(250,82,60,0.14) 0%, rgba(250,82,60,0.05) 40%, transparent 65%)',
+          animation: 'orbFloat1 18s ease-in-out infinite',
         }} />
         <div style={{
           position: 'absolute', bottom: '-200px', left: '-160px',
           width: '850px', height: '850px', borderRadius: '50%',
-          background: 'radial-gradient(circle, rgba(59,130,246,0.14) 0%, rgba(99,102,241,0.07) 45%, transparent 72%)',
-          animation: 'orbFloat2 36s ease-in-out infinite',
+          background: 'radial-gradient(circle, rgba(90,209,181,0.13) 0%, rgba(90,209,181,0.04) 40%, transparent 65%)',
+          animation: 'orbFloat2 22s ease-in-out infinite',
         }} />
         <div style={{
           position: 'absolute', top: '40%', left: '35%',
           width: '620px', height: '620px', borderRadius: '50%',
-          background: 'radial-gradient(circle, rgba(16,185,129,0.10) 0%, rgba(6,182,212,0.04) 50%, transparent 72%)',
-          animation: 'orbFloat3 22s ease-in-out infinite',
+          background: 'radial-gradient(circle, rgba(255,191,3,0.12) 0%, rgba(255,191,3,0.04) 42%, transparent 65%)',
+          animation: 'orbFloat3 14s ease-in-out infinite',
         }} />
         <div style={{
           position: 'absolute', top: '10%', left: '20%',
           width: '500px', height: '500px', borderRadius: '50%',
-          background: 'radial-gradient(circle, rgba(245,158,11,0.07) 0%, transparent 68%)',
-          animation: 'orbFloat2 42s ease-in-out infinite reverse',
+          background: 'radial-gradient(circle, rgba(250,82,60,0.10) 0%, transparent 60%)',
+          animation: 'orbFloat2 26s ease-in-out infinite reverse',
         }} />
       </div>
       <div className="relative" style={{ zIndex: 1 }}>
@@ -143,7 +143,7 @@ export default function App() {
       />
 
       {/* Banner strip */}
-      <div className="w-full overflow-hidden" style={{ height: '72px' }}>
+      <div className="w-full overflow-hidden" style={{ height: '7px' }}>
         <img
           src="https://www.elchandriogroup.com/wp-content/uploads/hogueras-2026/logo-fondo-gradient.png"
           alt=""

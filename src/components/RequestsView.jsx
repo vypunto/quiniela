@@ -26,7 +26,7 @@ function StatusBadge({ estado }) {
   )
 }
 
-const inputClass = "w-full px-3.5 py-2.5 text-sm border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#732442]/15 focus:border-[#732442]/30 transition-all duration-150"
+const inputClass = "w-full px-3.5 py-2.5 text-sm border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#e84530]/15 focus:border-[#e84530]/30 transition-all duration-150"
 
 function EditModal({ req, scriptUrl, onSave, onClose }) {
   const [form, setForm] = useState({
@@ -167,7 +167,7 @@ function EditModal({ req, scriptUrl, onSave, onClose }) {
               onClick={handleSave}
               disabled={saving}
               className="flex-1 py-2.5 rounded-xl text-sm font-bold text-white transition-all duration-150 disabled:opacity-40"
-              style={{ backgroundColor: '#732442' }}
+              style={{ backgroundColor: '#e84530' }}
             >
               {saving ? 'Guardando...' : 'Guardar cambios'}
             </button>

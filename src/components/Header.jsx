@@ -1,5 +1,4 @@
 import { MONTHS_ES_UPPER, MONTHS_ES_SHORT } from '../utils/dateUtils'
-import { CalendappLogo } from './Icons'
 
 export default function Header({
   year, month, activeTab, setActiveTab,
@@ -9,20 +8,29 @@ export default function Header({
   pendingCount,
 }) {
   const tabBar = (extraClass = '') => (
-    <div className={`flex items-center gap-0.5 p-1 bg-gray-100/70 rounded-xl flex-shrink-0 ${extraClass}`}>
+    <div
+      className={`flex items-center gap-0.5 p-1 rounded-xl flex-shrink-0 ${extraClass}`}
+      style={{
+        background: 'linear-gradient(to bottom, #e2e2e8, #d0d0d8)',
+        boxShadow: 'inset 0 2px 5px rgba(0,0,0,0.18), inset 0 1px 2px rgba(0,0,0,0.12), 0 1px 0 rgba(255,255,255,0.85)',
+      }}
+    >
       {['publicaciones', 'peticiones'].map(tab => (
         <button
           key={tab}
           onClick={() => setActiveTab(tab)}
-          className={`relative px-3 sm:px-3.5 py-1.5 sm:py-2 rounded-[10px] text-[11px] sm:text-[11px] font-bold tracking-wide transition-all duration-150 ${
-            activeTab === tab
-              ? 'bg-white text-gray-900 shadow-sm'
-              : 'text-gray-500 hover:text-gray-700'
+          className={`relative px-3 sm:px-3.5 py-1.5 sm:py-2 rounded-[10px] text-[11px] sm:text-[11px] font-bold tracking-wide transition-all duration-200 ${
+            activeTab === tab ? 'text-gray-900' : 'text-gray-400 hover:text-gray-600'
           }`}
+          style={activeTab === tab ? {
+            background: 'linear-gradient(to bottom, #ffffff, #eeeeF5)',
+            boxShadow: '0 3px 6px rgba(0,0,0,0.20), 0 1px 3px rgba(0,0,0,0.14), inset 0 1px 0 rgba(255,255,255,1)',
+            transform: 'translateY(-1px)',
+          } : {}}
         >
           {tab === 'publicaciones' ? 'PUBLICACIONES' : 'PETICIONES'}
           {tab === 'peticiones' && pendingCount > 0 && (
-            <span className="absolute -top-1 -right-1 min-w-[16px] h-4 px-1 bg-[#732442] text-white text-[8px] font-black rounded-full flex items-center justify-center">
+            <span className="absolute -top-1 -right-1 min-w-[16px] h-4 px-1 bg-[#e84530] text-white text-[8px] font-black rounded-full flex items-center justify-center">
               {pendingCount > 9 ? '9+' : pendingCount}
             </span>
           )}
@@ -39,11 +47,11 @@ export default function Header({
 
         {/* Logo */}
         <div className="flex items-center gap-2.5 flex-shrink-0">
-          <CalendappLogo height={52} />
-          <div className="leading-none">
-            <div className="text-[20px] font-black" style={{ color: '#732442', letterSpacing: '0.08em', lineHeight: 1 }}>CALENDAPP</div>
-            <div className="text-[10px] font-medium mt-0.5 text-gray-400 tracking-wide">by El Chandrio Group</div>
-          </div>
+          <img
+            src="https://elchandriogroup.com/calendapp/img/logo_calendapp.png"
+            alt="CalendApp by El Chandrio Group"
+            style={{ height: 'clamp(28px, 4vw, 40px)', width: 'auto', display: 'block' }}
+          />
         </div>
 
         {/* Desktop tabs */}
@@ -84,16 +92,25 @@ export default function Header({
 
         {/* View toggle — desktop */}
         {activeTab === 'publicaciones' && (
-          <div className="hidden sm:flex items-center gap-0.5 p-1 bg-gray-100/70 rounded-xl">
+          <div
+            className="hidden sm:flex items-center gap-0.5 p-1 rounded-xl"
+            style={{
+              background: 'linear-gradient(to bottom, #e2e2e8, #d0d0d8)',
+              boxShadow: 'inset 0 2px 5px rgba(0,0,0,0.18), inset 0 1px 2px rgba(0,0,0,0.12), 0 1px 0 rgba(255,255,255,0.85)',
+            }}
+          >
             {[['grid','Mes'],['list','Lista'],['feed','Visual Feed']].map(([mode, label]) => (
               <button
                 key={mode}
                 onClick={() => setViewMode(mode)}
-                className={`px-2.5 py-1.5 rounded-[9px] text-xs font-semibold transition-all duration-150 ${
-                  viewMode === mode
-                    ? 'bg-white text-gray-900 shadow-sm'
-                    : 'text-gray-500 hover:text-gray-700'
+                className={`px-2.5 py-1.5 rounded-[9px] text-xs font-semibold transition-all duration-200 ${
+                  viewMode === mode ? 'text-gray-900' : 'text-gray-400 hover:text-gray-600'
                 }`}
+                style={viewMode === mode ? {
+                  background: 'linear-gradient(to bottom, #ffffff, #eeeeF5)',
+                  boxShadow: '0 3px 6px rgba(0,0,0,0.20), 0 1px 3px rgba(0,0,0,0.14), inset 0 1px 0 rgba(255,255,255,1)',
+                  transform: 'translateY(-1px)',
+                } : {}}
               >
                 {label}
               </button>
@@ -102,27 +119,29 @@ export default function Header({
         )}
 
         {/* Demo toggle — desktop */}
-        <div className="hidden sm:block">
-          {isDemo ? (
-            <button
-              onClick={onExitDemo}
-              className="px-3 py-1.5 rounded-xl text-xs font-semibold transition-all duration-150"
-              style={{ border: '1px solid rgba(115,36,66,0.3)', color: '#732442', backgroundColor: 'rgba(115,36,66,0.06)' }}
-            >
-              Salir del demo
-            </button>
-          ) : (
-            <button
-              onClick={onDemo}
-              className="px-3 py-1.5 rounded-xl border border-gray-200 text-gray-400 text-xs font-medium hover:bg-gray-50 hover:text-gray-600 transition-all duration-150"
-            >
-              Ver demo
-            </button>
-          )}
-        </div>
+        {activeTab === 'publicaciones' && (
+          <div className="hidden sm:block">
+            {isDemo ? (
+              <button
+                onClick={onExitDemo}
+                className="px-3 py-1.5 rounded-xl text-xs font-semibold transition-all duration-150"
+                style={{ border: '1px solid rgba(115,36,66,0.3)', color: '#e84530', backgroundColor: 'rgba(115,36,66,0.06)' }}
+              >
+                Salir del demo
+              </button>
+            ) : (
+              <button
+                onClick={onDemo}
+                className="px-3 py-1.5 rounded-xl border border-gray-200 text-gray-400 text-xs font-medium hover:bg-gray-50 hover:text-gray-600 transition-all duration-150"
+              >
+                Ver demo
+              </button>
+            )}
+          </div>
+        )}
 
         {/* Sync — desktop */}
-        {hasConfig && (
+        {hasConfig && activeTab === 'publicaciones' && (
           <button
             onClick={onSync}
             disabled={loading}
@@ -138,8 +157,9 @@ export default function Header({
       </div>
 
       {/* ── Mobile second row ─────────────────────────────────────── */}
+      {activeTab === 'publicaciones' && (
       <div className="sm:hidden flex items-center justify-between px-4 pb-3 gap-2">
-        {activeTab === 'publicaciones' && viewMode !== 'feed' && (
+        {viewMode !== 'feed' && (
             <div className="flex items-center gap-1">
               <button
                 onClick={onPrev}
@@ -160,30 +180,28 @@ export default function Header({
               </button>
             </div>
           )}
-        {activeTab === 'publicaciones' && viewMode === 'feed' && <div className="flex-1" />}
+        {viewMode === 'feed' && <div className="flex-1" />}
 
           <div className="flex items-center gap-1.5">
-            {activeTab === 'publicaciones' && (
-              <div className="flex items-center gap-0.5 p-1 bg-gray-100/70 rounded-xl">
-                {[['grid','Mes'],['list','Lista'],['feed','Feed']].map(([mode, label]) => (
-                  <button
-                    key={mode}
-                    onClick={() => setViewMode(mode)}
-                    className={`px-2 py-1 rounded-[8px] text-xs font-semibold transition-all duration-150 ${
-                      viewMode === mode ? 'bg-white text-gray-900 shadow-sm' : 'text-gray-500'
-                    }`}
-                  >
-                    {label}
-                  </button>
-                ))}
-              </div>
-            )}
+            <div className="flex items-center gap-0.5 p-1 bg-gray-100/70 rounded-xl">
+              {[['grid','Mes'],['list','Lista'],['feed','Feed']].map(([mode, label]) => (
+                <button
+                  key={mode}
+                  onClick={() => setViewMode(mode)}
+                  className={`px-2 py-1 rounded-[8px] text-xs font-semibold transition-all duration-150 ${
+                    viewMode === mode ? 'bg-white text-gray-900 shadow-sm' : 'text-gray-500'
+                  }`}
+                >
+                  {label}
+                </button>
+              ))}
+            </div>
 
             {isDemo ? (
               <button
                 onClick={onExitDemo}
                 className="px-2.5 py-1.5 rounded-xl text-[10px] font-semibold"
-                style={{ border: '1px solid rgba(115,36,66,0.3)', color: '#732442', backgroundColor: 'rgba(115,36,66,0.06)' }}
+                style={{ border: '1px solid rgba(115,36,66,0.3)', color: '#e84530', backgroundColor: 'rgba(115,36,66,0.06)' }}
               >
                 Salir
               </button>
@@ -210,6 +228,7 @@ export default function Header({
             )}
           </div>
         </div>
+      )}
     </header>
   )
 }

@@ -47,7 +47,7 @@ const CANAL_ICONS = {
   ),
 }
 
-const inputClass = "w-full px-3.5 py-2.5 text-sm border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#732442]/15 focus:border-[#732442]/30 transition-all duration-150 bg-white placeholder:text-gray-300"
+const inputClass = "w-full px-3.5 py-2.5 text-sm border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#e84530]/15 focus:border-[#e84530]/30 transition-all duration-150 bg-white placeholder:text-gray-300"
 const labelClass = "block text-xs font-semibold text-gray-500 mb-2 tracking-wide"
 
 const EMPTY_FORM = { proyecto: '', proyectoOtros: '', fecha: '', titulo: '', info: '', contenido: '', solicitante: '', tipo: 'imagen', canal: '' }
@@ -117,7 +117,7 @@ export default function RequestForm({ projects, scriptUrl, onSubmitted }) {
             style={{ backgroundColor: 'rgba(115,36,66,0.08)' }}
           >
             <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
-              <path d="M5 12l5 5L20 7" stroke="#732442" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+              <path d="M5 12l5 5L20 7" stroke="#e84530" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
             </svg>
           </div>
           <p className="text-sm font-bold text-gray-800">¡Petición enviada!</p>
@@ -128,7 +128,7 @@ export default function RequestForm({ projects, scriptUrl, onSubmitted }) {
 
           {/* Proyecto */}
           <div>
-            <label className={labelClass}>Proyecto <span className="text-[#732442]">*</span></label>
+            <label className={labelClass}>Proyecto <span className="text-[#e84530]">*</span></label>
             <select
               value={form.proyecto}
               onChange={e => set('proyecto', e.target.value)}
@@ -212,13 +212,13 @@ export default function RequestForm({ projects, scriptUrl, onSubmitted }) {
 
           {/* Fecha */}
           <div>
-            <label className={labelClass}>Fecha deseada <span className="text-[#732442]">*</span></label>
+            <label className={labelClass}>Fecha deseada <span className="text-[#e84530]">*</span></label>
             <input type="date" value={form.fecha} onChange={e => set('fecha', e.target.value)} required className={inputClass} />
           </div>
 
           {/* Título */}
           <div>
-            <label className={labelClass}>Título del post <span className="text-[#732442]">*</span></label>
+            <label className={labelClass}>Título del post <span className="text-[#e84530]">*</span></label>
             <input
               type="text"
               value={form.titulo}
@@ -297,7 +297,7 @@ export default function RequestForm({ projects, scriptUrl, onSubmitted }) {
             type="submit"
             disabled={sending || !proyectoFinal || !form.fecha || !form.titulo}
             className="w-full py-3 text-sm font-bold rounded-xl transition-all duration-150 disabled:opacity-35 disabled:cursor-not-allowed"
-            style={{ backgroundColor: '#732442', color: '#fff' }}
+            style={{ backgroundColor: '#e84530', color: '#fff' }}
           >
             {sending ? 'Enviando...' : 'Enviar petición'}
           </button>
