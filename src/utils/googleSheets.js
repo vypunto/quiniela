@@ -61,11 +61,18 @@ function parseRow(row, i) {
 
 function safeParse(csv) {
   if (typeof csv !== 'string' || !csv.trim()) return { data: [] }
-  return Papa.parse(csv, {
-    header: true,
-    skipEmptyLines: true,
-    transformHeader: h => (typeof h === 'string' ? h : String(h || '')).trim().toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g, ''),
-  })
+  try {
+    return Papa.parse(String(csv), {
+      header: true,
+      skipEmptyLines: true,
+      transformHeader: h => {
+        try { return String(h == null ? '' : h).trim().toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g, '') }
+        catch { return String(h == null ? '' : h) }
+      },
+    })
+  } catch {
+    return { data: [] }
+  }
 }
 
 export async function fetchSheetData(sheetUrl) {
@@ -105,6 +112,15 @@ export async function updateRequest(scriptUrl, rowIndex, data) {
   const res = await fetch(scriptUrl, {
     method: 'POST',
     body: JSON.stringify({ action: 'update', rowIndex, data }),
+  })
+  if (!res.ok) throw new Error(`Error ${res.status}`)
+  return res.json()
+}
+
+export async function deleteRequest(scriptUrl, rowIndex) {
+  const res = await fetch(scriptUrl, {
+    method: 'POST',
+    body: JSON.stringify({ action: 'delete', rowIndex }),
   })
   if (!res.ok) throw new Error(`Error ${res.status}`)
   return res.json()

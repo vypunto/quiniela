@@ -2,7 +2,7 @@ import { useState, useEffect, useMemo } from 'react'
 import RequestForm from './RequestForm'
 import { getProjectColor } from '../utils/colors'
 import { DAYS_ES, MONTHS_ES, parseDate } from '../utils/dateUtils'
-import { fetchRequestsData, updateRequest } from '../utils/googleSheets'
+import { fetchRequestsData, updateRequest, deleteRequest } from '../utils/googleSheets'
 import { REQUESTS_SHEET_URL, PROJECTS } from '../config'
 
 const STATUS_STYLES = {
@@ -257,6 +257,23 @@ export default function RequestsView({ config, isDemo, calendarPubs = [], onCoun
     onCountChange && onCountChange(all.filter(r => !r.estado || r.estado === 'Pendiente').length)
   }
 
+  const handleDelete = async (req) => {
+    if (!window.confirm(`¿Eliminar la petición "${req.titulo}"?`)) return
+    setRequests(prev => {
+      const next = prev.filter(r => r.id !== req.id)
+      onCountChange && onCountChange(next.filter(r => !r.estado || r.estado === 'Pendiente').length)
+      return next
+    })
+    try {
+      const saved = JSON.parse(localStorage.getItem('pubcal_requests') || '[]')
+      localStorage.setItem('pubcal_requests', JSON.stringify(saved.filter(r => r.id !== req.id)))
+    } catch { /* ignore */ }
+    if (config.requestsScriptUrl && req.id.startsWith('sheet-')) {
+      const rowIndex = parseInt(req.id.replace('sheet-', ''))
+      try { await deleteRequest(config.requestsScriptUrl, rowIndex) } catch { /* ignore */ }
+    }
+  }
+
   const sorted = [...requests].sort((a, b) => (a.fecha || 0) - (b.fecha || 0))
 
   return (
@@ -334,6 +351,15 @@ export default function RequestsView({ config, isDemo, calendarPubs = [], onCoun
                     >
                       <svg width="11" height="11" viewBox="0 0 12 12" fill="none">
                         <path d="M8.5 1.5a1.5 1.5 0 0 1 2 2L4 10H2v-2L8.5 1.5z" stroke="currentColor" strokeWidth="1.3" strokeLinecap="round" strokeLinejoin="round"/>
+                      </svg>
+                    </button>
+                    <button
+                      onClick={() => handleDelete(req)}
+                      className="flex-shrink-0 w-8 h-8 rounded-xl border border-gray-200 flex items-center justify-center text-gray-400 hover:text-red-500 hover:border-red-200 hover:bg-red-50 transition-all duration-150"
+                      title="Eliminar"
+                    >
+                      <svg width="11" height="11" viewBox="0 0 12 12" fill="none">
+                        <path d="M2 3h8M5 3V2h2v1M4.5 3v6.5h3V3" stroke="currentColor" strokeWidth="1.3" strokeLinecap="round" strokeLinejoin="round"/>
                       </svg>
                     </button>
                   </div>

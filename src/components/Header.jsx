@@ -40,7 +40,7 @@ export default function Header({
   )
 
   return (
-    <header className="sticky top-0 z-20 bg-white/95 backdrop-blur-md border-b border-gray-200/80" style={{ boxShadow: '0 1px 0 rgba(0,0,0,0.04)' }}>
+    <header className="sticky top-0 z-30 bg-white/95 backdrop-blur-md border-b border-gray-200/80" style={{ boxShadow: '0 1px 0 rgba(0,0,0,0.04)' }}>
 
       {/* ── Main row ─────────────────────────────────────────────── */}
       <div className="max-w-7xl mx-auto px-4 sm:px-6 h-[64px] sm:h-[60px] flex items-center gap-2 sm:gap-4">
