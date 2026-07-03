@@ -131,6 +131,15 @@ export default function App() {
         }} />
       </div>
       <div className="relative" style={{ zIndex: 1 }}>
+      {/* Banner strip — top of page */}
+      <div className="w-full overflow-hidden" style={{ height: '7px' }}>
+        <img
+          src="https://www.elchandriogroup.com/wp-content/uploads/hogueras-2026/logo-fondo-gradient.png"
+          alt=""
+          className="w-full h-full object-cover"
+          draggable="false"
+        />
+      </div>
       <Header
         year={year} month={month}
         activeTab={activeTab} setActiveTab={setActiveTab}
@@ -141,16 +150,6 @@ export default function App() {
         isDemo={isDemo} onDemo={loadDemo} onExitDemo={exitDemo}
         pendingCount={pendingCount}
       />
-
-      {/* Banner strip */}
-      <div className="w-full overflow-hidden" style={{ height: '7px' }}>
-        <img
-          src="https://www.elchandriogroup.com/wp-content/uploads/hogueras-2026/logo-fondo-gradient.png"
-          alt=""
-          className="w-full h-full object-cover"
-          draggable="false"
-        />
-      </div>
 
       <main className="max-w-7xl mx-auto px-4 sm:px-6 py-4 sm:py-6">
 
