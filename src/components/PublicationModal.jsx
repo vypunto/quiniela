@@ -3,6 +3,11 @@ import { getProjectColor } from '../utils/colors'
 import { formatDate } from '../utils/dateUtils'
 import { TypeIcon } from './Icons'
 
+function parseMediaList(media) {
+  if (!media) return []
+  return media.split(',').map(s => s.trim()).filter(Boolean)
+}
+
 function CopyButton({ text }) {
   const [copied, setCopied] = useState(false)
   const handleCopy = async () => {
@@ -98,8 +103,15 @@ function MediaLightbox({ embed, onClose }) {
 
 export default function PublicationModal({ publication: pub, allPublications = [], onNavigate, onClose }) {
   const color = getProjectColor(pub.proyecto)
-  const embed = getMediaEmbed(pub.media)
+  const mediaList = parseMediaList(pub.media)
+  const isCarousel = mediaList.length > 1
+  const [slide, setSlide] = useState(0)
   const [lightbox, setLightbox] = useState(false)
+
+  useEffect(() => { setSlide(0) }, [pub.id])
+
+  const currentMedia = mediaList[slide] || pub.media || ''
+  const embed = getMediaEmbed(currentMedia)
 
   const currentIndex = allPublications.findIndex(p => p.id === pub.id)
   const prevPub = currentIndex > 0 ? allPublications[currentIndex - 1] : null
@@ -111,19 +123,30 @@ export default function PublicationModal({ publication: pub, allPublications = [
     const handle = e => {
       if (lightbox) return
       if (e.key === 'Escape') onClose()
-      if (e.key === 'ArrowLeft' && prevPub) onNavigate(prevPub)
-      if (e.key === 'ArrowRight' && nextPub) onNavigate(nextPub)
+      if (e.key === 'ArrowLeft') {
+        if (isCarousel && slide > 0) setSlide(s => s - 1)
+        else if (prevPub) onNavigate(prevPub)
+      }
+      if (e.key === 'ArrowRight') {
+        if (isCarousel && slide < mediaList.length - 1) setSlide(s => s + 1)
+        else if (nextPub) onNavigate(nextPub)
+      }
     }
     document.addEventListener('keydown', handle)
     return () => document.removeEventListener('keydown', handle)
-  }, [onClose, prevPub, nextPub, onNavigate, lightbox])
+  }, [onClose, prevPub, nextPub, onNavigate, lightbox, isCarousel, slide, mediaList.length])
 
   const onTouchStart = e => { touchStartX.current = e.touches[0].clientX }
   const onTouchEnd = e => {
     if (touchStartX.current === null) return
     const dx = e.changedTouches[0].clientX - touchStartX.current
-    if (dx > 60 && prevPub) onNavigate(prevPub)
-    if (dx < -60 && nextPub) onNavigate(nextPub)
+    if (isCarousel) {
+      if (dx > 50 && slide > 0) setSlide(s => s - 1)
+      if (dx < -50 && slide < mediaList.length - 1) setSlide(s => s + 1)
+    } else {
+      if (dx > 60 && prevPub) onNavigate(prevPub)
+      if (dx < -60 && nextPub) onNavigate(nextPub)
+    }
     touchStartX.current = null
   }
 
@@ -216,50 +239,102 @@ export default function PublicationModal({ publication: pub, allPublications = [
                   </a>
                 ) : (
                   /* Fixed-size masked media preview */
-                  <div
-                    className="relative rounded-2xl overflow-hidden cursor-pointer group"
-                    style={{
-                      aspectRatio: embed.kind === 'iframe' ? '16/9' : '4/3',
-                      border: '1px solid #F0F0F0',
-                      backgroundColor: '#F9FAFB',
-                    }}
-                    onClick={() => canExpand && setLightbox(true)}
-                  >
-                    {embed.kind === 'iframe' && (
-                      <iframe
-                        src={embed.src}
-                        className="w-full h-full border-0 pointer-events-none"
-                        allow="autoplay; encrypted-media"
-                        title="preview"
-                      />
-                    )}
-                    {embed.kind === 'image' && (
-                      <img
-                        src={embed.src}
-                        alt=""
-                        className="w-full h-full object-cover"
-                        onError={e => { e.target.style.display = 'none' }}
-                      />
-                    )}
-                    {embed.kind === 'video' && (
-                      <video src={embed.src} className="w-full h-full object-cover" />
-                    )}
-
-                    {/* Fullscreen button */}
+                  <div className="relative">
                     <div
-                      className="absolute bottom-3 right-3 w-8 h-8 rounded-xl flex items-center justify-center text-white transition-all duration-150 opacity-0 group-hover:opacity-100"
-                      style={{ backgroundColor: 'rgba(0,0,0,0.55)', backdropFilter: 'blur(4px)' }}
+                      className="relative rounded-2xl overflow-hidden cursor-pointer group"
+                      style={{
+                        aspectRatio: embed.kind === 'iframe' ? '16/9' : '4/3',
+                        border: '1px solid #F0F0F0',
+                        backgroundColor: '#F9FAFB',
+                      }}
+                      onClick={() => canExpand && !isCarousel && setLightbox(true)}
                     >
-                      <FullscreenIcon />
+                      {embed.kind === 'iframe' && (
+                        <iframe
+                          src={embed.src}
+                          className="w-full h-full border-0 pointer-events-none"
+                          allow="autoplay; encrypted-media"
+                          title="preview"
+                        />
+                      )}
+                      {embed.kind === 'image' && (
+                        <img
+                          src={embed.src}
+                          alt=""
+                          className="w-full h-full object-cover"
+                          onError={e => { e.target.style.display = 'none' }}
+                        />
+                      )}
+                      {embed.kind === 'video' && (
+                        <video src={embed.src} className="w-full h-full object-cover" />
+                      )}
+
+                      {/* Carousel prev/next arrows */}
+                      {isCarousel && slide > 0 && (
+                        <button
+                          onClick={e => { e.stopPropagation(); setSlide(s => s - 1) }}
+                          className="absolute left-2 top-1/2 -translate-y-1/2 w-8 h-8 rounded-full flex items-center justify-center text-white transition-all duration-150"
+                          style={{ backgroundColor: 'rgba(0,0,0,0.50)', backdropFilter: 'blur(4px)' }}
+                        >
+                          <svg width="12" height="12" viewBox="0 0 12 12" fill="none"><path d="M8 2L4 6l4 4" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"/></svg>
+                        </button>
+                      )}
+                      {isCarousel && slide < mediaList.length - 1 && (
+                        <button
+                          onClick={e => { e.stopPropagation(); setSlide(s => s + 1) }}
+                          className="absolute right-2 top-1/2 -translate-y-1/2 w-8 h-8 rounded-full flex items-center justify-center text-white transition-all duration-150"
+                          style={{ backgroundColor: 'rgba(0,0,0,0.50)', backdropFilter: 'blur(4px)' }}
+                        >
+                          <svg width="12" height="12" viewBox="0 0 12 12" fill="none"><path d="M4 2l4 4-4 4" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"/></svg>
+                        </button>
+                      )}
+
+                      {/* Carousel counter badge */}
+                      {isCarousel && (
+                        <div
+                          className="absolute top-2.5 right-2.5 px-2 py-0.5 rounded-full text-[10px] font-bold text-white"
+                          style={{ backgroundColor: 'rgba(0,0,0,0.55)', backdropFilter: 'blur(4px)' }}
+                        >
+                          {slide + 1}/{mediaList.length}
+                        </div>
+                      )}
+
+                      {/* Fullscreen button (non-carousel only) */}
+                      {!isCarousel && (
+                        <>
+                          <div
+                            className="absolute bottom-3 right-3 w-8 h-8 rounded-xl flex items-center justify-center text-white transition-all duration-150 opacity-0 group-hover:opacity-100"
+                            style={{ backgroundColor: 'rgba(0,0,0,0.55)', backdropFilter: 'blur(4px)' }}
+                          >
+                            <FullscreenIcon />
+                          </div>
+                          <div
+                            className="sm:hidden absolute bottom-3 right-3 w-8 h-8 rounded-xl flex items-center justify-center text-white"
+                            style={{ backgroundColor: 'rgba(0,0,0,0.45)', backdropFilter: 'blur(4px)' }}
+                          >
+                            <FullscreenIcon />
+                          </div>
+                        </>
+                      )}
                     </div>
 
-                    {/* Fullscreen hint on mobile (always visible) */}
-                    <div
-                      className="sm:hidden absolute bottom-3 right-3 w-8 h-8 rounded-xl flex items-center justify-center text-white"
-                      style={{ backgroundColor: 'rgba(0,0,0,0.45)', backdropFilter: 'blur(4px)' }}
-                    >
-                      <FullscreenIcon />
-                    </div>
+                    {/* Carousel dots */}
+                    {isCarousel && (
+                      <div className="flex items-center justify-center gap-1.5 mt-3">
+                        {mediaList.map((_, i) => (
+                          <button
+                            key={i}
+                            onClick={() => setSlide(i)}
+                            className="rounded-full transition-all duration-200 flex-shrink-0"
+                            style={{
+                              width: i === slide ? 14 : 6,
+                              height: 6,
+                              backgroundColor: i === slide ? color.dot : '#D1D5DB',
+                            }}
+                          />
+                        ))}
+                      </div>
+                    )}
                   </div>
                 )}
               </div>
@@ -280,15 +355,15 @@ export default function PublicationModal({ publication: pub, allPublications = [
             {(pub.copy || pub.media) && (
               <div className="px-6 pb-6 flex gap-2 flex-wrap">
                 {pub.copy && <CopyButton text={pub.copy} />}
-                {pub.media && pub.media.startsWith('http') && (
+                {currentMedia && currentMedia.startsWith('http') && (
                   <a
-                    href={pub.media}
+                    href={currentMedia}
                     target="_blank"
                     rel="noopener noreferrer"
                     className="flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-semibold bg-gray-100 text-gray-600 hover:bg-gray-200 transition-all duration-150"
                   >
                     <svg width="12" height="12" viewBox="0 0 12 12" fill="none"><path d="M4 6a3 3 0 0 0 4.24.56l1.12-1.12a3 3 0 0 0-4.24-4.24L4 2.32" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round"/><path d="M8 6a3 3 0 0 0-4.24-.56L2.64 6.56A3 3 0 0 0 6.88 10.8L8 9.68" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round"/></svg>
-                    Abrir media
+                    {isCarousel ? `Abrir slide ${slide + 1}` : 'Abrir media'}
                   </a>
                 )}
               </div>
