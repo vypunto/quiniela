@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useRef, useEffect } from 'react'
 import { submitRequest } from '../utils/googleSheets'
 import { TypeIcon } from './Icons'
 
@@ -49,6 +49,80 @@ const CANAL_ICONS = {
 
 const inputClass = "w-full px-3.5 py-2.5 text-sm border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#e84530]/15 focus:border-[#e84530]/30 transition-all duration-150 bg-white placeholder:text-gray-300"
 const labelClass = "block text-xs font-semibold text-gray-500 mb-2 tracking-wide"
+
+function CustomSelect({ value, onChange, options, placeholder }) {
+  const [open, setOpen] = useState(false)
+  const ref = useRef(null)
+
+  useEffect(() => {
+    const handler = e => { if (ref.current && !ref.current.contains(e.target)) setOpen(false) }
+    document.addEventListener('mousedown', handler)
+    return () => document.removeEventListener('mousedown', handler)
+  }, [])
+
+  const selected = options.find(o => o === value)
+
+  return (
+    <div ref={ref} className="relative">
+      <button
+        type="button"
+        onClick={() => setOpen(o => !o)}
+        className="w-full px-3.5 py-2.5 text-sm border rounded-xl bg-white flex items-center justify-between transition-all duration-150 focus:outline-none"
+        style={{
+          borderColor: open ? 'rgba(232,69,48,0.3)' : '#E5E7EB',
+          boxShadow: open ? '0 0 0 3px rgba(232,69,48,0.08)' : 'none',
+        }}
+      >
+        <span className={selected ? 'text-gray-800 font-medium' : 'text-gray-300'}>
+          {selected || placeholder}
+        </span>
+        <svg
+          width="12" height="12" viewBox="0 0 12 12" fill="none"
+          className="flex-shrink-0 transition-transform duration-200"
+          style={{ transform: open ? 'rotate(180deg)' : 'rotate(0deg)' }}
+        >
+          <path d="M2 4l4 4 4-4" stroke="#9CA3AF" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+        </svg>
+      </button>
+
+      {open && (
+        <div
+          className="absolute z-50 mt-1.5 w-full bg-white rounded-2xl border border-gray-100 overflow-hidden"
+          style={{ boxShadow: '0 12px 40px rgba(0,0,0,0.12), 0 2px 8px rgba(0,0,0,0.06)', animation: 'accountDropIn 150ms cubic-bezier(0.16,1,0.3,1)' }}
+        >
+          <div className="p-1.5 max-h-56 overflow-y-auto">
+            {options.map(opt => {
+              const isActive = value === opt
+              const isOtros = opt === '__otros__'
+              return (
+                <button
+                  key={opt}
+                  type="button"
+                  onClick={() => { onChange(opt); setOpen(false) }}
+                  className="w-full text-left px-3 py-2.5 rounded-xl text-sm font-medium transition-all duration-100 flex items-center gap-2.5"
+                  style={isActive
+                    ? { backgroundColor: '#e84530', color: '#fff' }
+                    : { color: isOtros ? '#9CA3AF' : '#374151', backgroundColor: 'transparent' }
+                  }
+                  onMouseEnter={e => { if (!isActive) e.currentTarget.style.backgroundColor = '#F9FAFB' }}
+                  onMouseLeave={e => { if (!isActive) e.currentTarget.style.backgroundColor = 'transparent' }}
+                >
+                  {!isOtros && (
+                    <span
+                      className="w-1.5 h-1.5 rounded-full flex-shrink-0"
+                      style={{ backgroundColor: isActive ? 'rgba(255,255,255,0.7)' : '#D1D5DB' }}
+                    />
+                  )}
+                  {isOtros ? 'OTROS…' : opt}
+                </button>
+              )
+            })}
+          </div>
+        </div>
+      )}
+    </div>
+  )
+}
 
 const EMPTY_FORM = { proyecto: '', proyectoOtros: '', fecha: '', titulo: '', info: '', contenido: '', solicitante: '', tipo: 'imagen', canal: '' }
 
@@ -129,19 +203,12 @@ export default function RequestForm({ projects, scriptUrl, onSubmitted }) {
           {/* Proyecto */}
           <div>
             <label className={labelClass}>Proyecto <span className="text-[#e84530]">*</span></label>
-            <select
+            <CustomSelect
               value={form.proyecto}
-              onChange={e => set('proyecto', e.target.value)}
-              required
-              className={inputClass}
-              style={{ cursor: 'pointer', appearance: 'none', backgroundImage: `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12' fill='none'%3E%3Cpath d='M2 4l4 4 4-4' stroke='%239CA3AF' stroke-width='1.5' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E")`, backgroundRepeat: 'no-repeat', backgroundPosition: 'right 12px center' }}
-            >
-              <option value="">Selecciona un proyecto…</option>
-              {(projects || []).map(p => (
-                <option key={p} value={p}>{p}</option>
-              ))}
-              <option value="__otros__">OTROS</option>
-            </select>
+              onChange={v => set('proyecto', v)}
+              placeholder="Selecciona un proyecto…"
+              options={[...(projects || []), '__otros__']}
+            />
             {form.proyecto === '__otros__' && (
               <input
                 type="text"

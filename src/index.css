@@ -26,21 +26,24 @@
 }
 @keyframes orbFloat1 {
   0%   { transform: translate(0px, 0px) scale(1); }
-  25%  { transform: translate(-40px, 30px) scale(1.06); }
-  50%  { transform: translate(-20px, -25px) scale(0.97); }
-  75%  { transform: translate(30px, 20px) scale(1.04); }
+  20%  { transform: translate(-80px, 60px) scale(1.12); }
+  45%  { transform: translate(-40px, -70px) scale(0.92); }
+  70%  { transform: translate(70px, 50px) scale(1.08); }
+  85%  { transform: translate(30px, -30px) scale(1.04); }
   100% { transform: translate(0px, 0px) scale(1); }
 }
 @keyframes orbFloat2 {
   0%   { transform: translate(0px, 0px) scale(1); }
-  30%  { transform: translate(35px, -30px) scale(1.05); }
-  60%  { transform: translate(-25px, 20px) scale(0.96); }
+  25%  { transform: translate(75px, -65px) scale(1.10); }
+  55%  { transform: translate(-60px, 55px) scale(0.90); }
+  80%  { transform: translate(40px, -20px) scale(1.06); }
   100% { transform: translate(0px, 0px) scale(1); }
 }
 @keyframes orbFloat3 {
   0%   { transform: translate(0px, 0px) scale(1); }
-  40%  { transform: translate(-20px, -35px) scale(1.08); }
-  70%  { transform: translate(25px, 15px) scale(0.94); }
+  35%  { transform: translate(-65px, -80px) scale(1.14); }
+  65%  { transform: translate(55px, 45px) scale(0.88); }
+  85%  { transform: translate(-25px, 30px) scale(1.05); }
   100% { transform: translate(0px, 0px) scale(1); }
 }
 
@@ -60,7 +63,20 @@ body {
 
 #root { width: 100%; max-width: 100%; text-align: left; }
 
+/* Custom scrollbars */
+::-webkit-scrollbar { width: 4px; height: 4px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb {
+  background: linear-gradient(180deg, #e84530 0%, rgba(232,69,48,0.45) 100%);
+  border-radius: 100px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: linear-gradient(180deg, #c73520 0%, #e84530 100%);
+}
+* { scrollbar-width: thin; scrollbar-color: rgba(232,69,48,0.5) transparent; }
+
 .scrollbar-none::-webkit-scrollbar { display: none; }
+.scrollbar-none { scrollbar-width: none; }
 
 /* Premium card shadow */
 .card { box-shadow: 0 1px 2px rgba(0,0,0,0.04), 0 4px 16px rgba(0,0,0,0.04); }

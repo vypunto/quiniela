@@ -107,27 +107,33 @@ export default function App() {
       <div aria-hidden="true" className="fixed inset-0 pointer-events-none overflow-hidden" style={{ zIndex: 0 }}>
         <div style={{
           position: 'absolute', top: '-180px', right: '-140px',
-          width: '800px', height: '800px', borderRadius: '50%',
-          background: 'radial-gradient(circle, rgba(250,82,60,0.14) 0%, rgba(250,82,60,0.05) 40%, transparent 65%)',
-          animation: 'orbFloat1 18s ease-in-out infinite',
+          width: '900px', height: '900px', borderRadius: '50%',
+          background: 'radial-gradient(circle, rgba(250,82,60,0.28) 0%, rgba(250,82,60,0.10) 35%, transparent 60%)',
+          animation: 'orbFloat1 16s ease-in-out infinite',
         }} />
         <div style={{
           position: 'absolute', bottom: '-200px', left: '-160px',
-          width: '850px', height: '850px', borderRadius: '50%',
-          background: 'radial-gradient(circle, rgba(90,209,181,0.13) 0%, rgba(90,209,181,0.04) 40%, transparent 65%)',
-          animation: 'orbFloat2 22s ease-in-out infinite',
+          width: '950px', height: '950px', borderRadius: '50%',
+          background: 'radial-gradient(circle, rgba(90,209,181,0.26) 0%, rgba(90,209,181,0.08) 35%, transparent 60%)',
+          animation: 'orbFloat2 20s ease-in-out infinite',
         }} />
         <div style={{
           position: 'absolute', top: '40%', left: '35%',
-          width: '620px', height: '620px', borderRadius: '50%',
-          background: 'radial-gradient(circle, rgba(255,191,3,0.12) 0%, rgba(255,191,3,0.04) 42%, transparent 65%)',
-          animation: 'orbFloat3 14s ease-in-out infinite',
+          width: '700px', height: '700px', borderRadius: '50%',
+          background: 'radial-gradient(circle, rgba(255,191,3,0.24) 0%, rgba(255,191,3,0.07) 38%, transparent 62%)',
+          animation: 'orbFloat3 12s ease-in-out infinite',
         }} />
         <div style={{
           position: 'absolute', top: '10%', left: '20%',
-          width: '500px', height: '500px', borderRadius: '50%',
-          background: 'radial-gradient(circle, rgba(250,82,60,0.10) 0%, transparent 60%)',
-          animation: 'orbFloat2 26s ease-in-out infinite reverse',
+          width: '560px', height: '560px', borderRadius: '50%',
+          background: 'radial-gradient(circle, rgba(250,82,60,0.20) 0%, rgba(250,82,60,0.05) 40%, transparent 62%)',
+          animation: 'orbFloat2 23s ease-in-out infinite reverse',
+        }} />
+        <div style={{
+          position: 'absolute', bottom: '20%', right: '10%',
+          width: '480px', height: '480px', borderRadius: '50%',
+          background: 'radial-gradient(circle, rgba(139,92,246,0.18) 0%, rgba(139,92,246,0.05) 40%, transparent 62%)',
+          animation: 'orbFloat1 19s ease-in-out infinite reverse',
         }} />
       </div>
       <div className="relative" style={{ zIndex: 1 }}>
