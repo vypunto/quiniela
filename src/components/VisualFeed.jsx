@@ -3,20 +3,71 @@ import { getProjectColor } from '../utils/colors'
 import { formatDate } from '../utils/dateUtils'
 import { TypeIcon } from './Icons'
 
-function getThumb(media) {
-  if (!media) return null
-  const yt = media.match(/(?:youtube\.com\/watch\?v=|youtu\.be\/)([^&?]+)/)
+const INSTAGRAM = {
+  'DEL POBLE FEST':        'delpoblefest',
+  'GASTRO LEAGUE':         'gastro_league',
+  'PREVENIDOS Y ACCION':   'prevenidosyaccion',
+  'LA CRUZ DE CELIA':      'lacruzdeceliaoficial',
+  'EL CHANDRIO GROUP':     'elchandriogroup',
+  'GLOBALY LIVE':          'globalylive',
+  'CLUB GARRISON ALICANTE':'clubgarrisonalicante',
+  'MARTINICA BAR':         'martinicabar',
+  'PLAZA EL CHANDRIO':     'plazadelchandrio',
+  'TERRAZA DUNA':          'terrazaduna',
+  'CANDELA ALICANTE':      'candelaalicante',
+  'TÁVORA TEATRO ABIERTO': 'tavorateatroabierto',
+  'CLUB TEMERARIA':        'clubtemeraria',
+}
+
+function igUrl(proyecto) {
+  const h = INSTAGRAM[proyecto]
+  return h ? `https://www.instagram.com/${h}/` : null
+}
+
+function parseMediaList(media) {
+  if (!media) return []
+  return media.split(',').map(s => s.trim()).filter(Boolean)
+}
+
+function getThumb(url) {
+  if (!url) return null
+  const u = url.split(',')[0].trim()
+  const yt = u.match(/(?:youtube\.com\/watch\?v=|youtu\.be\/)([^&?]+)/)
   if (yt) return `https://img.youtube.com/vi/${yt[1]}/mqdefault.jpg`
-  if (media.includes('unsplash.com')) return media
-  if (/\.(jpg|jpeg|png|gif|webp|avif)$/i.test(media)) return media
-  const driveFile = media.match(/drive\.google\.com\/file\/d\/([^/?]+)/)
+  if (u.includes('unsplash.com')) return u
+  if (/\.(jpg|jpeg|png|gif|webp|avif)$/i.test(u)) return u
+  const driveFile = u.match(/drive\.google\.com\/file\/d\/([^/?]+)/)
   if (driveFile) return `https://drive.google.com/thumbnail?id=${driveFile[1]}&sz=w400`
   return null
 }
 
-function isVideoMedia(media) {
-  if (!media) return false
-  return media.includes('youtube.com') || media.includes('youtu.be') || /\.(mp4|mov|webm)$/i.test(media)
+function isVideoMedia(url) {
+  if (!url) return false
+  const u = url.split(',')[0].trim()
+  return u.includes('youtube.com') || u.includes('youtu.be') || /\.(mp4|mov|webm)$/i.test(u)
+}
+
+function SlideMedia({ url, color, tipo }) {
+  const thumb = getThumb(url)
+  const isVid = isVideoMedia(url)
+  return (
+    <div className="w-full h-full flex-shrink-0 relative" style={{ minWidth: '100%' }}>
+      {thumb ? (
+        <img src={thumb} alt="" className="w-full h-full object-cover" onError={e => { e.target.style.display = 'none' }} />
+      ) : (
+        <div className="w-full h-full flex items-center justify-center" style={{ backgroundColor: color.bg }}>
+          <TypeIcon tipo={tipo} size={32} color={color.dot} />
+        </div>
+      )}
+      {isVid && (
+        <div className="absolute inset-0 flex items-center justify-center">
+          <div className="w-12 h-12 rounded-full flex items-center justify-center" style={{ backgroundColor: 'rgba(0,0,0,0.45)' }}>
+            <svg width="18" height="18" viewBox="0 0 20 20" fill="white"><path d="M5 3l13 7-13 7V3z"/></svg>
+          </div>
+        </div>
+      )}
+    </div>
+  )
 }
 
 function getInitials(name) {
@@ -90,12 +141,14 @@ function StatusBar() {
 /* ── Instagram post view (inside phone) ── */
 function InstaPostView({ pub, onBack, onOpenDetails }) {
   const color = getProjectColor(pub.proyecto)
-  const thumb = getThumb(pub.media)
-  const isVideo = isVideoMedia(pub.media)
+  const mediaList = parseMediaList(pub.media)
+  const isCarousel = mediaList.length > 1
   const likes = mockLikes(pub.id)
   const whenStr = relativeDate(pub.fecha)
   const [liked, setLiked] = useState(false)
   const [saved, setSaved] = useState(false)
+  const [slide, setSlide] = useState(0)
+  const ig = igUrl(pub.proyecto)
 
   return (
     <div
@@ -136,7 +189,8 @@ function InstaPostView({ pub, onBack, onOpenDetails }) {
             {pub.fecha && <div className="text-[9px] text-gray-400 leading-tight">{formatDate(pub.fecha)}</div>}
           </div>
           <button
-            className="px-3 py-1 rounded-lg text-[10px] font-bold flex-shrink-0"
+            onClick={() => ig && window.open(ig, '_blank')}
+            className="px-3 py-1 rounded-lg text-[10px] font-bold flex-shrink-0 transition-opacity duration-150 active:opacity-70"
             style={{ backgroundColor: color.dot, color: '#fff' }}
           >
             Seguir
@@ -152,18 +206,58 @@ function InstaPostView({ pub, onBack, onOpenDetails }) {
 
         {/* Media — 4:5 portrait */}
         <div className="w-full" style={{ aspectRatio: '4/5', backgroundColor: color.bg, position: 'relative', overflow: 'hidden' }}>
-          {thumb ? (
-            <img src={thumb} alt="" className="w-full h-full object-cover" onError={e => { e.target.style.display = 'none' }} />
+          {isCarousel ? (
+            <>
+              {/* Slides container */}
+              <div
+                className="flex h-full"
+                style={{ transform: `translateX(-${slide * 100}%)`, transition: 'transform 280ms cubic-bezier(0.16,1,0.3,1)', width: `${mediaList.length * 100}%` }}
+              >
+                {mediaList.map((url, i) => (
+                  <SlideMedia key={i} url={url} color={color} tipo={pub.tipo} />
+                ))}
+              </div>
+              {/* Prev arrow */}
+              {slide > 0 && (
+                <button
+                  onClick={() => setSlide(s => s - 1)}
+                  className="absolute left-2 top-1/2 -translate-y-1/2 w-7 h-7 rounded-full flex items-center justify-center shadow-sm"
+                  style={{ backgroundColor: 'rgba(255,255,255,0.88)' }}
+                >
+                  <svg width="9" height="9" viewBox="0 0 10 10" fill="none"><path d="M7 2L4 5l3 3" stroke="#111" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round"/></svg>
+                </button>
+              )}
+              {/* Next arrow */}
+              {slide < mediaList.length - 1 && (
+                <button
+                  onClick={() => setSlide(s => s + 1)}
+                  className="absolute right-2 top-1/2 -translate-y-1/2 w-7 h-7 rounded-full flex items-center justify-center shadow-sm"
+                  style={{ backgroundColor: 'rgba(255,255,255,0.88)' }}
+                >
+                  <svg width="9" height="9" viewBox="0 0 10 10" fill="none"><path d="M3 2l3 3-3 3" stroke="#111" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round"/></svg>
+                </button>
+              )}
+              {/* Dots */}
+              <div className="absolute bottom-2.5 left-1/2 -translate-x-1/2 flex gap-1">
+                {mediaList.map((_, i) => (
+                  <button
+                    key={i}
+                    onClick={() => setSlide(i)}
+                    className="rounded-full transition-all duration-200"
+                    style={{ width: i === slide ? '14px' : '6px', height: '6px', backgroundColor: i === slide ? color.dot : 'rgba(255,255,255,0.6)' }}
+                  />
+                ))}
+              </div>
+              {/* Counter */}
+              <div className="absolute top-2 right-2 px-1.5 py-0.5 rounded-full text-[9px] font-bold text-white" style={{ backgroundColor: 'rgba(0,0,0,0.45)' }}>
+                {slide + 1}/{mediaList.length}
+              </div>
+            </>
+          ) : mediaList.length === 1 ? (
+            <SlideMedia url={mediaList[0]} color={color} tipo={pub.tipo} />
           ) : (
             <div className="w-full h-full flex items-center justify-center">
               <TypeIcon tipo={pub.tipo} size={32} color={color.dot} />
-            </div>
-          )}
-          {isVideo && (
-            <div className="absolute inset-0 flex items-center justify-center">
-              <div className="w-12 h-12 rounded-full flex items-center justify-center" style={{ backgroundColor: 'rgba(0,0,0,0.45)' }}>
-                <svg width="18" height="18" viewBox="0 0 20 20" fill="white"><path d="M5 3l13 7-13 7V3z"/></svg>
-              </div>
             </div>
           )}
         </div>
@@ -520,25 +614,54 @@ export default function VisualFeed({ publications, onSelect, selectedPub, active
                     : 'Sin publicaciones planificadas'}
                 </div>
               </div>
-              <div className="flex gap-2">
-                <button className="flex-1 py-1 rounded-lg text-[11px] font-bold" style={{ backgroundColor: color.dot, color: '#fff' }}>Seguir</button>
-                <button className="flex-1 py-1 rounded-lg text-[11px] font-semibold bg-gray-100 text-black">Mensaje</button>
-                <button className="w-8 py-1 rounded-lg bg-gray-100 flex items-center justify-center">
-                  <svg width="12" height="12" viewBox="0 0 14 14" fill="none"><path d="M5 3l4 4-4 4" stroke="#111" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round"/></svg>
-                </button>
-              </div>
+              {(() => {
+                const url = igUrl(project)
+                return (
+                  <div className="flex gap-2">
+                    <button
+                      onClick={() => url && window.open(url, '_blank')}
+                      className="flex-1 py-1 rounded-lg text-[11px] font-bold transition-opacity duration-150 active:opacity-70"
+                      style={{ backgroundColor: color.dot, color: '#fff', opacity: url ? 1 : 0.6 }}
+                    >
+                      Seguir
+                    </button>
+                    <button
+                      onClick={() => url && window.open(`https://ig.me/m/${INSTAGRAM[project]}`, '_blank')}
+                      className="flex-1 py-1 rounded-lg text-[11px] font-semibold bg-gray-100 text-black transition-opacity duration-150 active:opacity-70"
+                    >
+                      Mensaje
+                    </button>
+                    <button className="w-8 py-1 rounded-lg bg-gray-100 flex items-center justify-center">
+                      <svg width="12" height="12" viewBox="0 0 14 14" fill="none"><path d="M5 3l4 4-4 4" stroke="#111" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round"/></svg>
+                    </button>
+                  </div>
+                )
+              })()}
             </div>
 
-            {/* Story highlights */}
+            {/* Story highlights — click to switch tab */}
             <div className="flex gap-3 px-4 pb-3 overflow-x-hidden">
-              {[['Reels', 'reel'], ['Posts', 'imagen'], ['Stories', 'historia']].map(([label, tipo]) => (
-                <div key={label} className="flex flex-col items-center gap-1 flex-shrink-0">
-                  <div className="w-12 h-12 rounded-full flex items-center justify-center" style={{ border: `1.5px solid ${color.dot}40`, backgroundColor: color.bg }}>
-                    <TypeIcon tipo={tipo} size={16} color={color.dot} />
-                  </div>
-                  <span className="text-[9px] text-gray-600">{label}</span>
-                </div>
-              ))}
+              {[['Reels', 'reel', TAB_REELS], ['Posts', 'imagen', TAB_POSTS], ['Stories', 'historia', TAB_STORIES]].map(([label, tipo, tab]) => {
+                const isActive = gridTab === tab
+                return (
+                  <button
+                    key={label}
+                    onClick={() => setGridTab(tab)}
+                    className="flex flex-col items-center gap-1 flex-shrink-0 active:opacity-70 transition-opacity"
+                  >
+                    <div
+                      className="w-12 h-12 rounded-full flex items-center justify-center transition-all duration-150"
+                      style={{
+                        border: `2px solid ${isActive ? color.dot : color.dot + '40'}`,
+                        backgroundColor: isActive ? color.bg : 'transparent',
+                      }}
+                    >
+                      <TypeIcon tipo={tipo} size={16} color={color.dot} />
+                    </div>
+                    <span className="text-[9px] font-semibold" style={{ color: isActive ? color.dot : '#6B7280' }}>{label}</span>
+                  </button>
+                )
+              })}
             </div>
 
             {/* Grid tab bar — functional */}

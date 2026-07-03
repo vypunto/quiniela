@@ -3,13 +3,18 @@ export const REQUESTS_SHEET_URL = 'https://docs.google.com/spreadsheets/d/e/2PAC
 export const REQUESTS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycby7s21MuJEE_B42i3DtC-iXe7c26PHaIVy45SL5rTOpsVC0Dhq_ICCllxqlkH_edSs/exec'
 
 export const PROJECTS = [
+  'CANDELA ALICANTE',
+  'CLUB GARRISON ALICANTE',
+  'CLUB TEMERARIA',
   'DEL POBLE FEST',
   'EL CHANDRIO GROUP',
   'GASTRO LEAGUE',
   'GLOBALY LIVE',
   'LA CRUZ DE CELIA',
+  'MARTINICA BAR',
   'PLAZA EL CHANDRIO',
   'PREVENIDOS Y ACCION',
+  'TÁVORA TEATRO ABIERTO',
   'TEATRO ALICANTE',
-  'TEATRO SEVILLA',
+  'TERRAZA DUNA',
 ]
