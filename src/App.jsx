@@ -179,7 +179,7 @@ export default function App() {
               <div className="flex flex-col items-center justify-center py-24 px-4">
                 <div
                   className="w-16 h-16 rounded-2xl flex items-center justify-center mb-5"
-                  style={{ backgroundColor: '#732442' }}
+                  style={{ backgroundColor: '#e84530' }}
                 >
                   <svg width="26" height="26" viewBox="0 0 28 28" fill="none">
                     <rect x="2" y="2" width="11" height="11" rx="2" fill="white"/>
@@ -200,7 +200,7 @@ export default function App() {
                   <button
                     onClick={() => setShowSettings(true)}
                     className="px-5 py-2.5 rounded-xl text-sm font-bold text-white transition-all duration-150 hover:brightness-90"
-                    style={{ backgroundColor: '#732442' }}
+                    style={{ backgroundColor: '#e84530' }}
                   >
                     Conectar Google Sheets
                   </button>
