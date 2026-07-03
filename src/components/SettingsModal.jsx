@@ -84,7 +84,7 @@ export default function SettingsModal({ config, onSave, onClose }) {
           <button
             onClick={onClose}
             className="w-full py-2.5 rounded-xl text-sm font-bold text-white transition-all duration-150 hover:brightness-90"
-            style={{ backgroundColor: '#732442' }}
+            style={{ backgroundColor: '#e84530' }}
           >
             Cerrar
           </button>

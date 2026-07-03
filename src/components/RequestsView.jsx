@@ -43,15 +43,32 @@ function EditModal({ req, scriptUrl, onSave, onClose }) {
   const handleSave = async () => {
     setSaving(true)
     setError(null)
+    const updated = { ...req, ...form, fecha: new Date(form.fecha) }
     try {
       if (scriptUrl && req.id.startsWith('sheet-')) {
         const rowIndex = parseInt(req.id.replace('sheet-', ''))
         await updateRequest(scriptUrl, rowIndex, form)
       }
-      onSave({ ...req, ...form, fecha: new Date(form.fecha) })
+      try {
+        const saved = JSON.parse(localStorage.getItem('pubcal_requests') || '[]')
+        const idx = saved.findIndex(r => r.id === req.id)
+        if (idx >= 0) {
+          saved[idx] = { ...saved[idx], ...form }
+          localStorage.setItem('pubcal_requests', JSON.stringify(saved))
+        }
+      } catch { /* ignore */ }
+      onSave(updated)
     } catch (e) {
       setError('No se pudo guardar en la hoja. Los cambios se aplicaron localmente.')
-      onSave({ ...req, ...form, fecha: new Date(form.fecha) })
+      try {
+        const saved = JSON.parse(localStorage.getItem('pubcal_requests') || '[]')
+        const idx = saved.findIndex(r => r.id === req.id)
+        if (idx >= 0) {
+          saved[idx] = { ...saved[idx], ...form }
+          localStorage.setItem('pubcal_requests', JSON.stringify(saved))
+        }
+      } catch { /* ignore */ }
+      onSave(updated)
     } finally {
       setSaving(false)
     }
@@ -281,7 +298,7 @@ export default function RequestsView({ config, isDemo, calendarPubs = [], onCoun
                 return (
                   <div
                     key={req.id}
-                    className="flex items-center gap-4 px-5 py-3.5 hover:bg-gray-50/60 transition-all duration-150 group"
+                    className="flex items-center gap-4 px-5 py-3.5 hover:bg-gray-50/60 transition-all duration-150"
                   >
                     {/* Date */}
                     <div className="w-10 text-center flex-shrink-0">
@@ -312,7 +329,7 @@ export default function RequestsView({ config, isDemo, calendarPubs = [], onCoun
 
                     <button
                       onClick={() => setEditingReq(req)}
-                      className="flex-shrink-0 w-8 h-8 rounded-xl border border-gray-200 flex items-center justify-center text-gray-300 hover:text-gray-600 hover:bg-gray-100 transition-all duration-150 opacity-0 group-hover:opacity-100"
+                      className="flex-shrink-0 w-8 h-8 rounded-xl border border-gray-200 flex items-center justify-center text-gray-400 hover:text-gray-600 hover:bg-gray-100 transition-all duration-150"
                       title="Editar"
                     >
                       <svg width="11" height="11" viewBox="0 0 12 12" fill="none">

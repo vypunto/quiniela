@@ -65,7 +65,7 @@ export default function CalendarList({ year, month, publications, onSelect, acti
             >
               <span
                 className="text-[11px] font-bold uppercase tracking-[0.08em]"
-                style={{ color: isCurrentWeek ? '#732442' : '#9CA3AF' }}
+                style={{ color: isCurrentWeek ? '#e84530' : '#9CA3AF' }}
               >
                 {label}
               </span>

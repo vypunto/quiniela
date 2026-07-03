@@ -128,12 +128,12 @@ export default function CalendarGrid({ year, month, publications, onSelect, acti
                     isToday
                       ? 'text-white font-black'
                       : isCurrentWeekRow
-                      ? 'text-[#732442] font-bold'
+                      ? 'text-[#e84530] font-bold'
                       : isPast
                       ? 'text-gray-300'
                       : 'text-gray-700'
                   }`}
-                  style={isToday ? { backgroundColor: '#732442' } : {}}
+                  style={isToday ? { backgroundColor: '#e84530' } : {}}
                 >
                   {cell.day}
                   {isToday && (

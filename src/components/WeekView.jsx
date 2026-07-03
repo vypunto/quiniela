@@ -56,7 +56,7 @@ export default function WeekView({ publications, onSelect, activeFilter }) {
             {weekStart.getDate()} – {weekEnd.getDate()} {weekEnd.toLocaleDateString('es-ES', { month: 'long' }).toUpperCase()} {weekEnd.getFullYear()}
           </span>
           {sameDay(startOfWeek(today), weekStart) && (
-            <span className="ml-2 text-[10px] font-semibold px-2 py-0.5 rounded-full" style={{ color: '#732442', backgroundColor: 'rgba(115,36,66,0.08)' }}>
+            <span className="ml-2 text-[10px] font-semibold px-2 py-0.5 rounded-full" style={{ color: '#e84530', backgroundColor: 'rgba(115,36,66,0.08)' }}>
               Esta semana
             </span>
           )}
@@ -94,7 +94,7 @@ export default function WeekView({ publications, onSelect, activeFilter }) {
                   className="text-sm sm:text-base font-bold mx-auto w-7 h-7 flex items-center justify-center rounded-full mt-1 transition-colors"
                   style={
                     isToday
-                      ? { backgroundColor: '#732442', color: '#fff' }
+                      ? { backgroundColor: '#e84530', color: '#fff' }
                       : { color: '#374151' }
                   }
                 >
@@ -133,7 +133,7 @@ export default function WeekView({ publications, onSelect, activeFilter }) {
           <button
             onClick={goToday}
             className="text-xs font-semibold transition-colors"
-            style={{ color: '#732442' }}
+            style={{ color: '#e84530' }}
           >
             Ir a esta semana
           </button>

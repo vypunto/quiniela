@@ -419,7 +419,7 @@ export default function VisualFeed({ publications, onSelect, selectedPub, active
           <div key={i} className="flex items-center gap-3 flex-1 px-4 py-3 rounded-2xl"
             style={{ backgroundColor: '#fff', border: '1px solid #E8EAED', boxShadow: '0 1px 3px rgba(0,0,0,0.04)' }}
           >
-            <div className="w-7 h-7 rounded-full flex items-center justify-center flex-shrink-0 text-white font-black text-[11px]" style={{ backgroundColor: '#732442' }}>
+            <div className="w-7 h-7 rounded-full flex items-center justify-center flex-shrink-0 text-white font-black text-[11px]" style={{ backgroundColor: '#e84530' }}>
               {i + 1}
             </div>
             <div className="flex items-center gap-2" style={{ color: '#6B7280' }}>
