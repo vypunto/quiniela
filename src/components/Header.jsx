@@ -102,29 +102,27 @@ export default function Header({
         )}
 
         {/* Demo toggle — desktop */}
-        {activeTab === 'publicaciones' && (
-          <div className="hidden sm:block">
-            {isDemo ? (
-              <button
-                onClick={onExitDemo}
-                className="px-3 py-1.5 rounded-xl text-xs font-semibold transition-all duration-150"
-                style={{ border: '1px solid rgba(115,36,66,0.3)', color: '#732442', backgroundColor: 'rgba(115,36,66,0.06)' }}
-              >
-                Salir del demo
-              </button>
-            ) : (
-              <button
-                onClick={onDemo}
-                className="px-3 py-1.5 rounded-xl border border-gray-200 text-gray-400 text-xs font-medium hover:bg-gray-50 hover:text-gray-600 transition-all duration-150"
-              >
-                Ver demo
-              </button>
-            )}
-          </div>
-        )}
+        <div className="hidden sm:block">
+          {isDemo ? (
+            <button
+              onClick={onExitDemo}
+              className="px-3 py-1.5 rounded-xl text-xs font-semibold transition-all duration-150"
+              style={{ border: '1px solid rgba(115,36,66,0.3)', color: '#732442', backgroundColor: 'rgba(115,36,66,0.06)' }}
+            >
+              Salir del demo
+            </button>
+          ) : (
+            <button
+              onClick={onDemo}
+              className="px-3 py-1.5 rounded-xl border border-gray-200 text-gray-400 text-xs font-medium hover:bg-gray-50 hover:text-gray-600 transition-all duration-150"
+            >
+              Ver demo
+            </button>
+          )}
+        </div>
 
         {/* Sync — desktop */}
-        {hasConfig && activeTab === 'publicaciones' && (
+        {hasConfig && (
           <button
             onClick={onSync}
             disabled={loading}
@@ -140,9 +138,8 @@ export default function Header({
       </div>
 
       {/* ── Mobile second row ─────────────────────────────────────── */}
-      {activeTab === 'publicaciones' && (
-        <div className="sm:hidden flex items-center justify-between px-4 pb-3 gap-2">
-          {viewMode !== 'feed' && (
+      <div className="sm:hidden flex items-center justify-between px-4 pb-3 gap-2">
+        {activeTab === 'publicaciones' && viewMode !== 'feed' && (
             <div className="flex items-center gap-1">
               <button
                 onClick={onPrev}
@@ -163,22 +160,24 @@ export default function Header({
               </button>
             </div>
           )}
-          {viewMode === 'feed' && <div className="flex-1" />}
+        {activeTab === 'publicaciones' && viewMode === 'feed' && <div className="flex-1" />}
 
           <div className="flex items-center gap-1.5">
-            <div className="flex items-center gap-0.5 p-1 bg-gray-100/70 rounded-xl">
-              {[['grid','Mes'],['list','Lista'],['feed','Feed']].map(([mode, label]) => (
-                <button
-                  key={mode}
-                  onClick={() => setViewMode(mode)}
-                  className={`px-2 py-1 rounded-[8px] text-xs font-semibold transition-all duration-150 ${
-                    viewMode === mode ? 'bg-white text-gray-900 shadow-sm' : 'text-gray-500'
-                  }`}
-                >
-                  {label}
-                </button>
-              ))}
-            </div>
+            {activeTab === 'publicaciones' && (
+              <div className="flex items-center gap-0.5 p-1 bg-gray-100/70 rounded-xl">
+                {[['grid','Mes'],['list','Lista'],['feed','Feed']].map(([mode, label]) => (
+                  <button
+                    key={mode}
+                    onClick={() => setViewMode(mode)}
+                    className={`px-2 py-1 rounded-[8px] text-xs font-semibold transition-all duration-150 ${
+                      viewMode === mode ? 'bg-white text-gray-900 shadow-sm' : 'text-gray-500'
+                    }`}
+                  >
+                    {label}
+                  </button>
+                ))}
+              </div>
+            )}
 
             {isDemo ? (
               <button
@@ -211,7 +210,6 @@ export default function Header({
             )}
           </div>
         </div>
-      )}
     </header>
   )
 }
