@@ -1,22 +1,26 @@
-// Fixed, maximally-distinct colors per project (hues ~40° apart on color wheel)
 const PROJECT_COLORS = {
-  'del poble fest':      { bg: '#FEE2E2', text: '#991B1B', dot: '#EF4444' }, // red
-  'el chandrio group':   { bg: '#FEF3C7', text: '#92400E', dot: '#F59E0B' }, // amber
-  'gastro league':       { bg: '#DCFCE7', text: '#166534', dot: '#22C55E' }, // green
-  'globaly live':        { bg: '#DBEAFE', text: '#1E40AF', dot: '#3B82F6' }, // blue
-  'la cruz de celia':    { bg: '#F3E8FF', text: '#7E22CE', dot: '#A855F7' }, // purple
-  'plaza el chandrio':   { bg: '#FFEDD5', text: '#9A3412', dot: '#F97316' }, // orange
-  'prevenidos y accion': { bg: '#E0F2FE', text: '#0C4A6E', dot: '#0EA5E9' }, // sky
-  'teatro alicante':     { bg: '#FCE7F3', text: '#9D174D', dot: '#EC4899' }, // pink
-  'teatro sevilla':      { bg: '#CCFBF1', text: '#134E4A', dot: '#14B8A6' }, // teal
+  'candela alicante':       { bg: '#FFF1F2', text: '#9F1239', dot: '#F43F5E' }, // rose
+  'club garrison alicante': { bg: '#EEF2FF', text: '#3730A3', dot: '#4F46E5' }, // indigo
+  'club temeraria':         { bg: '#FEE2E2', text: '#991B1B', dot: '#DC2626' }, // red
+  'del poble fest':         { bg: '#FFEDD5', text: '#9A3412', dot: '#EA580C' }, // orange
+  'el chandrio group':      { bg: '#FEF3C7', text: '#92400E', dot: '#D97706' }, // amber
+  'gastro league':          { bg: '#F0FDF4', text: '#14532D', dot: '#16A34A' }, // green
+  'globaly live':           { bg: '#EFF6FF', text: '#1E40AF', dot: '#2563EB' }, // blue
+  'la cruz de celia':       { bg: '#F5F3FF', text: '#4C1D95', dot: '#7C3AED' }, // violet
+  'martinica bar':          { bg: '#ECFEFF', text: '#164E63', dot: '#06B6D4' }, // cyan
+  'plaza el chandrio':      { bg: '#FEFCE8', text: '#713F12', dot: '#CA8A04' }, // yellow
+  'prevenidos y accion':    { bg: '#F0FDFA', text: '#134E4A', dot: '#0D9488' }, // teal
+  'távora teatro abierto':  { bg: '#F7FEE7', text: '#365314', dot: '#65A30D' }, // lime
+  'teatro alicante':        { bg: '#FDF4FF', text: '#701A75', dot: '#C026D3' }, // fuchsia
+  'terraza duna':           { bg: '#F1F5F9', text: '#1E293B', dot: '#475569' }, // slate
 }
 
 const FALLBACK_PALETTE = [
-  { bg: '#F1F5F9', text: '#334155', dot: '#64748B' },
-  { bg: '#F0FDF4', text: '#14532D', dot: '#16A34A' },
-  { bg: '#EFF6FF', text: '#1E3A8A', dot: '#2563EB' },
-  { bg: '#FDF4FF', text: '#581C87', dot: '#9333EA' },
-  { bg: '#FFF7ED', text: '#7C2D12', dot: '#EA580C' },
+  { bg: '#FFF7ED', text: '#7C2D12', dot: '#C2410C' },
+  { bg: '#F0F9FF', text: '#0C4A6E', dot: '#0369A1' },
+  { bg: '#FAF5FF', text: '#581C87', dot: '#9333EA' },
+  { bg: '#F0FDF4', text: '#14532D', dot: '#15803D' },
+  { bg: '#FFF1F2', text: '#881337', dot: '#E11D48' },
 ]
 
 function hashString(str) {
