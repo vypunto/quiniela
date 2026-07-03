@@ -238,14 +238,19 @@ function InstaPostView({ pub, onBack, onOpenDetails }) {
                 </button>
               )}
               {/* Dots */}
-              <div className="absolute bottom-2.5 left-1/2 -translate-x-1/2 flex gap-1">
+              <div className="absolute bottom-1 left-1/2 -translate-x-1/2 flex">
                 {mediaList.map((_, i) => (
                   <button
                     key={i}
                     onClick={() => setSlide(i)}
-                    className="rounded-full transition-all duration-200"
-                    style={{ width: i === slide ? '14px' : '6px', height: '6px', backgroundColor: i === slide ? color.dot : 'rgba(255,255,255,0.6)' }}
-                  />
+                    className="flex items-center justify-center"
+                    style={{ padding: '6px 3px' }}
+                  >
+                    <span
+                      className="rounded-full block"
+                      style={{ width: i === slide ? 14 : 6, height: 6, backgroundColor: i === slide ? color.dot : 'rgba(255,255,255,0.6)', transition: 'all 200ms' }}
+                    />
+                  </button>
                 ))}
               </div>
               {/* Counter */}
@@ -427,13 +432,41 @@ function CornerTypeIcon({ tipo }) {
 
 /* ── Grid cell (4:5 portrait) ── */
 function GridCell({ pub, onClick, isSelected }) {
-  const thumb = getThumb(pub.media)
+  const mediaList = parseMediaList(pub.media)
+  const isCarouselCell = mediaList.length > 1
   const color = getProjectColor(pub.proyecto)
   const t = (pub.tipo || '').toLowerCase()
+
+  const [hoverSlide, setHoverSlide] = useState(0)
+  const [hovering, setHovering] = useState(false)
+  const intervalRef = useRef(null)
+
+  const onMouseEnter = () => {
+    if (!isCarouselCell) return
+    setHovering(true)
+    let i = 1
+    intervalRef.current = setInterval(() => {
+      setHoverSlide(i % mediaList.length)
+      i++
+    }, 700)
+  }
+
+  const onMouseLeave = () => {
+    clearInterval(intervalRef.current)
+    setHoverSlide(0)
+    setHovering(false)
+  }
+
+  useEffect(() => () => clearInterval(intervalRef.current), [])
+
+  const currentUrl = isCarouselCell ? mediaList[hoverSlide] : (pub.media || '')
+  const thumb = getThumb(currentUrl)
 
   return (
     <button
       onClick={() => onClick(pub)}
+      onMouseEnter={onMouseEnter}
+      onMouseLeave={onMouseLeave}
       className="relative overflow-hidden transition-all duration-150 focus:outline-none"
       style={{
         aspectRatio: '4/5',
@@ -443,7 +476,7 @@ function GridCell({ pub, onClick, isSelected }) {
     >
       {thumb ? (
         <>
-          <img src={thumb} alt="" className="w-full h-full object-cover" onError={e => { e.target.style.display = 'none'; e.target.nextSibling.style.display = 'flex' }} />
+          <img key={hoverSlide} src={thumb} alt="" className="w-full h-full object-cover" style={{ animation: isCarouselCell && hovering ? 'fadeIn 180ms ease' : 'none' }} onError={e => { e.target.style.display = 'none'; e.target.nextSibling.style.display = 'flex' }} />
           <div className="absolute inset-0 items-center justify-center hidden" style={{ backgroundColor: color.bg }}>
             <TypeIcon tipo={pub.tipo} size={16} color={color.dot} />
           </div>
@@ -457,6 +490,23 @@ function GridCell({ pub, onClick, isSelected }) {
       {(t === 'video' || t === 'reel' || t === 'carrusel') && (
         <div className="absolute top-1.5 right-1.5 flex items-center justify-center">
           <CornerTypeIcon tipo={t} />
+        </div>
+      )}
+      {/* Hover slide dots for carousel */}
+      {isCarouselCell && hovering && (
+        <div className="absolute bottom-2 left-1/2 -translate-x-1/2 flex gap-1">
+          {mediaList.map((_, i) => (
+            <span
+              key={i}
+              className="rounded-full block"
+              style={{
+                width: i === hoverSlide ? 10 : 5,
+                height: 5,
+                backgroundColor: i === hoverSlide ? '#fff' : 'rgba(255,255,255,0.5)',
+                transition: 'all 180ms',
+              }}
+            />
+          ))}
         </div>
       )}
       {isSelected && <div className="absolute inset-0 bg-black/10" />}

@@ -247,7 +247,7 @@ export default function PublicationModal({ publication: pub, allPublications = [
                         border: '1px solid #F0F0F0',
                         backgroundColor: '#F9FAFB',
                       }}
-                      onClick={() => canExpand && !isCarousel && setLightbox(true)}
+                      onClick={() => canExpand && setLightbox(true)}
                     >
                       {embed.kind === 'iframe' && (
                         <iframe
@@ -299,39 +299,41 @@ export default function PublicationModal({ publication: pub, allPublications = [
                         </div>
                       )}
 
-                      {/* Fullscreen button (non-carousel only) */}
-                      {!isCarousel && (
-                        <>
-                          <div
-                            className="absolute bottom-3 right-3 w-8 h-8 rounded-xl flex items-center justify-center text-white transition-all duration-150 opacity-0 group-hover:opacity-100"
-                            style={{ backgroundColor: 'rgba(0,0,0,0.55)', backdropFilter: 'blur(4px)' }}
-                          >
-                            <FullscreenIcon />
-                          </div>
-                          <div
-                            className="sm:hidden absolute bottom-3 right-3 w-8 h-8 rounded-xl flex items-center justify-center text-white"
-                            style={{ backgroundColor: 'rgba(0,0,0,0.45)', backdropFilter: 'blur(4px)' }}
-                          >
-                            <FullscreenIcon />
-                          </div>
-                        </>
-                      )}
+                      {/* Fullscreen button */}
+                      <div
+                        className="absolute bottom-3 right-3 w-8 h-8 rounded-xl flex items-center justify-center text-white transition-all duration-150 opacity-0 group-hover:opacity-100"
+                        style={{ backgroundColor: 'rgba(0,0,0,0.55)', backdropFilter: 'blur(4px)' }}
+                      >
+                        <FullscreenIcon />
+                      </div>
+                      <div
+                        className="sm:hidden absolute bottom-3 right-3 w-8 h-8 rounded-xl flex items-center justify-center text-white"
+                        style={{ backgroundColor: 'rgba(0,0,0,0.45)', backdropFilter: 'blur(4px)' }}
+                      >
+                        <FullscreenIcon />
+                      </div>
                     </div>
 
                     {/* Carousel dots */}
                     {isCarousel && (
-                      <div className="flex items-center justify-center gap-1.5 mt-3">
+                      <div className="flex items-center justify-center mt-1">
                         {mediaList.map((_, i) => (
                           <button
                             key={i}
                             onClick={() => setSlide(i)}
-                            className="rounded-full transition-all duration-200 flex-shrink-0"
-                            style={{
-                              width: i === slide ? 14 : 6,
-                              height: 6,
-                              backgroundColor: i === slide ? color.dot : '#D1D5DB',
-                            }}
-                          />
+                            className="flex items-center justify-center flex-shrink-0"
+                            style={{ padding: '8px 4px' }}
+                          >
+                            <span
+                              className="rounded-full block"
+                              style={{
+                                width: i === slide ? 14 : 6,
+                                height: 6,
+                                backgroundColor: i === slide ? color.dot : '#D1D5DB',
+                                transition: 'all 200ms',
+                              }}
+                            />
+                          </button>
                         ))}
                       </div>
                     )}
