@@ -1,14 +1,102 @@
-import { useMemo } from 'react'
+import { useMemo, useState, useEffect, useRef } from 'react'
 import { getProjectColor } from '../utils/colors'
-import { sameDay } from '../utils/dateUtils'
+import { sameDay, formatDate } from '../utils/dateUtils'
 import { TypeIcon } from './Icons'
 
 const DAYS = ['Lun', 'Mar', 'Mié', 'Jue', 'Vie', 'Sáb', 'Dom']
 const MAX_VISIBLE = 3
 
+function DayPopover({ date, pubs, anchorRect, onSelect, onClose }) {
+  const ref = useRef(null)
+
+  useEffect(() => {
+    const onKey = e => { if (e.key === 'Escape') onClose() }
+    document.addEventListener('keydown', onKey)
+    return () => document.removeEventListener('keydown', onKey)
+  }, [onClose])
+
+  // Position: desktop → near cell; mobile → bottom sheet
+  const isMobile = window.innerWidth < 640
+  let style = {}
+  if (!isMobile && anchorRect) {
+    const popW = 240
+    const popH = Math.min(pubs.length * 44 + 56, 360)
+    let left = anchorRect.left + window.scrollX
+    let top = anchorRect.bottom + window.scrollY + 6
+    if (left + popW > window.innerWidth - 12) left = window.innerWidth - popW - 12
+    if (top + popH > window.innerHeight + window.scrollY - 12) top = anchorRect.top + window.scrollY - popH - 6
+    style = { position: 'fixed', top: anchorRect.bottom + 6, left: Math.max(8, Math.min(left, window.innerWidth - popW - 8)), width: popW, zIndex: 55 }
+  }
+
+  return (
+    <>
+      {/* Backdrop */}
+      <div
+        className="fixed inset-0 z-50"
+        style={{ backgroundColor: isMobile ? 'rgba(0,0,0,0.3)' : 'transparent' }}
+        onClick={onClose}
+      />
+
+      {/* Panel */}
+      <div
+        ref={ref}
+        className={isMobile
+          ? 'fixed bottom-0 left-0 right-0 z-[55] bg-white rounded-t-3xl max-h-[70vh] flex flex-col overflow-hidden'
+          : 'z-[55] bg-white rounded-2xl overflow-hidden flex flex-col'
+        }
+        style={isMobile
+          ? { boxShadow: '0 -8px 40px rgba(0,0,0,0.18)', animation: 'modalIn 200ms cubic-bezier(0.16,1,0.3,1)' }
+          : { ...style, boxShadow: '0 8px 32px rgba(0,0,0,0.16), 0 2px 8px rgba(0,0,0,0.08)', border: '1px solid #E8EAED', animation: 'fadeUp 150ms cubic-bezier(0.16,1,0.3,1)' }
+        }
+      >
+        {/* Header */}
+        <div className="flex items-center justify-between px-4 py-3 border-b border-gray-100 flex-shrink-0">
+          <div>
+            <span className="text-sm font-black text-gray-900">{formatDate(date)}</span>
+            <span className="text-xs text-gray-400 ml-2">{pubs.length} publicaciones</span>
+          </div>
+          <button onClick={onClose} className="w-7 h-7 rounded-lg flex items-center justify-center hover:bg-gray-100 transition-colors">
+            <svg width="10" height="10" viewBox="0 0 12 12" fill="none"><path d="M1 1l10 10M11 1L1 11" stroke="#9CA3AF" strokeWidth="1.6" strokeLinecap="round"/></svg>
+          </button>
+        </div>
+
+        {/* List */}
+        <div className="overflow-y-auto flex-1 p-2">
+          {pubs.map(pub => {
+            const color = getProjectColor(pub.proyecto)
+            return (
+              <button
+                key={pub.id}
+                onClick={() => { onSelect(pub); onClose() }}
+                className="w-full text-left flex items-center gap-2.5 px-3 py-2.5 rounded-xl transition-all duration-100 hover:brightness-95 active:brightness-90 mb-1"
+                style={{ backgroundColor: color.bg }}
+              >
+                <span className="w-2 h-2 rounded-full flex-shrink-0" style={{ backgroundColor: color.dot }} />
+                <div className="flex-1 min-w-0">
+                  <div className="text-[11px] font-bold truncate" style={{ color: color.text }}>{pub.proyecto}</div>
+                  {pub.titulo && <div className="text-[10px] text-gray-500 truncate leading-tight mt-0.5">{pub.titulo}</div>}
+                </div>
+                {pub.tipo && (
+                  <span className="flex-shrink-0 opacity-40" style={{ color: color.text }}>
+                    <TypeIcon tipo={pub.tipo} size={11} />
+                  </span>
+                )}
+              </button>
+            )
+          })}
+        </div>
+
+        {/* Mobile drag handle hint */}
+        {isMobile && <div className="flex justify-center py-3 flex-shrink-0"><div className="w-10 h-1 rounded-full bg-gray-200" /></div>}
+      </div>
+    </>
+  )
+}
+
 export default function CalendarGrid({ year, month, publications, onSelect, activeFilter }) {
   const hasFilter = activeFilter.length > 0
   const filtered = hasFilter ? publications.filter(p => activeFilter.includes(p.proyecto)) : publications
+  const [openDay, setOpenDay] = useState(null)
 
   const cells = useMemo(() => {
     const firstDay = new Date(year, month, 1)
@@ -59,6 +147,16 @@ export default function CalendarGrid({ year, month, publications, onSelect, acti
           </div>
         ))}
       </div>
+
+      {openDay && (
+        <DayPopover
+          date={openDay.date}
+          pubs={openDay.pubs}
+          anchorRect={openDay.anchorRect}
+          onSelect={onSelect}
+          onClose={() => setOpenDay(null)}
+        />
+      )}
 
       {/* Grid */}
       <div
@@ -178,9 +276,16 @@ export default function CalendarGrid({ year, month, publications, onSelect, acti
                   )
                 })}
                 {overflow > 0 && (
-                  <div className="text-[9px] sm:text-[10px] text-gray-400 pl-1 font-medium">
-                    +{overflow}
-                  </div>
+                  <button
+                    onClick={e => {
+                      e.stopPropagation()
+                      setOpenDay({ date: cell.date, pubs, anchorRect: e.currentTarget.getBoundingClientRect() })
+                    }}
+                    className="text-[9px] sm:text-[10px] font-semibold pl-1 transition-colors duration-100 hover:text-gray-600"
+                    style={{ color: '#e84530' }}
+                  >
+                    +{overflow} más
+                  </button>
                 )}
               </div>
             </div>
