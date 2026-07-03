@@ -119,29 +119,27 @@ export default function Header({
         )}
 
         {/* Demo toggle — desktop */}
-        {activeTab === 'publicaciones' && (
-          <div className="hidden sm:block">
-            {isDemo ? (
-              <button
-                onClick={onExitDemo}
-                className="px-3 py-1.5 rounded-xl text-xs font-semibold transition-all duration-150"
-                style={{ border: '1px solid rgba(115,36,66,0.3)', color: '#e84530', backgroundColor: 'rgba(115,36,66,0.06)' }}
-              >
-                Salir del demo
-              </button>
-            ) : (
-              <button
-                onClick={onDemo}
-                className="px-3 py-1.5 rounded-xl border border-gray-200 text-gray-400 text-xs font-medium hover:bg-gray-50 hover:text-gray-600 transition-all duration-150"
-              >
-                Ver demo
-              </button>
-            )}
-          </div>
-        )}
+        <div className="hidden sm:block">
+          {isDemo ? (
+            <button
+              onClick={onExitDemo}
+              className="px-3 py-1.5 rounded-xl text-xs font-semibold transition-all duration-150"
+              style={{ border: '1px solid rgba(115,36,66,0.3)', color: '#e84530', backgroundColor: 'rgba(115,36,66,0.06)' }}
+            >
+              Salir del demo
+            </button>
+          ) : (
+            <button
+              onClick={onDemo}
+              className="px-3 py-1.5 rounded-xl border border-gray-200 text-gray-400 text-xs font-medium hover:bg-gray-50 hover:text-gray-600 transition-all duration-150"
+            >
+              Ver demo
+            </button>
+          )}
+        </div>
 
         {/* Sync — desktop */}
-        {hasConfig && activeTab === 'publicaciones' && (
+        {hasConfig && (
           <button
             onClick={onSync}
             disabled={loading}
@@ -156,7 +154,41 @@ export default function Header({
         )}
       </div>
 
-      {/* ── Mobile second row ─────────────────────────────────────── */}
+      {/* ── Mobile second row — peticiones ───────────────────────── */}
+      {activeTab === 'peticiones' && (
+        <div className="sm:hidden flex items-center justify-end px-4 pb-3 gap-1.5">
+          {isDemo ? (
+            <button
+              onClick={onExitDemo}
+              className="px-2.5 py-1.5 rounded-xl text-[10px] font-semibold"
+              style={{ border: '1px solid rgba(115,36,66,0.3)', color: '#e84530', backgroundColor: 'rgba(115,36,66,0.06)' }}
+            >
+              Salir
+            </button>
+          ) : (
+            <button
+              onClick={onDemo}
+              className="px-2.5 py-1.5 rounded-xl border border-gray-200 text-gray-400 text-[10px] font-medium"
+            >
+              Demo
+            </button>
+          )}
+          {hasConfig && (
+            <button
+              onClick={onSync}
+              disabled={loading}
+              className="w-8 h-8 rounded-xl border border-gray-200 flex items-center justify-center text-gray-400 disabled:opacity-40"
+            >
+              <svg width="13" height="13" viewBox="0 0 14 14" fill="none" className={loading ? 'animate-spin' : ''}>
+                <path d="M12 7A5 5 0 1 1 7 2" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/>
+                <path d="M10 2h2v2" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+              </svg>
+            </button>
+          )}
+        </div>
+      )}
+
+      {/* ── Mobile second row — publicaciones ─────────────────────── */}
       {activeTab === 'publicaciones' && (
       <div className="sm:hidden flex items-center justify-between px-4 pb-3 gap-2">
         {viewMode !== 'feed' && (
