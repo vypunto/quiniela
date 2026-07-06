@@ -149,19 +149,34 @@ export default function RequestForm({ projects, scriptUrl, onSubmitted }) {
 
   const set = (k, v) => setForm(f => ({ ...f, [k]: v }))
 
-  const handleFile = useCallback((file) => {
+  const handleFile = useCallback(async (file) => {
     if (prevPreviewRef.current) { URL.revokeObjectURL(prevPreviewRef.current); prevPreviewRef.current = null }
     if (!file) { setAdjunto(null); return }
     const isImage = file.type.startsWith('image/')
     const preview = isImage ? URL.createObjectURL(file) : null
     prevPreviewRef.current = preview
-    setAdjunto({ nombre: file.name, tipo: file.type, preview, size: file.size })
-    if (file.size < 25 * 1024 * 1024) {
-      const reader = new FileReader()
-      reader.onload = ev => setAdjunto(prev => prev ? { ...prev, datos: ev.target.result } : prev)
-      reader.readAsDataURL(file)
+    if (file.size >= 25 * 1024 * 1024) {
+      setAdjunto({ nombre: file.name, tipo: file.type, preview, size: file.size, status: 'toobig' })
+      return
     }
-  }, [])
+    setAdjunto({ nombre: file.name, tipo: file.type, preview, size: file.size, status: 'uploading' })
+    if (!scriptUrl) { setAdjunto(prev => prev ? { ...prev, status: 'error' } : null); return }
+    try {
+      const datos = await new Promise((res, rej) => {
+        const r = new FileReader(); r.onload = e => res(e.target.result); r.onerror = rej; r.readAsDataURL(file)
+      })
+      const result = await uploadFile(scriptUrl, file.name, file.type, datos)
+      if (result?.url) {
+        setForm(f => ({ ...f, contenido: f.contenido ? `${f.contenido}, ${result.url}` : result.url }))
+        setAdjunto(prev => prev ? { ...prev, status: 'done' } : null)
+      } else {
+        setAdjunto(prev => prev ? { ...prev, status: 'error' } : null)
+      }
+    } catch (err) {
+      console.warn('Upload error:', err)
+      setAdjunto(prev => prev ? { ...prev, status: 'error' } : null)
+    }
+  }, [scriptUrl])
 
   useEffect(() => () => { if (prevPreviewRef.current) URL.revokeObjectURL(prevPreviewRef.current) }, [])
 
@@ -174,20 +189,9 @@ export default function RequestForm({ projects, scriptUrl, onSubmitted }) {
     setSending(true)
     setError(null)
 
-    let contenidoFinal = form.contenido
-    if (adjunto?.datos && scriptUrl) {
-      try {
-        const result = await uploadFile(scriptUrl, adjunto.nombre, adjunto.tipo, adjunto.datos)
-        if (result?.url) contenidoFinal = contenidoFinal ? `${contenidoFinal}, ${result.url}` : result.url
-      } catch (err) {
-        console.warn('Error al subir adjunto:', err)
-      }
-    }
-
     const payload = {
       ...form,
       proyecto: proyectoFinal,
-      contenido: contenidoFinal,
       fechaSolicitud: new Date().toLocaleDateString('es-ES'),
       estado: 'Pendiente',
       promocionado: form.promocionado ? 'Sí' : 'No',
@@ -386,27 +390,32 @@ export default function RequestForm({ projects, scriptUrl, onSubmitted }) {
             </label>
             {adjunto && (
               <div className="mt-1.5 flex items-center gap-2.5 px-3 py-2 bg-gray-50 rounded-xl">
-                {adjunto.preview && (
-                  <img src={adjunto.preview} alt="" className="w-10 h-10 object-cover rounded-lg flex-shrink-0" />
-                )}
-                {!adjunto.preview && (
-                  <div className="w-10 h-10 rounded-lg bg-gray-100 flex items-center justify-center flex-shrink-0">
-                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#9CA3AF" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
-                      <rect x="2" y="2" width="20" height="20" rx="2.18"/><line x1="7" y1="2" x2="7" y2="22"/><line x1="17" y1="2" x2="17" y2="22"/><line x1="2" y1="12" x2="22" y2="12"/><line x1="2" y1="7" x2="7" y2="7"/><line x1="2" y1="17" x2="7" y2="17"/><line x1="17" y1="17" x2="22" y2="17"/><line x1="17" y1="7" x2="22" y2="7"/>
-                    </svg>
-                  </div>
-                )}
+                {adjunto.preview
+                  ? <img src={adjunto.preview} alt="" className="w-10 h-10 object-cover rounded-lg flex-shrink-0" />
+                  : <div className="w-10 h-10 rounded-lg bg-gray-100 flex items-center justify-center flex-shrink-0">
+                      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#9CA3AF" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"><polygon points="23 7 16 12 23 17 23 7"/><rect x="1" y="5" width="15" height="14" rx="2" ry="2"/></svg>
+                    </div>
+                }
                 <div className="flex-1 min-w-0">
                   <div className="text-xs font-semibold text-gray-700 truncate">{adjunto.nombre}</div>
-                  <div className="text-[11px] text-gray-400">{adjunto.size >= 1024*1024 ? `${(adjunto.size/1024/1024).toFixed(1)} MB` : `${(adjunto.size/1024).toFixed(0)} KB`}</div>
+                  <div className="text-[11px] text-gray-400">
+                    {adjunto.size >= 1024*1024 ? `${(adjunto.size/1024/1024).toFixed(1)} MB` : `${(adjunto.size/1024).toFixed(0)} KB`}
+                    {adjunto.status === 'uploading' && <span className="ml-1.5 text-blue-500">· Subiendo a Drive…</span>}
+                    {adjunto.status === 'done'     && <span className="ml-1.5 text-green-600">· Guardado en Drive</span>}
+                    {adjunto.status === 'error'    && <span className="ml-1.5 text-amber-600">· Error al subir — añade el link manualmente</span>}
+                    {adjunto.status === 'toobig'   && <span className="ml-1.5 text-amber-600">· Supera 25 MB — añade el link manualmente</span>}
+                  </div>
                 </div>
-                <button
-                  type="button"
-                  onClick={() => { handleFile(null); if (fileInputRef.current) fileInputRef.current.value = '' }}
-                  className="w-6 h-6 rounded-full flex items-center justify-center text-gray-400 hover:text-gray-600 hover:bg-gray-200 transition-all duration-150 flex-shrink-0"
-                >
-                  <svg width="10" height="10" viewBox="0 0 12 12" fill="none"><path d="M1 1l10 10M11 1L1 11" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round"/></svg>
-                </button>
+                {adjunto.status === 'uploading'
+                  ? <svg className="animate-spin flex-shrink-0" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#3B82F6" strokeWidth="2.5" strokeLinecap="round"><path d="M12 2v4M12 18v4M4.93 4.93l2.83 2.83M16.24 16.24l2.83 2.83M2 12h4M18 12h4M4.93 19.07l2.83-2.83M16.24 7.76l2.83-2.83"/></svg>
+                  : <button
+                      type="button"
+                      onClick={() => { handleFile(null); if (fileInputRef.current) fileInputRef.current.value = '' }}
+                      className="w-6 h-6 rounded-full flex items-center justify-center text-gray-400 hover:text-gray-600 hover:bg-gray-200 transition-all duration-150 flex-shrink-0"
+                    >
+                      <svg width="10" height="10" viewBox="0 0 12 12" fill="none"><path d="M1 1l10 10M11 1L1 11" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round"/></svg>
+                    </button>
+                }
               </div>
             )}
           </div>
