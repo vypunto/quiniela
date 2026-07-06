@@ -124,7 +124,15 @@ function CustomSelect({ value, onChange, options, placeholder }) {
   )
 }
 
-const EMPTY_FORM = { proyecto: '', proyectoOtros: '', fecha: '', titulo: '', info: '', contenido: '', solicitante: '', tipo: 'imagen', canal: '', promocionado: false, presupuesto: '' }
+const PRIORIDAD_OPTIONS = ['Baja', 'Media', 'Alta', 'Muy alta']
+const PRIORIDAD_STYLES = {
+  'Baja':     { active: { backgroundColor: '#6B7280', color: '#fff', borderColor: '#6B7280' } },
+  'Media':    { active: { backgroundColor: '#3B82F6', color: '#fff', borderColor: '#3B82F6' } },
+  'Alta':     { active: { backgroundColor: '#F59E0B', color: '#fff', borderColor: '#F59E0B' } },
+  'Muy alta': { active: { backgroundColor: '#e84530', color: '#fff', borderColor: '#e84530' } },
+}
+
+const EMPTY_FORM = { proyecto: '', proyectoOtros: '', fecha: '', titulo: '', info: '', contenido: '', solicitante: '', tipo: 'imagen', canal: '', prioridad: 'Media', promocionado: false, presupuesto: '' }
 
 export default function RequestForm({ projects, scriptUrl, onSubmitted }) {
   const [form, setForm] = useState(EMPTY_FORM)
@@ -177,7 +185,7 @@ export default function RequestForm({ projects, scriptUrl, onSubmitted }) {
 
   return (
     <div
-      className="bg-white rounded-2xl p-6"
+      className="bg-white rounded-2xl p-4 sm:p-6"
       style={{ border: '1px solid #E8EAED', boxShadow: '0 1px 3px rgba(0,0,0,0.04), 0 4px 16px rgba(0,0,0,0.04)' }}
     >
       <div className="mb-5">
@@ -355,9 +363,31 @@ export default function RequestForm({ projects, scriptUrl, onSubmitted }) {
             />
           </div>
 
-          {/* Pauta */}
+          {/* Prioridad */}
           <div>
-            <label className={labelClass}>¿Va con pauta publicitaria?</label>
+            <label className={labelClass}>Prioridad</label>
+            <div className="flex flex-wrap gap-1.5">
+              {PRIORIDAD_OPTIONS.map(p => {
+                const isActive = form.prioridad === p
+                const activeStyle = PRIORIDAD_STYLES[p]?.active || {}
+                return (
+                  <button
+                    key={p}
+                    type="button"
+                    onClick={() => set('prioridad', p)}
+                    className="px-3 py-1 rounded-full text-[11px] font-semibold border transition-all duration-150"
+                    style={isActive ? activeStyle : { backgroundColor: '#fff', color: '#6B7280', borderColor: '#E5E7EB' }}
+                  >
+                    {p}
+                  </button>
+                )
+              })}
+            </div>
+          </div>
+
+          {/* Campaña de Ads */}
+          <div>
+            <label className={labelClass}>Campaña de Ads</label>
             <div className="flex items-center gap-3">
               <button
                 type="button"
@@ -372,7 +402,7 @@ export default function RequestForm({ projects, scriptUrl, onSubmitted }) {
                   <path d="M2 8h5M11 5l3 3-3 3" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
                   <path d="M4 5H2v6h2" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
                 </svg>
-                {form.promocionado ? 'Sí, va con pauta' : 'Sin pauta'}
+                {form.promocionado ? 'Sí, con campaña' : 'Sin campaña'}
               </button>
             </div>
             {form.promocionado && (

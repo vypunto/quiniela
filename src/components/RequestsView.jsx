@@ -5,6 +5,14 @@ import { DAYS_ES, MONTHS_ES, parseDate } from '../utils/dateUtils'
 import { fetchRequestsData, updateRequest, deleteRequest } from '../utils/googleSheets'
 import { REQUESTS_SHEET_URL, PROJECTS } from '../config'
 
+const PRIORIDAD_STYLES = {
+  'Baja':     { bg: '#F3F4F6', text: '#6B7280', dot: '#9CA3AF' },
+  'Media':    { bg: '#EFF6FF', text: '#3B82F6', dot: '#3B82F6' },
+  'Alta':     { bg: '#FFF7ED', text: '#D97706', dot: '#F59E0B' },
+  'Muy alta': { bg: '#FFF1F2', text: '#BE123C', dot: '#e84530' },
+}
+const PRIORIDAD_OPTIONS = ['Baja', 'Media', 'Alta', 'Muy alta']
+
 const STATUS_STYLES = {
   'Pendiente':   { bg: '#FFF8E6', text: '#8A6000', dot: '#F59E0B' },
   'En revisión': { bg: '#EFF6FF', text: '#1D4ED8', dot: '#3B82F6' },
@@ -35,6 +43,7 @@ function EditModal({ req, scriptUrl, onSave, onClose }) {
     estado: req.estado || 'Pendiente',
     fecha: req.fecha instanceof Date ? req.fecha.toISOString().slice(0, 10) : '',
     canal: req.canal || '',
+    prioridad: req.prioridad || 'Media',
     promocionado: (req.promocionado || 'No').startsWith('S') || (req.promocionado || 'No').startsWith('s'),
     presupuesto: req.presupuesto || '',
   })
@@ -172,7 +181,31 @@ function EditModal({ req, scriptUrl, onSave, onClose }) {
           </div>
 
           <div>
-            <label className="block text-xs font-semibold text-gray-400 uppercase tracking-[0.1em] mb-2">¿Va con pauta?</label>
+            <label className="block text-xs font-semibold text-gray-400 uppercase tracking-[0.1em] mb-2.5">Prioridad</label>
+            <div className="flex flex-wrap gap-1.5">
+              {PRIORIDAD_OPTIONS.map(p => {
+                const s = PRIORIDAD_STYLES[p]
+                const isActive = form.prioridad === p
+                return (
+                  <button
+                    key={p}
+                    type="button"
+                    onClick={() => set('prioridad', p)}
+                    className="px-3 py-1.5 rounded-xl text-xs font-semibold transition-all duration-150 border"
+                    style={isActive
+                      ? { backgroundColor: s.dot, color: '#fff', borderColor: s.dot }
+                      : { backgroundColor: s.bg, color: s.text, borderColor: 'transparent' }
+                    }
+                  >
+                    {p}
+                  </button>
+                )
+              })}
+            </div>
+          </div>
+
+          <div>
+            <label className="block text-xs font-semibold text-gray-400 uppercase tracking-[0.1em] mb-2">Campaña de Ads</label>
             <div className="flex items-center gap-3">
               <button
                 type="button"
@@ -183,7 +216,7 @@ function EditModal({ req, scriptUrl, onSave, onClose }) {
                   : { backgroundColor: '#fff', color: '#6B7280', borderColor: '#E5E7EB' }
                 }
               >
-                {form.promocionado ? 'Sí, con pauta' : 'Sin pauta'}
+                {form.promocionado ? 'Sí, con campaña' : 'Sin campaña'}
               </button>
             </div>
             {form.promocionado && (
@@ -386,6 +419,15 @@ export default function RequestsView({ config, isDemo, calendarPubs = [], onCoun
                       </span>
                     )}
 
+                    {req.prioridad && (
+                      <span
+                        className="hidden sm:inline-flex items-center px-2 py-1 rounded-full text-[10px] font-semibold flex-shrink-0"
+                        style={{ backgroundColor: (PRIORIDAD_STYLES[req.prioridad] || PRIORIDAD_STYLES['Media']).bg, color: (PRIORIDAD_STYLES[req.prioridad] || PRIORIDAD_STYLES['Media']).text }}
+                      >
+                        {req.prioridad}
+                      </span>
+                    )}
+
                     <StatusBadge estado={req.estado} />
 
                     <button
@@ -393,8 +435,24 @@ export default function RequestsView({ config, isDemo, calendarPubs = [], onCoun
                       className="flex-shrink-0 w-8 h-8 rounded-xl border border-gray-200 flex items-center justify-center text-gray-400 hover:text-gray-600 hover:bg-gray-100 transition-all duration-150"
                       title="Editar"
                     >
-                      <svg width="11" height="11" viewBox="0 0 12 12" fill="none">
-                        <path d="M8.5 1.5a1.5 1.5 0 0 1 2 2L4 10H2v-2L8.5 1.5z" stroke="currentColor" strokeWidth="1.3" strokeLinecap="round" strokeLinejoin="round"/>
+                      <svg width="11" height="11" viewBox="0 0 682.66669 682.66669" fill="none">
+                        <g transform="matrix(1.3333333,0,0,-1.3333333,0,682.66667)">
+                          <g transform="translate(436.2648,490.5177)">
+                            <path d="m 0,0 55.186,-55.186 c 7.811,-7.811 7.811,-20.474 0,-28.285 L -0.151,-138.809 -83.622,-55.338 -28.284,0 C -20.474,7.81 -7.81,7.81 0,0 Z" stroke="currentColor" strokeWidth="75" strokeLinecap="round" strokeLinejoin="round"/>
+                          </g>
+                          <g transform="translate(310.4019,392.939)">
+                            <path d="m 0,0 83.471,-83.471 42.24,42.241 -83.47,83.471 z" stroke="currentColor" strokeWidth="75" strokeLinecap="round" strokeLinejoin="round"/>
+                          </g>
+                          <g transform="translate(310.4019,392.939)">
+                            <path d="m 0,0 -250.624,-250.624 83.47,-83.471 250.625,250.624 z" stroke="currentColor" strokeWidth="75" strokeLinecap="round" strokeLinejoin="round"/>
+                          </g>
+                          <g transform="translate(14.6909,15)">
+                            <path d="m 0,0 128.557,43.844 -83.47,83.471 z" stroke="currentColor" strokeWidth="75" strokeLinecap="round" strokeLinejoin="round"/>
+                          </g>
+                          <g transform="translate(30.2175,58.8438)">
+                            <path d="M 0,0 29.014,-29.014" stroke="currentColor" strokeWidth="75" strokeLinecap="round" strokeLinejoin="round"/>
+                          </g>
+                        </g>
                       </svg>
                     </button>
                     <button
@@ -402,8 +460,25 @@ export default function RequestsView({ config, isDemo, calendarPubs = [], onCoun
                       className="flex-shrink-0 w-8 h-8 rounded-xl border border-gray-200 flex items-center justify-center text-gray-400 hover:text-red-500 hover:border-red-200 hover:bg-red-50 transition-all duration-150"
                       title="Eliminar"
                     >
-                      <svg width="11" height="11" viewBox="0 0 12 12" fill="none">
-                        <path d="M2 3h8M5 3V2h2v1M4.5 3v6.5h3V3" stroke="currentColor" strokeWidth="1.3" strokeLinecap="round" strokeLinejoin="round"/>
+                      <svg width="11" height="11" viewBox="0 0 682.66669 682.66669" fill="none">
+                        <g transform="matrix(1.3333333,0,0,-1.3333333,0,682.66667)">
+                          <g transform="translate(196,435)">
+                            <path d="M 0,0 V 62 H 120 V 0" stroke="currentColor" strokeWidth="75" strokeLinecap="round" strokeLinejoin="round"/>
+                          </g>
+                          <g transform="translate(406,375)">
+                            <path d="M 0,0 -30,-360 H -270 L -300,0" stroke="currentColor" strokeWidth="75" strokeLinecap="round" strokeLinejoin="round"/>
+                          </g>
+                          <path d="M 436,375 H 76 v 60 h 360 z" stroke="currentColor" strokeWidth="75" strokeLinecap="round" strokeLinejoin="round"/>
+                          <g transform="translate(256,285)">
+                            <path d="M 0,0 V -180" stroke="currentColor" strokeWidth="75" strokeLinecap="round" strokeLinejoin="round"/>
+                          </g>
+                          <g transform="translate(196,285)">
+                            <path d="M 0,0 V -180" stroke="currentColor" strokeWidth="75" strokeLinecap="round" strokeLinejoin="round"/>
+                          </g>
+                          <g transform="translate(316,285)">
+                            <path d="M 0,0 V -180" stroke="currentColor" strokeWidth="75" strokeLinecap="round" strokeLinejoin="round"/>
+                          </g>
+                        </g>
                       </svg>
                     </button>
                   </div>
