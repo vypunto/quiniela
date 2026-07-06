@@ -505,37 +505,87 @@ a:focus-visible, button:focus-visible, summary:focus-visible {
     </div>
   </div>
 
+  <div class="section" id="modo-demo">
+    <div class="section-head">
+      <div class="section-icon" aria-hidden="true">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2.2" stroke-linecap="round"><polygon points="5 3 19 12 5 21 5 3"/></svg>
+      </div>
+      <h2>Modo demo</h2>
+    </div>
+
+    <p>Si la app no tiene un Google Sheet conectado, o simplemente quieres explorarla antes de configurarla, puedes activar el <strong>modo demo</strong>. Carga un conjunto de publicaciones de ejemplo con todos los tipos de contenido y proyectos para que puedas navegar libremente.</p>
+
+    <ol class="steps">
+      <li>
+        <div class="step-n" aria-hidden="true">1</div>
+        <div class="step-body">
+          <strong>Pulsar "Ver demo"</strong>
+          <p>Aparece en la pantalla de bienvenida cuando no hay hoja configurada, o en el menú de ajustes.</p>
+        </div>
+      </li>
+      <li>
+        <div class="step-n" aria-hidden="true">2</div>
+        <div class="step-body">
+          <strong>Explorar con datos de ejemplo</strong>
+          <p>El calendario se llena con publicaciones ficticias de varios proyectos: imágenes, vídeos, reels, carruseles, historias y textos.</p>
+        </div>
+      </li>
+      <li>
+        <div class="step-n" aria-hidden="true">3</div>
+        <div class="step-body">
+          <strong>Salir del demo</strong>
+          <p>Pulsa el banner "Salir del demo" que aparece en la cabecera para volver a los datos reales.</p>
+        </div>
+      </li>
+    </ol>
+
+    <div class="callout tip">
+      <strong>Nota:</strong> En modo demo no se puede editar ni guardar nada. Es solo para exploración visual.
+    </div>
+  </div>
+
   <div class="section" id="ver-calendario">
     <div class="section-head">
       <div class="section-icon" aria-hidden="true">
         <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2.2" stroke-linecap="round"><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/></svg>
       </div>
-      <h2>Ver el calendario</h2>
+      <h2>Las tres vistas del calendario</h2>
     </div>
 
-    <p>La pestaña <strong>Publicaciones</strong> muestra todo el contenido programado. Se puede consultar sin iniciar sesión, en tres formatos:</p>
+    <p>La pestaña <strong>Publicaciones</strong> muestra todo el contenido programado sin necesidad de iniciar sesión. Puedes cambiar entre tres vistas con los iconos de la cabecera.</p>
 
-    <div class="feat-grid">
-      <div class="feat-card">
-        <div class="ico">📅</div>
-        <strong>Vista Mes</strong>
-        <span>Cuadrícula clásica con chips de color por proyecto.</span>
-      </div>
-      <div class="feat-card">
-        <div class="ico">📋</div>
-        <strong>Vista Lista</strong>
-        <span>Publicaciones por semana, ordenadas cronológicamente.</span>
-      </div>
-      <div class="feat-card">
-        <div class="ico">📸</div>
-        <strong>Visual Feed</strong>
-        <span>Grid estilo Instagram por proyecto, con preview de imágenes.</span>
-      </div>
+    <span class="sub-label" style="margin-top: 0">📅 Vista Mes</span>
+    <p>Cuadrícula mensual clásica. Cada día muestra chips de colores, uno por publicación, con el nombre del proyecto. Los días con muchas publicaciones muestran un indicador de desbordamiento — haz clic en él para verlas todas. Navega entre meses con las flechas del header.</p>
+    <ul class="item-list" style="margin-top: 6px; margin-bottom: 14px;">
+      <li>Haz clic en cualquier chip para abrir el detalle completo de esa publicación</li>
+      <li>Los iconos de tipo (imagen, vídeo, reel…) aparecen sobre cada chip</li>
+      <li>Las publicaciones con campaña de Ads muestran un indicador especial</li>
+    </ul>
+
+    <span class="sub-label">📋 Vista Lista</span>
+    <p>Publicaciones del mes ordenadas cronológicamente, agrupadas por semana. Cada fila muestra proyecto, título, tipo, canal y estado de un vistazo. Es la vista ideal para revisar la planificación semana a semana.</p>
+    <ul class="item-list" style="margin-top: 6px; margin-bottom: 14px;">
+      <li>Filtros rápidos de <strong>Tipo</strong> y <strong>Canal</strong> aparecen encima de la lista — solo se muestran los que existen ese mes</li>
+      <li>Los filtros se pueden combinar: por ejemplo, ver solo reels de Instagram</li>
+      <li>Haz clic en cualquier fila para abrir el detalle</li>
+    </ul>
+
+    <span class="sub-label">📸 Visual Feed</span>
+    <p>Grid estilo feed de Instagram organizado por proyecto. Cada proyecto aparece con su avatar (inicial del nombre) y sus publicaciones en formato mosaico. Es la vista más visual — ideal para revisar cómo queda el grid de cada cuenta.</p>
+    <ul class="item-list" style="margin-top: 6px; margin-bottom: 14px;">
+      <li>Las imágenes se muestran en miniatura; los vídeos y reels tienen un indicador de reproducción</li>
+      <li>Las <strong>historias</strong> aparecen como avatares circulares con aro de gradiente, igual que en Instagram — haz clic para abrirlas</li>
+      <li>Los <strong>carruseles</strong> muestran la primera imagen con un indicador de múltiples piezas</li>
+      <li>Puedes deslizar entre publicaciones dentro del visor de detalle</li>
+    </ul>
+
+    <span class="sub-label">Detalle de publicación</span>
+    <p>Al hacer clic en cualquier publicación (en cualquier vista) se abre un panel con toda la información: imagen o vídeo, copy completo, estado, canal, enlace al post publicado y datos de campaña si los hay.</p>
+    <div class="callout tip">
+      <strong>Copiar copy:</strong> Pulsa el botón de copiar en el panel de detalle para copiar el texto al portapapeles con un clic.
     </div>
 
-    <p style="margin-top: 14px;">Haz clic en cualquier publicación para ver su detalle: imagen, copy, estado, canal y enlace al post publicado. Desde el detalle puedes copiar el copy al portapapeles.</p>
-
-    <span class="sub-label">Estados de las publicaciones</span>
+    <span class="sub-label" style="margin-top: 20px;">Estados de las publicaciones</span>
     <div class="status-row">
       <span class="status-pill s-pub">▶ Publicado</span>
       <span class="status-pill s-prog">⏸ Programado</span>
@@ -749,7 +799,7 @@ a:focus-visible, button:focus-visible, summary:focus-visible {
 <script>
 // Resaltar la pill activa según sección visible
 const anchors = [
-  { ids: ['equipo','peticiones','ver-calendario','filtros'], tab: 'tab-equipo' },
+  { ids: ['equipo','peticiones','modo-demo','ver-calendario','filtros'], tab: 'tab-equipo' },
   { ids: ['admin','admin-acceso','editar','gestionar-peticiones','tipos'], tab: 'tab-admin' },
   { ids: ['faq-section'], tab: 'tab-faq' },
 ]
