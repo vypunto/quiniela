@@ -108,26 +108,28 @@ export default function App() {
     }
   })
 
-  const syncData = useCallback(async () => {
+  const syncData = useCallback(async (bustCache = false) => {
     if (!config.spreadsheetId) return
 
-    // Show cached data immediately so the calendar is never blank
-    try {
-      const raw = localStorage.getItem('pubcal_pubs_cache')
-      if (raw) {
-        const cached = JSON.parse(raw).map(p => ({ ...p, fecha: p.fecha ? new Date(p.fecha) : null }))
-        setRealPublications(cached)
-        setPublications(cached)
-      }
-    } catch { /* ignore bad cache */ }
+    // Show cached data immediately so the calendar is never blank (skip if busting cache after an edit)
+    if (!bustCache) {
+      try {
+        const raw = localStorage.getItem('pubcal_pubs_cache')
+        if (raw) {
+          const cached = JSON.parse(raw).map(p => ({ ...p, fecha: p.fecha ? new Date(p.fecha) : null }))
+          setRealPublications(cached)
+          setPublications(cached)
+        }
+      } catch { /* ignore bad cache */ }
+    }
 
     setLoading(true)
     setError(null)
     try {
       // Fetch publications sheet + requests sheet in parallel
       const [pubsData, reqsData] = await Promise.all([
-        fetchSheetData(config.spreadsheetId),
-        REQUESTS_SHEET_URL ? fetchRequestsData(REQUESTS_SHEET_URL).catch(() => []) : Promise.resolve([]),
+        fetchSheetData(config.spreadsheetId, bustCache),
+        REQUESTS_SHEET_URL ? fetchRequestsData(REQUESTS_SHEET_URL, bustCache).catch(() => []) : Promise.resolve([]),
       ])
 
       // Approved requests become calendar entries visible to everyone
@@ -204,7 +206,7 @@ export default function App() {
       removePending(pendingId)
     }
     // Re-sync after Apps Script write so other users see the change
-    setTimeout(() => syncData(), 2000)
+    setTimeout(() => syncData(true), 5000)
   }, [addPending, removePending, syncData])
 
   // Called from PublicationEditModal — writes to Sheet via Apps Script, optimistic update meanwhile
@@ -221,7 +223,7 @@ export default function App() {
       } catch (err) {
         console.error('[EditPub] error:', err)
       }
-      setTimeout(() => syncData(), 2000)
+      setTimeout(() => syncData(true), 5000)
     }
   }, [addPending, config.requestsScriptUrl, syncData])
 

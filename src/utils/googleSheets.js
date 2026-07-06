@@ -20,7 +20,9 @@ function fetchWithTimeout(url, options = {}, ms = 12000) {
   return fetch(url, { ...options, signal: controller.signal }).finally(() => clearTimeout(timer))
 }
 
-async function fetchCsv(url) {
+async function fetchCsv(url, bustCache = false) {
+  // Cache-busting: append timestamp so Google Sheets doesn't serve stale CSV
+  const u = bustCache ? `${url}${url.includes('?') ? '&' : '?'}_t=${Date.now()}` : url
   const proxies = [
     u => fetchWithTimeout(u, { mode: 'cors' }),
     u => fetchWithTimeout(`https://corsproxy.io/?url=${encodeURIComponent(u)}`),
@@ -30,7 +32,7 @@ async function fetchCsv(url) {
   ]
   for (const proxy of proxies) {
     try {
-      const res = await proxy(url)
+      const res = await proxy(u)
       if (res.ok) {
         const text = await res.text()
         if (isCsvText(text)) return text
@@ -53,15 +55,39 @@ function normalizeHeader(h) {
   } catch { return h.trim() }
 }
 
+function parseCsvLine(line) {
+  const fields = []
+  let i = 0
+  while (i <= line.length) {
+    if (line[i] === '"') {
+      i++
+      let field = ''
+      while (i < line.length) {
+        if (line[i] === '"' && line[i + 1] === '"') { field += '"'; i += 2 }
+        else if (line[i] === '"') { i++; break }
+        else { field += line[i++] }
+      }
+      fields.push(field)
+      if (line[i] === ',') i++
+    } else {
+      const end = line.indexOf(',', i)
+      if (end === -1) { fields.push(line.slice(i)); break }
+      fields.push(line.slice(i, end))
+      i = end + 1
+    }
+  }
+  return fields
+}
+
 function safeParse(csv) {
   if (typeof csv !== 'string' || !csv.trim()) return { data: [] }
   try {
     const str = String(csv).replace(/^﻿/, '')
     const lines = str.split(/\r?\n/)
-    const headers = lines[0].split(',').map(normalizeHeader)
+    const headers = parseCsvLine(lines[0]).map(normalizeHeader)
     const rows = lines.slice(1).filter(l => l.trim())
     const data = rows.map(row => {
-      const vals = row.split(',')
+      const vals = parseCsvLine(row)
       const obj = {}
       headers.forEach((h, i) => { obj[h] = vals[i] || '' })
       return obj
@@ -89,15 +115,15 @@ function parseRow(row, i) {
   }
 }
 
-export async function fetchSheetData(sheetUrl) {
+export async function fetchSheetData(sheetUrl, bustCache = false) {
   const url = buildCsvUrl(sheetUrl)
-  const csv = await fetchCsv(url)
+  const csv = await fetchCsv(url, bustCache)
   const { data } = safeParse(csv)
   return data.map(parseRow).filter(p => p.proyecto && p.fecha)
 }
 
-export async function fetchRequestsData(sheetUrl) {
-  const csv = await fetchCsv(sheetUrl)
+export async function fetchRequestsData(sheetUrl, bustCache = false) {
+  const csv = await fetchCsv(sheetUrl, bustCache)
   const { data } = safeParse(csv)
   return data.map((row, i) => ({
     id: `sheet-${i}`,

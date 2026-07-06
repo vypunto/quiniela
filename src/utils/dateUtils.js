@@ -7,12 +7,17 @@ export function parseDate(str) {
   if (!str) return null
   const s = str.trim()
 
-  // YYYY-MM-DD
+  // YYYY-MM-DD (ISO date only — treat as local to avoid UTC-shift)
   if (/^\d{4}-\d{2}-\d{2}$/.test(s)) {
     const [y, m, d] = s.split('-').map(Number)
     return new Date(y, m - 1, d)
   }
-  // DD/MM/YYYY
+  // YYYY-MM-DDThh:mm (ISO datetime — extract date part)
+  if (/^\d{4}-\d{2}-\d{2}T/.test(s)) {
+    const [y, m, d] = s.slice(0, 10).split('-').map(Number)
+    return new Date(y, m - 1, d)
+  }
+  // DD/MM/YYYY (Spanish)
   if (/^\d{1,2}\/\d{1,2}\/\d{4}$/.test(s)) {
     const [d, m, y] = s.split('/').map(Number)
     return new Date(y, m - 1, d)
@@ -30,8 +35,10 @@ export function parseDate(str) {
     }
   }
 
+  // Fallback: native parser — use local date to avoid UTC-shift
   const d = new Date(s)
-  return isNaN(d.getTime()) ? null : d
+  if (isNaN(d.getTime())) return null
+  return new Date(d.getFullYear(), d.getMonth(), d.getDate())
 }
 
 export function sameDay(a, b) {
