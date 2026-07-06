@@ -15,40 +15,29 @@ function isCsvText(t) {
   return typeof t === 'string' && !t.includes('<!DOCTYPE') && !t.includes('<html')
 }
 
-function fetchWithTimeout(url, options = {}, ms = 8000) {
+function fetchWithTimeout(url, options = {}, ms = 12000) {
   const controller = new AbortController()
   const timer = setTimeout(() => controller.abort(), ms)
   return fetch(url, { ...options, signal: controller.signal }).finally(() => clearTimeout(timer))
 }
 
 async function fetchCsv(url) {
-  // 1. Direct fetch
-  try {
-    const res = await fetchWithTimeout(url, { mode: 'cors' })
-    if (res.ok) {
-      const text = await res.text()
-      if (isCsvText(text)) return text
-    }
-  } catch { /* fall through */ }
-
-  // 2. corsproxy.io
-  try {
-    const res = await fetchWithTimeout(`https://corsproxy.io/?url=${encodeURIComponent(url)}`)
-    if (res.ok) {
-      const text = await res.text()
-      if (isCsvText(text)) return text
-    }
-  } catch { /* fall through */ }
-
-  // 3. allorigins.win
-  try {
-    const res = await fetchWithTimeout(`https://api.allorigins.win/raw?url=${encodeURIComponent(url)}`)
-    if (res.ok) {
-      const text = await res.text()
-      if (isCsvText(text)) return text
-    }
-  } catch { /* fall through */ }
-
+  const proxies = [
+    u => fetchWithTimeout(u, { mode: 'cors' }),
+    u => fetchWithTimeout(`https://corsproxy.io/?url=${encodeURIComponent(u)}`),
+    u => fetchWithTimeout(`https://api.allorigins.win/raw?url=${encodeURIComponent(u)}`),
+    u => fetchWithTimeout(`https://api.codetabs.com/v1/proxy?quest=${encodeURIComponent(u)}`),
+    u => fetchWithTimeout(`https://thingproxy.freeboard.io/fetch/${encodeURIComponent(u)}`),
+  ]
+  for (const proxy of proxies) {
+    try {
+      const res = await proxy(url)
+      if (res.ok) {
+        const text = await res.text()
+        if (isCsvText(text)) return text
+      }
+    } catch { /* try next */ }
+  }
   throw new Error('No se pudo acceder a la hoja. Asegúrate de haberla publicado en Archivo → Compartir → Publicar en la web (formato CSV).')
 }
 
