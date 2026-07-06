@@ -95,8 +95,8 @@ function tabMatch(pub, tab) {
   const t = (pub.tipo || '').toLowerCase()
   if (tab === 'reels') return t === 'reel'
   if (tab === 'stories') return t === 'historia'
-  // posts: imagen + video + carrusel (everything except reel and historia)
-  return t === 'imagen' || t === 'video' || t === 'carrusel' || t === '' || !pub.tipo
+  // posts: everything except stories (reels, carrusels, images, videos all appear in main grid)
+  return t !== 'historia'
 }
 
 function Avatar({ name, size = 28 }) {
@@ -138,11 +138,56 @@ function StatusBar() {
   )
 }
 
+/* ── Reel media: thumbnail → click-to-play embedded video ── */
+function ReelMediaArea({ pub, color }) {
+  const [playing, setPlaying] = useState(false)
+  const url = (pub.media || '').split(',')[0].trim()
+  const thumb = getThumb(url)
+  const ytMatch = url.match(/(?:youtube\.com\/watch\?v=|youtu\.be\/)([^&?]+)/)
+  const driveMatch = url.match(/drive\.google\.com\/file\/d\/([^/?]+)/)
+  const isDirectVid = /\.(mp4|mov|webm)$/i.test(url)
+
+  const embedSrc = ytMatch
+    ? `https://www.youtube.com/embed/${ytMatch[1]}?autoplay=1&playsinline=1`
+    : driveMatch
+    ? `https://drive.google.com/file/d/${driveMatch[1]}/preview`
+    : null
+
+  return (
+    <div className="w-full relative" style={{ aspectRatio: '9/16', backgroundColor: '#000', overflow: 'hidden' }}>
+      {playing ? (
+        embedSrc
+          ? <iframe src={embedSrc} className="w-full h-full border-0" allow="autoplay; encrypted-media" allowFullScreen title="reel" />
+          : isDirectVid
+          ? <video src={url} className="w-full h-full object-cover" controls autoPlay playsInline />
+          : <div className="w-full h-full flex items-center justify-center" style={{ backgroundColor: color.bg }}><TypeIcon tipo="reel" size={32} color={color.dot} /></div>
+      ) : (
+        <>
+          {thumb
+            ? <img src={thumb} alt="" className="w-full h-full object-cover" onError={e => { e.target.style.display = 'none' }} />
+            : <div className="w-full h-full flex items-center justify-center" style={{ backgroundColor: color.bg }}><TypeIcon tipo="reel" size={32} color={color.dot} /></div>
+          }
+          <div className="absolute inset-0 flex items-center justify-center">
+            <button
+              onClick={() => setPlaying(true)}
+              className="w-14 h-14 rounded-full flex items-center justify-center"
+              style={{ backgroundColor: 'rgba(0,0,0,0.55)', backdropFilter: 'blur(2px)' }}
+            >
+              <svg width="22" height="22" viewBox="0 0 20 20" fill="white"><path d="M5 3l13 7-13 7V3z"/></svg>
+            </button>
+          </div>
+        </>
+      )}
+    </div>
+  )
+}
+
 /* ── Instagram post view (inside phone) ── */
 function InstaPostView({ pub, onBack, onOpenDetails }) {
   const color = getProjectColor(pub.proyecto)
   const mediaList = parseMediaList(pub.media)
   const isCarousel = mediaList.length > 1
+  const isReel = (pub.tipo || '').toLowerCase() === 'reel'
   const likes = mockLikes(pub.id)
   const whenStr = relativeDate(pub.fecha)
   const [liked, setLiked] = useState(false)
@@ -204,8 +249,11 @@ function InstaPostView({ pub, onBack, onOpenDetails }) {
           </button>
         </div>
 
-        {/* Media — 4:5 portrait */}
-        <div className="w-full" style={{ aspectRatio: '4/5', backgroundColor: color.bg, position: 'relative', overflow: 'hidden' }}>
+        {/* Media — reel: 9:16 playable · others: 4:5 */}
+        {isReel && !isCarousel ? (
+          <ReelMediaArea pub={pub} color={color} />
+        ) : null}
+        <div className="w-full" style={{ display: isReel && !isCarousel ? 'none' : undefined, aspectRatio: '4/5', backgroundColor: color.bg, position: 'relative', overflow: 'hidden' }}>
           {isCarousel ? (
             <>
               {/* Slides container */}
@@ -564,6 +612,8 @@ export default function VisualFeed({ publications, onSelect, selectedPub, active
     .filter(p => p.proyecto === project)
     .sort((a, b) => (a.fecha || 0) - (b.fecha || 0))
 
+  const hasStories = allForProject.some(p => (p.tipo || '').toLowerCase() === 'historia')
+
   const filtered = allForProject.filter(p => tabMatch(p, gridTab))
   const postCount = allForProject.length
   const latestDate = allForProject.length > 0 ? allForProject[allForProject.length - 1].fecha : null
@@ -642,10 +692,22 @@ export default function VisualFeed({ publications, onSelect, selectedPub, active
             {/* Profile header */}
             <div className="px-4 pb-3">
               <div className="flex items-center justify-between mb-4">
-                <div className="w-[70px] h-[70px] rounded-full flex items-center justify-center text-lg font-black flex-shrink-0"
-                  style={{ backgroundColor: color.bg, color: color.dot, border: `2.5px solid ${color.dot}` }}>
-                  {project ? getInitials(project) : '?'}
-                </div>
+                {/* Avatar with Instagram-style stories ring */}
+                {hasStories ? (
+                  <div className="flex-shrink-0 rounded-full p-[3px]" style={{ background: 'linear-gradient(135deg, #fcb045 0%, #fd1d1d 50%, #833ab4 100%)' }}>
+                    <div className="rounded-full p-[2px] bg-white">
+                      <div className="w-[66px] h-[66px] rounded-full flex items-center justify-center text-lg font-black"
+                        style={{ backgroundColor: color.bg, color: color.dot }}>
+                        {project ? getInitials(project) : '?'}
+                      </div>
+                    </div>
+                  </div>
+                ) : (
+                  <div className="w-[70px] h-[70px] rounded-full flex items-center justify-center text-lg font-black flex-shrink-0"
+                    style={{ backgroundColor: color.bg, color: color.dot, border: `2.5px solid ${color.dot}` }}>
+                    {project ? getInitials(project) : '?'}
+                  </div>
+                )}
                 <div className="flex gap-4 flex-1 justify-around ml-4">
                   {[{ val: postCount, label: 'publicaciones' }, { val: '—', label: 'seguidores' }, { val: '—', label: 'seguidos' }].map(({ val, label }) => (
                     <div key={label} className="flex flex-col items-center">
