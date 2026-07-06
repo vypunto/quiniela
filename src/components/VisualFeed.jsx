@@ -196,16 +196,17 @@ function ReelMediaArea({ pub, color }) {
   )
 }
 
-/* ── Story viewer (full-screen Instagram-style) ── */
-function StoryView({ pub, onBack, onOpenDetails }) {
-  const color = getProjectColor(pub.proyecto)
-  const mediaList = parseMediaList(pub.media)
-  const [slide, setSlide] = useState(0)
+/* ── Story viewer — accepts an array of story publications ── */
+function StoryView({ stories, onBack, onOpenDetails }) {
+  const [idx, setIdx] = useState(0)
   const [progress, setProgress] = useState(0)
-  const mediaUrl = mediaList[slide] || ''
+  const DURATION = 5000
+
+  const pub = stories[idx]
+  const color = getProjectColor(pub.proyecto)
+  const mediaUrl = (pub.media || '').split(',')[0].trim()
   const thumb = getThumb(mediaUrl)
   const isVid = isVideoMedia(mediaUrl)
-  const DURATION = 5000
 
   useEffect(() => {
     if (isVid) return
@@ -216,11 +217,15 @@ function StoryView({ pub, onBack, onOpenDetails }) {
       const p = Math.min(1, (Date.now() - start) / DURATION)
       setProgress(p)
       if (p < 1) { raf.id = requestAnimationFrame(tick) }
-      else if (slide < mediaList.length - 1) { setSlide(s => s + 1) }
+      else if (idx < stories.length - 1) { setIdx(i => i + 1) }
+      else { onBack() }
     }
     raf.id = requestAnimationFrame(tick)
     return () => cancelAnimationFrame(raf.id)
-  }, [slide, isVid, mediaList.length])
+  }, [idx, isVid, stories.length])
+
+  const goPrev = () => { if (idx > 0) setIdx(i => i - 1) }
+  const goNext = () => { if (idx < stories.length - 1) setIdx(i => i + 1); else onBack() }
 
   return (
     <div
@@ -229,19 +234,17 @@ function StoryView({ pub, onBack, onOpenDetails }) {
     >
       <StatusBar />
       <div className="flex-1 relative" style={{ marginTop: '54px' }}>
-        {/* Media */}
         {thumb
           ? <img src={thumb} alt="" className="absolute inset-0 w-full h-full object-cover" />
           : <div className="absolute inset-0 flex items-center justify-center" style={{ backgroundColor: color.bg }}><TypeIcon tipo="historia" size={40} color={color.dot} /></div>
         }
-        {/* Gradient overlays */}
         <div className="absolute inset-0" style={{ background: 'linear-gradient(to bottom, rgba(0,0,0,0.55) 0%, transparent 28%, transparent 58%, rgba(0,0,0,0.65) 100%)' }} />
 
-        {/* Progress bars */}
+        {/* One progress bar segment per story */}
         <div className="absolute left-3 right-3 flex gap-1" style={{ top: 10 }}>
-          {mediaList.map((_, i) => (
+          {stories.map((_, i) => (
             <div key={i} className="flex-1 rounded-full overflow-hidden" style={{ height: 2, backgroundColor: 'rgba(255,255,255,0.35)' }}>
-              <div style={{ height: '100%', borderRadius: 9999, backgroundColor: '#fff', width: i < slide ? '100%' : i === slide ? `${progress * 100}%` : '0%' }} />
+              <div style={{ height: '100%', borderRadius: 9999, backgroundColor: '#fff', width: i < idx ? '100%' : i === idx ? `${progress * 100}%` : '0%' }} />
             </div>
           ))}
         </div>
@@ -268,7 +271,7 @@ function StoryView({ pub, onBack, onOpenDetails }) {
           {pub.titulo && <p className="text-white text-[11px] italic mb-1" style={{ opacity: 0.8 }}>{pub.titulo}</p>}
           {pub.copy && <p className="text-white text-[11px] font-medium leading-snug mb-3">{pub.copy}</p>}
           <button
-            onClick={onOpenDetails}
+            onClick={() => onOpenDetails(pub)}
             className="w-full py-2 rounded-xl text-[11px] font-bold text-white transition-all active:opacity-70"
             style={{ backgroundColor: 'rgba(255,255,255,0.18)', backdropFilter: 'blur(6px)', border: '1px solid rgba(255,255,255,0.35)' }}
           >
@@ -276,9 +279,9 @@ function StoryView({ pub, onBack, onOpenDetails }) {
           </button>
         </div>
 
-        {/* Tap zones prev / next */}
-        {slide > 0 && <button className="absolute left-0 top-0 bottom-0 w-1/3" style={{ background: 'none', border: 'none' }} onClick={() => setSlide(s => s - 1)} />}
-        {slide < mediaList.length - 1 && <button className="absolute right-0 top-0 bottom-0 w-1/3" style={{ background: 'none', border: 'none' }} onClick={() => setSlide(s => s + 1)} />}
+        {/* Tap zones */}
+        <button className="absolute left-0 top-0 bottom-0 w-1/3" style={{ background: 'none', border: 'none' }} onClick={goPrev} />
+        <button className="absolute right-0 top-0 bottom-0 w-1/3" style={{ background: 'none', border: 'none' }} onClick={goNext} />
       </div>
       <div className="absolute bottom-1.5 left-1/2 -translate-x-1/2 rounded-full" style={{ width: 120, height: 5, backgroundColor: '#fff', opacity: 0.2 }} />
     </div>
@@ -707,6 +710,7 @@ export default function VisualFeed({ publications, onSelect, selectedPub, active
   const [showDropdown, setShowDropdown] = useState(false)
   const [gridTab, setGridTab] = useState(TAB_POSTS)
   const [openPost, setOpenPost] = useState(null)
+  const [openStories, setOpenStories] = useState(false)
 
   const project = selectedProject || projects[0] || null
   const color = project ? getProjectColor(project) : { bg: '#F3F4F6', dot: '#9CA3AF', text: '#6B7280' }
@@ -715,7 +719,10 @@ export default function VisualFeed({ publications, onSelect, selectedPub, active
     .filter(p => p.proyecto === project)
     .sort((a, b) => (a.fecha || 0) - (b.fecha || 0))
 
-  const hasStories = allForProject.some(p => (p.tipo || '').toLowerCase() === 'historia')
+  const storiesForProject = allForProject
+    .filter(p => (p.tipo || '').toLowerCase() === 'historia')
+    .sort((a, b) => (a.fecha || 0) - (b.fecha || 0))
+  const hasStories = storiesForProject.length > 0
 
   const filtered = allForProject.filter(p => tabMatch(p, gridTab))
   const postCount = allForProject.length
@@ -795,16 +802,20 @@ export default function VisualFeed({ publications, onSelect, selectedPub, active
             {/* Profile header */}
             <div className="px-4 pb-3">
               <div className="flex items-center justify-between mb-4">
-                {/* Avatar with Instagram-style stories ring */}
+                {/* Avatar — clickable ring when project has stories */}
                 {hasStories ? (
-                  <div className="flex-shrink-0 rounded-full p-[3px]" style={{ background: 'linear-gradient(135deg, #fcb045 0%, #fd1d1d 50%, #833ab4 100%)' }}>
+                  <button
+                    onClick={() => setOpenStories(true)}
+                    className="flex-shrink-0 rounded-full p-[3px] transition-opacity active:opacity-70"
+                    style={{ background: 'linear-gradient(135deg, #fcb045 0%, #fd1d1d 50%, #833ab4 100%)', border: 'none', cursor: 'pointer' }}
+                  >
                     <div className="rounded-full p-[2px] bg-white">
                       <div className="w-[66px] h-[66px] rounded-full flex items-center justify-center text-lg font-black"
                         style={{ backgroundColor: color.bg, color: color.dot }}>
                         {project ? getInitials(project) : '?'}
                       </div>
                     </div>
-                  </div>
+                  </button>
                 ) : (
                   <div className="w-[70px] h-[70px] rounded-full flex items-center justify-center text-lg font-black flex-shrink-0"
                     style={{ backgroundColor: color.bg, color: color.dot, border: `2.5px solid ${color.dot}` }}>
@@ -923,12 +934,21 @@ export default function VisualFeed({ publications, onSelect, selectedPub, active
             />
           )}
 
-          {/* Post / Story / Reel viewer */}
+          {/* Stories from avatar click — all stories ordered by date */}
+          {openStories && (
+            <StoryView
+              stories={storiesForProject}
+              onBack={() => setOpenStories(false)}
+              onOpenDetails={(p) => { onSelect(p); setOpenStories(false) }}
+            />
+          )}
+
+          {/* Post / Reel viewer from grid click */}
           {openPost && (openPost.tipo || '').toLowerCase() === 'historia' ? (
             <StoryView
-              pub={openPost}
+              stories={storiesForProject.length > 0 ? storiesForProject : [openPost]}
               onBack={() => setOpenPost(null)}
-              onOpenDetails={() => { onSelect(openPost); setOpenPost(null) }}
+              onOpenDetails={(p) => { onSelect(p); setOpenPost(null) }}
             />
           ) : openPost ? (
             <InstaPostView
