@@ -6,7 +6,7 @@ import VisualFeed from './components/VisualFeed'
 import CalendarSkeleton from './components/CalendarSkeleton'
 import PublicationModal from './components/PublicationModal'
 import SettingsModal from './components/SettingsModal'
-import ProjectLegend from './components/ProjectLegend'
+import { ProjectTrigger, ProjectChips, useProjects } from './components/ProjectLegend'
 import RequestsView from './components/RequestsView'
 import MonthSummary from './components/MonthSummary'
 import LoginModal from './components/LoginModal'
@@ -95,6 +95,7 @@ export default function App() {
   const [error, setError]         = useState(null)
   const [pendingCount, setPendingCount] = useState(0)
   const [searchQuery, setSearchQuery]   = useState('')
+  const [filterOpen, setFilterOpen]     = useState(false)
   const searchRef = useRef(null)
 
   // In-memory optimistic updates — reset on reload, source of truth is always the Sheet
@@ -273,6 +274,7 @@ export default function App() {
       .sort((a, b) => (a.fecha || 0) - (b.fecha || 0))
   }, [searchQuery, displayPubs])
 
+  const allProjects  = useProjects(displayPubs)
   const hasConfig    = !!config.spreadsheetId
   const showCalendar = hasConfig || isDemo
   const animClass    = navDir > 0 ? 'slide-next' : navDir < 0 ? 'slide-prev' : ''
@@ -397,10 +399,10 @@ export default function App() {
 
             {showCalendar && (
               <>
-                {/* Search bar */}
-                <div className="mb-3 relative">
-                  <div className="relative flex items-center">
-                    <svg className="absolute left-3.5 text-gray-400 pointer-events-none" width="15" height="15" viewBox="0 0 20 20" fill="none">
+                {/* Toolbar: search + proyectos + resumen en una línea */}
+                <div className="flex items-center gap-2 mb-2">
+                  <div className="relative flex-1 min-w-0">
+                    <svg className="absolute left-3.5 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none" width="15" height="15" viewBox="0 0 20 20" fill="none">
                       <circle cx="8.5" cy="8.5" r="5.75" stroke="currentColor" strokeWidth="1.6"/>
                       <path d="M13 13l3.5 3.5" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round"/>
                     </svg>
@@ -411,12 +413,12 @@ export default function App() {
                       onChange={e => setSearchQuery(e.target.value)}
                       onKeyDown={e => e.key === 'Escape' && setSearchQuery('')}
                       placeholder="Buscar publicaciones…"
-                      className="w-full pl-9 pr-9 py-2.5 text-sm bg-white border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#e84530]/15 focus:border-[#e84530]/40 transition-all"
+                      className="w-full pl-9 pr-9 py-2 text-sm bg-white border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#e84530]/15 focus:border-[#e84530]/40 transition-all"
                     />
                     {searchQuery && (
                       <button
                         onClick={() => setSearchQuery('')}
-                        className="absolute right-3 text-gray-400 hover:text-gray-600 transition-colors"
+                        className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 transition-colors"
                       >
                         <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
                           <path d="M2 2l10 10M12 2L2 12" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round"/>
@@ -424,7 +426,28 @@ export default function App() {
                       </button>
                     )}
                   </div>
+                  {searchResults === null && viewMode !== 'feed' && (
+                    <ProjectTrigger
+                      open={filterOpen}
+                      onToggle={() => setFilterOpen(o => !o)}
+                      hasFilter={activeFilter.length > 0}
+                      filterCount={activeFilter.length}
+                    />
+                  )}
+                  {searchResults === null && viewMode !== 'feed' && (
+                    <MonthSummary publications={displayPubs} year={year} month={month} />
+                  )}
                 </div>
+
+                {/* Panel de chips de proyectos */}
+                {searchResults === null && viewMode !== 'feed' && filterOpen && (
+                  <ProjectChips
+                    projects={allProjects}
+                    activeFilter={activeFilter}
+                    onFilter={toggleFilter}
+                    onClear={clearFilter}
+                  />
+                )}
 
                 {/* Search results */}
                 {searchResults !== null && (
@@ -470,9 +493,6 @@ export default function App() {
                     </div>
                   </div>
                 )}
-
-                {searchResults === null && viewMode !== 'feed' && <ProjectLegend publications={displayPubs} activeFilter={activeFilter} onFilter={toggleFilter} onClear={clearFilter} />}
-                {searchResults === null && viewMode !== 'feed' && <MonthSummary publications={displayPubs} year={year} month={month} />}
 
                 {loading && publications.length === 0 && <CalendarSkeleton />}
 
