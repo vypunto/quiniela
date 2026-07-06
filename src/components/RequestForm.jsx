@@ -155,7 +155,7 @@ export default function RequestForm({ projects, scriptUrl, onSubmitted }) {
     const isImage = file.type.startsWith('image/')
     const preview = isImage ? URL.createObjectURL(file) : null
     prevPreviewRef.current = preview
-    if (file.size >= 25 * 1024 * 1024) {
+    if (file.size >= 50 * 1024 * 1024) {
       setAdjunto({ nombre: file.name, tipo: file.type, preview, size: file.size, status: 'toobig' })
       return
     }
@@ -403,7 +403,7 @@ export default function RequestForm({ projects, scriptUrl, onSubmitted }) {
                     {adjunto.status === 'uploading' && <span className="ml-1.5 text-blue-500">· Subiendo a Drive…</span>}
                     {adjunto.status === 'done'     && <span className="ml-1.5 text-green-600">· Guardado en Drive</span>}
                     {adjunto.status === 'error'    && <span className="ml-1.5 text-amber-600">· Error al subir — añade el link manualmente</span>}
-                    {adjunto.status === 'toobig'   && <span className="ml-1.5 text-amber-600">· Supera 25 MB — añade el link manualmente</span>}
+                    {adjunto.status === 'toobig'   && <span className="ml-1.5 text-amber-600">· Supera 50 MB — añade el link manualmente</span>}
                   </div>
                 </div>
                 {adjunto.status === 'uploading'

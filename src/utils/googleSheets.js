@@ -184,7 +184,7 @@ export async function uploadFile(scriptUrl, nombre, tipo, datos) {
   const res = await fetchWithTimeout(scriptUrl, {
     method: 'POST',
     body: JSON.stringify({ action: 'uploadFile', nombre, tipo, datos }),
-  }, 30000)
+  }, 90000)
   if (!res.ok) throw new Error(`Error ${res.status}`)
   return res.json()
 }
