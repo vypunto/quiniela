@@ -527,6 +527,53 @@ export default function App() {
           onSaved={syncData}
         />
       )}
+      <footer style={{
+        borderTop: '1px solid #e5e7eb',
+        background: 'rgba(255,255,255,0.85)',
+        backdropFilter: 'blur(8px)',
+        WebkitBackdropFilter: 'blur(8px)',
+        padding: '16px 24px',
+        marginTop: 'auto',
+        position: 'relative',
+        zIndex: 2,
+      }}>
+        <div style={{
+          maxWidth: '1280px', margin: '0 auto',
+          display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+          gap: '16px', flexWrap: 'wrap',
+        }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+            <img
+              src="https://elchandriogroup.com/calendapp/img/logo_calendapp.png"
+              alt="CalendApp"
+              style={{ height: '20px', width: 'auto', display: 'block' }}
+            />
+            <div style={{ width: '1px', height: '14px', background: '#e5e7eb' }} />
+            <span style={{ fontSize: '12px', color: '#9ca3af' }}>El Chandrio Group © 2026</span>
+          </div>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '16px', flexWrap: 'wrap' }}>
+            <a href="./help.html" style={{ fontSize: '12px', color: '#9ca3af', textDecoration: 'none', fontWeight: 500 }}
+              onMouseEnter={e => e.currentTarget.style.color = '#e84530'}
+              onMouseLeave={e => e.currentTarget.style.color = '#9ca3af'}
+            >Ayuda</a>
+            <div style={{ width: '2px', height: '2px', borderRadius: '50%', background: '#d1d5db' }} />
+            <a href="./help.html#peticiones" style={{ fontSize: '12px', color: '#9ca3af', textDecoration: 'none', fontWeight: 500 }}
+              onMouseEnter={e => e.currentTarget.style.color = '#e84530'}
+              onMouseLeave={e => e.currentTarget.style.color = '#9ca3af'}
+            >Peticiones</a>
+            <div style={{ width: '2px', height: '2px', borderRadius: '50%', background: '#d1d5db' }} />
+            <a href="./help.html#admin" style={{ fontSize: '12px', color: '#9ca3af', textDecoration: 'none', fontWeight: 500 }}
+              onMouseEnter={e => e.currentTarget.style.color = '#e84530'}
+              onMouseLeave={e => e.currentTarget.style.color = '#9ca3af'}
+            >Administración</a>
+            <div style={{ width: '2px', height: '2px', borderRadius: '50%', background: '#d1d5db' }} />
+            <a href="./help.html#faq-section" style={{ fontSize: '12px', color: '#9ca3af', textDecoration: 'none', fontWeight: 500 }}
+              onMouseEnter={e => e.currentTarget.style.color = '#e84530'}
+              onMouseLeave={e => e.currentTarget.style.color = '#9ca3af'}
+            >FAQ</a>
+          </div>
+        </div>
+      </footer>
       </div>
     </div>
   )
