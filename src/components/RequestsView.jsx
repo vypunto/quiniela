@@ -268,7 +268,7 @@ const DEMO_REQUESTS = [
   { id: 'r3', proyecto: 'PREVENIDOS Y ACCION', fecha: new Date(new Date().setDate(new Date().getDate() + 15)), titulo: 'Infografía prevención verano', info: 'Medidas de seguridad en la playa. Estilo visual limpio, colores claros.', solicitante: 'María G.', estado: 'Pendiente', tipo: 'imagen', canal: 'LinkedIn' },
 ]
 
-export default function RequestsView({ config, isDemo, calendarPubs = [], onCountChange, onApprove }) {
+export default function RequestsView({ config, isDemo, calendarPubs = [], onCountChange, onRequestSave }) {
   const [requests, setRequests] = useState([])
   const [editingReq, setEditingReq] = useState(null)
   const [loadingSheet, setLoadingSheet] = useState(false)
@@ -330,14 +330,12 @@ export default function RequestsView({ config, isDemo, calendarPubs = [], onCoun
   useEffect(() => { loadRequests() }, [isDemo])
 
   const handleSaveEdit = (updated) => {
-    const wasApproved = editingReq?.estado === 'Aprobado'
+    const prevEstado = editingReq?.estado
     setRequests(prev => prev.map(r => r.id === updated.id ? updated : r))
     setEditingReq(null)
     const all = requests.map(r => r.id === updated.id ? updated : r)
     onCountChange && onCountChange(all.filter(r => !r.estado || r.estado === 'Pendiente').length)
-    if (updated.estado === 'Aprobado' && !wasApproved) {
-      onApprove && onApprove(updated)
-    }
+    onRequestSave && onRequestSave(updated, prevEstado)
   }
 
   const handleDelete = async (req) => {

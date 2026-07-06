@@ -101,7 +101,7 @@ function MediaLightbox({ embed, onClose }) {
   )
 }
 
-export default function PublicationModal({ publication: pub, allPublications = [], onNavigate, onClose }) {
+export default function PublicationModal({ publication: pub, allPublications = [], onNavigate, onClose, isAuth, onEdit }) {
   const color = getProjectColor(pub.proyecto)
   const mediaList = parseMediaList(pub.media)
   const isCarousel = mediaList.length > 1
@@ -201,15 +201,45 @@ export default function PublicationModal({ publication: pub, allPublications = [
                   </div>
                 )}
               </div>
-              <button
-                onClick={onClose}
-                className="w-9 h-9 rounded-xl flex items-center justify-center flex-shrink-0 transition-all duration-150 hover:brightness-90"
-                style={{ backgroundColor: 'rgba(0,0,0,0.09)', color: color.text }}
-              >
-                <svg width="11" height="11" viewBox="0 0 12 12" fill="none">
-                  <path d="M1 1l10 10M11 1L1 11" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round"/>
-                </svg>
-              </button>
+              <div className="flex items-center gap-2 flex-shrink-0">
+                {isAuth && onEdit && (
+                  <button
+                    onClick={() => onEdit(pub)}
+                    className="w-9 h-9 rounded-xl flex items-center justify-center transition-all duration-150 hover:brightness-90"
+                    style={{ backgroundColor: 'rgba(0,0,0,0.09)', color: color.text }}
+                    title="Editar publicación"
+                  >
+                    <svg width="13" height="13" viewBox="0 0 682.66669 682.66669" fill="none">
+                      <g transform="matrix(1.3333333,0,0,-1.3333333,0,682.66667)">
+                        <g transform="translate(436.2648,490.5177)">
+                          <path d="m 0,0 55.186,-55.186 c 7.811,-7.811 7.811,-20.474 0,-28.285 L -0.151,-138.809 -83.622,-55.338 -28.284,0 C -20.474,7.81 -7.81,7.81 0,0 Z" stroke="currentColor" strokeWidth="75" strokeLinecap="round" strokeLinejoin="round"/>
+                        </g>
+                        <g transform="translate(310.4019,392.939)">
+                          <path d="m 0,0 83.471,-83.471 42.24,42.241 -83.47,83.471 z" stroke="currentColor" strokeWidth="75" strokeLinecap="round" strokeLinejoin="round"/>
+                        </g>
+                        <g transform="translate(310.4019,392.939)">
+                          <path d="m 0,0 -250.624,-250.624 83.47,-83.471 250.625,250.624 z" stroke="currentColor" strokeWidth="75" strokeLinecap="round" strokeLinejoin="round"/>
+                        </g>
+                        <g transform="translate(14.6909,15)">
+                          <path d="m 0,0 128.557,43.844 -83.47,83.471 z" stroke="currentColor" strokeWidth="75" strokeLinecap="round" strokeLinejoin="round"/>
+                        </g>
+                        <g transform="translate(30.2175,58.8438)">
+                          <path d="M 0,0 29.014,-29.014" stroke="currentColor" strokeWidth="75" strokeLinecap="round" strokeLinejoin="round"/>
+                        </g>
+                      </g>
+                    </svg>
+                  </button>
+                )}
+                <button
+                  onClick={onClose}
+                  className="w-9 h-9 rounded-xl flex items-center justify-center transition-all duration-150 hover:brightness-90"
+                  style={{ backgroundColor: 'rgba(0,0,0,0.09)', color: color.text }}
+                >
+                  <svg width="11" height="11" viewBox="0 0 12 12" fill="none">
+                    <path d="M1 1l10 10M11 1L1 11" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round"/>
+                  </svg>
+                </button>
+              </div>
             </div>
           </div>
 

@@ -13,6 +13,7 @@ import LoginModal from './components/LoginModal'
 import NewPublicationModal from './components/NewPublicationModal'
 import { fetchSheetData, fetchRequestsData } from './utils/googleSheets'
 import { SPREADSHEET_URL, REQUESTS_SHEET_URL, REQUESTS_SCRIPT_URL, PROJECTS } from './config'
+import PublicationEditModal from './components/PublicationEditModal'
 
 const now = new Date()
 const Y = now.getFullYear()
@@ -98,6 +99,15 @@ export default function App() {
     } catch { return [] }
   })
 
+  const [pubOverrides, setPubOverrides] = useState(() => {
+    try {
+      const saved = JSON.parse(localStorage.getItem('pubcal_pub_overrides') || '[]')
+      return saved.map(p => ({ ...p, fecha: p.fecha ? new Date(p.fecha) : null }))
+    } catch { return [] }
+  })
+
+  const [editingPub, setEditingPub] = useState(null)
+
   const [config] = useState(() => {
     try {
       const saved = JSON.parse(localStorage.getItem('pubcal_config') || '{}')
@@ -167,32 +177,52 @@ export default function App() {
 
   useEffect(() => { syncData() }, [syncData])
 
-  const handleApprove = useCallback((req) => {
-    const pub = {
-      id: `approved-${req.id}`,
-      proyecto: req.proyecto,
-      fecha: req.fecha instanceof Date ? req.fecha : (req.fecha ? new Date(req.fecha) : null),
-      titulo: req.titulo,
-      copy: req.info || '',
-      media: req.contenido || '',
-      url_post: '',
-      tipo: req.tipo || 'imagen',
-      canal: req.canal || '',
-      estado: 'Aprobado',
-      promocionado: req.promocionado || 'No',
-      presupuesto: req.presupuesto || '',
+  const saveApprovedPubs = (next) => {
+    try {
+      localStorage.setItem('pubcal_approved_pubs', JSON.stringify(
+        next.map(p => ({ ...p, fecha: p.fecha instanceof Date ? p.fecha.toISOString() : p.fecha }))
+      ))
+    } catch { /* ignore */ }
+    return next
+  }
+
+  const handleRequestSave = useCallback((updated, prevEstado) => {
+    const key = `${updated.proyecto}||${updated.titulo}`
+    if (updated.estado === 'Aprobado') {
+      const fecha = updated.fecha instanceof Date ? updated.fecha : (updated.fecha ? new Date(updated.fecha) : null)
+      if (!fecha) return
+      const pub = {
+        id: `approved-${updated.id}`,
+        proyecto: updated.proyecto,
+        fecha,
+        titulo: updated.titulo,
+        copy: updated.info || '',
+        media: updated.contenido || '',
+        url_post: '',
+        tipo: updated.tipo || 'imagen',
+        canal: updated.canal || '',
+        estado: 'Aprobado',
+        promocionado: updated.promocionado || 'No',
+        presupuesto: updated.presupuesto || '',
+      }
+      setApprovedPubs(prev => saveApprovedPubs([...prev.filter(p => `${p.proyecto}||${p.titulo}` !== key), pub]))
+    } else if (prevEstado === 'Aprobado') {
+      setApprovedPubs(prev => saveApprovedPubs(prev.filter(p => `${p.proyecto}||${p.titulo}` !== key)))
     }
-    if (!pub.fecha) return
-    setApprovedPubs(prev => {
-      const key = `${pub.proyecto}||${pub.titulo}`
-      const next = [...prev.filter(p => `${p.proyecto}||${p.titulo}` !== key), pub]
+  }, [])
+
+  const handleEditPub = useCallback((updated) => {
+    setPubOverrides(prev => {
+      const next = [...prev.filter(p => p.id !== updated.id), updated]
       try {
-        localStorage.setItem('pubcal_approved_pubs', JSON.stringify(
+        localStorage.setItem('pubcal_pub_overrides', JSON.stringify(
           next.map(p => ({ ...p, fecha: p.fecha instanceof Date ? p.fecha.toISOString() : p.fecha }))
         ))
       } catch { /* ignore */ }
       return next
     })
+    setSelectedPub(updated)
+    setEditingPub(null)
   }, [])
 
   const toggleFilter = name => setActiveFilter(prev => prev.includes(name) ? prev.filter(n => n !== name) : [...prev, name])
@@ -205,8 +235,11 @@ export default function App() {
     const base = isDemo ? DEMO : publications
     const keys = new Set(base.map(p => `${p.proyecto}||${p.titulo}`))
     const extra = approvedPubs.filter(p => p.fecha && !keys.has(`${p.proyecto}||${p.titulo}`))
-    return [...base, ...extra]
-  }, [isDemo, publications, approvedPubs])
+    const combined = [...base, ...extra]
+    if (pubOverrides.length === 0) return combined
+    const overrideMap = new Map(pubOverrides.map(p => [p.id, p]))
+    return combined.map(p => overrideMap.has(p.id) ? { ...p, ...overrideMap.get(p.id) } : p)
+  }, [isDemo, publications, approvedPubs, pubOverrides])
 
   const prevMonth = () => {
     setNavDir(-1)
@@ -360,16 +393,26 @@ export default function App() {
 
         {/* Requests tab */}
         {activeTab === 'peticiones' && (
-          <RequestsView config={config} isDemo={isDemo} calendarPubs={displayPubs} onCountChange={setPendingCount} onApprove={handleApprove} />
+          <RequestsView config={config} isDemo={isDemo} calendarPubs={displayPubs} onCountChange={setPendingCount} onRequestSave={handleRequestSave} />
         )}
       </main>
 
-      {selectedPub && (
+      {selectedPub && !editingPub && (
         <PublicationModal
           publication={selectedPub}
           allPublications={sortedPubs}
           onNavigate={setSelectedPub}
           onClose={() => setSelectedPub(null)}
+          isAuth={_auth}
+          onEdit={pub => { setEditingPub(pub) }}
+        />
+      )}
+      {editingPub && (
+        <PublicationEditModal
+          publication={editingPub}
+          projects={[...new Set([...PROJECTS, ...(displayPubs || []).map(p => p.proyecto).filter(Boolean)].map(p => p.toUpperCase()))].sort()}
+          onSave={handleEditPub}
+          onClose={() => setEditingPub(null)}
         />
       )}
       {showSettings && <SettingsModal config={config} onClose={() => setShowSettings(false)} />}
