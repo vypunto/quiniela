@@ -213,10 +213,14 @@ export default function App() {
     setSelectedPub(updated)
     setEditingPub(null)
     if (config.requestsScriptUrl) {
+      const rowIndex = parseInt(updated.id)
+      console.log('[EditPub] rowIndex:', rowIndex, 'id:', updated.id, 'titulo:', updated.titulo)
       try {
-        const rowIndex = parseInt(updated.id) // 0-based index from CSV
         await updatePublication(config.requestsScriptUrl, rowIndex, updated)
-      } catch { /* Script not yet updated — optimistic edit stays until reload */ }
+        console.log('[EditPub] enviado OK → fila sheet', rowIndex + 2)
+      } catch (err) {
+        console.error('[EditPub] error:', err)
+      }
       setTimeout(() => syncData(), 2000)
     }
   }, [addPending, config.requestsScriptUrl, syncData])

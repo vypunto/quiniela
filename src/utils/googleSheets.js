@@ -117,12 +117,13 @@ export async function fetchRequestsData(sheetUrl) {
 }
 
 export async function updatePublication(scriptUrl, rowIndex, data) {
-  const res = await fetch(scriptUrl, {
+  // no-cors avoids CORS/redirect errors from Apps Script (same pattern as submitRequest)
+  await fetch(scriptUrl, {
     method: 'POST',
+    mode: 'no-cors',
     body: JSON.stringify({ action: 'updatePublication', rowIndex, data }),
   })
-  if (!res.ok) throw new Error(`Error ${res.status}`)
-  return res.json()
+  return { ok: true }
 }
 
 export async function submitRequest(scriptUrl, payload) {
