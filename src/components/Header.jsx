@@ -48,13 +48,13 @@ export default function Header({
       <div className="max-w-7xl mx-auto px-4 sm:px-6 h-[64px] sm:h-[60px] flex items-center gap-2 sm:gap-4">
 
         {/* Logo */}
-        <div className="flex items-center gap-2.5 flex-shrink-0">
+        <a href="https://www.elchandriogroup.com/calendapp/index.html" className="flex items-center gap-2.5 flex-shrink-0" style={{ textDecoration: 'none' }}>
           <img
             src="https://elchandriogroup.com/calendapp/img/logo_calendapp.png"
             alt="CalendApp by El Chandrio Group"
             style={{ height: 'clamp(28px, 4vw, 40px)', width: 'auto', display: 'block' }}
           />
-        </div>
+        </a>
 
         {/* Desktop tabs */}
         <div className="hidden sm:block ml-2">

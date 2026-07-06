@@ -158,22 +158,18 @@ function EditModal({ req, scriptUrl, isAuth, actorName, projects, onSave, onClos
 
   return (
     <div
-      className="fixed inset-0 z-50 flex items-end sm:items-center justify-center sm:p-6"
+      className="fixed inset-0 z-50 flex items-end sm:items-center justify-center px-4 sm:p-6"
       onClick={e => { if (e.target === e.currentTarget) onClose() }}
     >
       <div className="absolute inset-0 bg-black/30 backdrop-blur-[6px]" onClick={onClose} />
       <div
-        className="relative bg-white rounded-t-[28px] sm:rounded-[24px] sm:max-w-md w-full overflow-hidden flex flex-col"
+        className="relative bg-white rounded-[24px] sm:max-w-md w-full overflow-hidden flex flex-col"
         style={{
           animation: 'modalIn 200ms cubic-bezier(0.16,1,0.3,1)',
           boxShadow: '0 8px 40px rgba(0,0,0,0.14), 0 32px 80px rgba(0,0,0,0.08)',
           maxHeight: '78vh',
         }}
       >
-        {/* Handle */}
-        <div className="sm:hidden flex justify-center pt-3 pb-1 flex-shrink-0" style={{ backgroundColor: color.bg }}>
-          <div className="w-8 h-1 rounded-full" style={{ backgroundColor: color.dot, opacity: 0.3 }} />
-        </div>
 
         {/* Header */}
         <div className="flex items-center justify-between px-6 py-4 border-b border-gray-100 flex-shrink-0" style={{ backgroundColor: color.bg }}>
@@ -486,20 +482,17 @@ function DeleteConfirmModal({ req, isAuth, onConfirm, onClose }) {
 
   return (
     <div
-      className="fixed inset-0 z-50 flex items-end sm:items-center justify-center sm:p-6"
+      className="fixed inset-0 z-50 flex items-end sm:items-center justify-center px-4 sm:p-6"
       onClick={e => { if (e.target === e.currentTarget) onClose() }}
     >
       <div className="absolute inset-0 bg-black/30 backdrop-blur-[6px]" onClick={onClose} />
       <div
-        className="relative bg-white rounded-t-[28px] sm:rounded-[24px] sm:max-w-sm w-full overflow-hidden"
+        className="relative bg-white rounded-[24px] sm:max-w-sm w-full overflow-hidden"
         style={{
           animation: 'modalIn 200ms cubic-bezier(0.16,1,0.3,1)',
           boxShadow: '0 8px 40px rgba(0,0,0,0.14), 0 32px 80px rgba(0,0,0,0.08)',
         }}
       >
-        <div className="sm:hidden flex justify-center pt-3 pb-1">
-          <div className="w-8 h-1 rounded-full bg-gray-200" />
-        </div>
         <div className="p-6">
           <div className="w-11 h-11 rounded-2xl flex items-center justify-center mb-4" style={{ backgroundColor: '#FFF1F2' }}>
             <svg width="18" height="18" viewBox="0 0 682.66669 682.66669" fill="none">

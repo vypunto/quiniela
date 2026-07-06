@@ -57,8 +57,8 @@ export default function NewPublicationModal({ onClose, config, projects, onSaved
       style={{ backgroundColor: 'rgba(0,0,0,0.45)', backdropFilter: 'blur(8px)' }}
     >
       <div
-        className="w-full max-w-lg bg-white rounded-3xl overflow-hidden"
-        style={{ maxHeight: '92vh', boxShadow: '0 24px 80px rgba(0,0,0,0.2)' }}
+        className="w-full max-w-lg bg-white rounded-3xl flex flex-col"
+        style={{ maxHeight: 'min(90vh, 700px)', boxShadow: '0 24px 80px rgba(0,0,0,0.2)' }}
       >
         {/* Header */}
         <div className="px-6 py-4 border-b border-gray-100 flex items-center justify-between flex-shrink-0">
@@ -79,7 +79,7 @@ export default function NewPublicationModal({ onClose, config, projects, onSaved
         </div>
 
         {/* Form */}
-        <div className="overflow-y-auto" style={{ maxHeight: 'calc(92vh - 130px)' }}>
+        <div className="overflow-y-auto flex-1" style={{ overscrollBehavior: 'contain', WebkitOverflowScrolling: 'touch' }}>
           <form onSubmit={handleSubmit} className="px-6 py-5 space-y-5">
 
             <div className="grid grid-cols-2 gap-4">
