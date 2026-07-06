@@ -108,6 +108,7 @@ export async function fetchRequestsData(sheetUrl) {
     estado: row.estado || row.status || 'Pendiente',
     promocionado: (row.promocionado || 'No').trim(),
     presupuesto: row.presupuesto || '',
+    prioridad: row.prioridad || row.priority || 'Media',
   })).filter(r => r.proyecto)
 }
 

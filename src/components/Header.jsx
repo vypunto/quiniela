@@ -19,7 +19,7 @@ export default function Header({
         <button
           key={tab}
           onClick={() => setActiveTab(tab)}
-          className={`relative px-3 sm:px-3.5 py-1.5 sm:py-2 rounded-[10px] text-[11px] sm:text-[11px] font-bold tracking-wide transition-all duration-200 ${
+          className={`relative px-2 sm:px-3.5 py-1.5 sm:py-2 rounded-[10px] text-[9px] sm:text-[11px] font-bold tracking-wide transition-all duration-200 ${
             activeTab === tab ? 'text-gray-900' : 'text-gray-400 hover:text-gray-600'
           }`}
           style={activeTab === tab ? {
@@ -28,7 +28,8 @@ export default function Header({
             transform: 'translateY(-1px)',
           } : {}}
         >
-          {tab === 'publicaciones' ? 'PUBLICACIONES' : 'PETICIONES'}
+          <span className="hidden sm:inline">{tab === 'publicaciones' ? 'PUBLICACIONES' : 'PETICIONES'}</span>
+          <span className="sm:hidden">{tab === 'publicaciones' ? 'POSTS' : 'PETICIONES'}</span>
           {tab === 'peticiones' && pendingCount > 0 && (
             <span className="absolute -top-1 -right-1 min-w-[16px] h-4 px-1 bg-[#e84530] text-white text-[8px] font-black rounded-full flex items-center justify-center">
               {pendingCount > 9 ? '9+' : pendingCount}
