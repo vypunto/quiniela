@@ -2,8 +2,9 @@ import { useState, useEffect } from 'react'
 import { getProjectColor } from '../utils/colors'
 import { PROJECTS } from '../config'
 
-const TYPE_OPTIONS = ['imagen', 'video', 'reel', 'carrusel', 'historia', 'texto']
-const CANAL_OPTIONS = ['Instagram', 'TikTok', 'LinkedIn', 'Facebook', 'Web', 'Otros']
+const TYPE_OPTIONS   = ['imagen', 'video', 'reel', 'carrusel', 'historia', 'texto']
+const CANAL_OPTIONS  = ['Instagram', 'TikTok', 'LinkedIn', 'Facebook', 'Web', 'Otros']
+const ESTADO_OPTIONS = ['Programado', 'Publicado', 'Borrador', 'Cancelado', 'En edición']
 
 const inputClass = "w-full px-3.5 py-2.5 text-sm border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#e84530]/15 focus:border-[#e84530]/30 transition-all duration-150 bg-white"
 const labelClass = "block text-xs font-semibold text-gray-400 uppercase tracking-[0.1em] mb-2"
@@ -159,7 +160,13 @@ export default function PublicationEditModal({ publication: pub, projects = PROJ
           {/* Estado */}
           <div>
             <label className={labelClass}>Estado</label>
-            <input type="text" value={form.estado} onChange={e => set('estado', e.target.value)} className={inputClass} placeholder="Publicado, Programado, En edición…" />
+            <select value={form.estado} onChange={e => set('estado', e.target.value)} className={inputClass}>
+              <option value="">Sin estado</option>
+              {ESTADO_OPTIONS.map(s => <option key={s} value={s}>{s}</option>)}
+              {form.estado && !ESTADO_OPTIONS.includes(form.estado) && (
+                <option value={form.estado}>{form.estado}</option>
+              )}
+            </select>
           </div>
 
           {/* Pauta */}
