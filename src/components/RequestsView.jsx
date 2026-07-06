@@ -109,10 +109,11 @@ function EditModal({ req, scriptUrl, isAuth, actorName, onSave, onClose }) {
     >
       <div className="absolute inset-0 bg-black/30 backdrop-blur-[6px]" onClick={onClose} />
       <div
-        className="relative bg-white rounded-t-[28px] sm:rounded-[24px] sm:max-w-md w-full overflow-hidden"
+        className="relative bg-white rounded-t-[28px] sm:rounded-[24px] sm:max-w-md w-full overflow-hidden flex flex-col"
         style={{
           animation: 'modalIn 200ms cubic-bezier(0.16,1,0.3,1)',
           boxShadow: '0 8px 40px rgba(0,0,0,0.14), 0 32px 80px rgba(0,0,0,0.08)',
+          maxHeight: '92vh',
         }}
       >
         {/* Handle */}
@@ -121,7 +122,7 @@ function EditModal({ req, scriptUrl, isAuth, actorName, onSave, onClose }) {
         </div>
 
         {/* Header */}
-        <div className="flex items-center justify-between px-6 py-4 border-b border-gray-100" style={{ backgroundColor: color.bg }}>
+        <div className="flex items-center justify-between px-6 py-4 border-b border-gray-100 flex-shrink-0" style={{ backgroundColor: color.bg }}>
           <div>
             <div
               className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[11px] font-bold mb-1.5"
@@ -143,7 +144,9 @@ function EditModal({ req, scriptUrl, isAuth, actorName, onSave, onClose }) {
         </div>
 
         {/* Form */}
-        <div className="p-6 space-y-4">
+        <div className="p-6 space-y-4 overflow-y-auto flex-1"
+          style={{ overscrollBehavior: 'contain', WebkitOverflowScrolling: 'touch' }}
+        >
           {/* Estado */}
           <div>
             <label className="block text-xs font-semibold text-gray-400 uppercase tracking-[0.1em] mb-2.5">Estado</label>
@@ -176,7 +179,9 @@ function EditModal({ req, scriptUrl, isAuth, actorName, onSave, onClose }) {
 
           <div>
             <label className="block text-xs font-semibold text-gray-400 uppercase tracking-[0.1em] mb-2">Fecha</label>
-            <input type="date" value={form.fecha} onChange={e => set('fecha', e.target.value)} className={inputClass} />
+            <div className="w-full overflow-hidden rounded-xl">
+              <input type="date" value={form.fecha} onChange={e => set('fecha', e.target.value)} className={inputClass} style={{ minWidth: 0 }} />
+            </div>
           </div>
 
           <div>
