@@ -1,5 +1,5 @@
 import { useState, useRef, useEffect, useCallback } from 'react'
-import { submitRequest } from '../utils/googleSheets'
+import { submitRequest, uploadFile } from '../utils/googleSheets'
 import { TypeIcon } from './Icons'
 
 const TIPOS = ['imagen', 'video', 'reel', 'carrusel', 'historia', 'texto']
@@ -156,7 +156,7 @@ export default function RequestForm({ projects, scriptUrl, onSubmitted }) {
     const preview = isImage ? URL.createObjectURL(file) : null
     prevPreviewRef.current = preview
     setAdjunto({ nombre: file.name, tipo: file.type, preview, size: file.size })
-    if (isImage && file.size < 8 * 1024 * 1024) {
+    if (file.size < 25 * 1024 * 1024) {
       const reader = new FileReader()
       reader.onload = ev => setAdjunto(prev => prev ? { ...prev, datos: ev.target.result } : prev)
       reader.readAsDataURL(file)
@@ -174,13 +174,23 @@ export default function RequestForm({ projects, scriptUrl, onSubmitted }) {
     setSending(true)
     setError(null)
 
+    let contenidoFinal = form.contenido
+    if (adjunto?.datos && scriptUrl) {
+      try {
+        const result = await uploadFile(scriptUrl, adjunto.nombre, adjunto.tipo, adjunto.datos)
+        if (result?.url) contenidoFinal = contenidoFinal ? `${contenidoFinal}, ${result.url}` : result.url
+      } catch (err) {
+        console.warn('Error al subir adjunto:', err)
+      }
+    }
+
     const payload = {
       ...form,
       proyecto: proyectoFinal,
+      contenido: contenidoFinal,
       fechaSolicitud: new Date().toLocaleDateString('es-ES'),
       estado: 'Pendiente',
       promocionado: form.promocionado ? 'Sí' : 'No',
-      ...(adjunto ? { adjunto_nombre: adjunto.nombre, adjunto_datos: adjunto.datos || '' } : {}),
     }
     delete payload.proyectoOtros
 

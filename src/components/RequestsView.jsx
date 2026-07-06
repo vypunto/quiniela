@@ -3,7 +3,7 @@ import RequestForm from './RequestForm'
 import { TypeIcon } from './Icons'
 import { getProjectColor } from '../utils/colors'
 import { DAYS_ES, MONTHS_ES, parseDate } from '../utils/dateUtils'
-import { fetchRequestsData, updateRequest, deleteRequest } from '../utils/googleSheets'
+import { fetchRequestsData, updateRequest, deleteRequest, uploadFile } from '../utils/googleSheets'
 import { REQUESTS_SHEET_URL, PROJECTS } from '../config'
 
 const SOLICITANTE_KEY = 'pubcal_solicitante'
@@ -87,7 +87,7 @@ function EditModal({ req, scriptUrl, isAuth, actorName, projects, onSave, onClos
     const preview = isImage ? URL.createObjectURL(file) : null
     prevPreviewRef.current = preview
     setAdjunto({ nombre: file.name, tipo: file.type, preview, size: file.size })
-    if (isImage && file.size < 8 * 1024 * 1024) {
+    if (file.size < 25 * 1024 * 1024) {
       const reader = new FileReader()
       reader.onload = ev => setAdjunto(prev => prev ? { ...prev, datos: ev.target.result } : prev)
       reader.readAsDataURL(file)
@@ -104,9 +104,20 @@ function EditModal({ req, scriptUrl, isAuth, actorName, projects, onSave, onClos
     const modificadoPor = actor
       ? `${actor} · ${new Date().toLocaleString('es-ES', { day: '2-digit', month: '2-digit', year: '2-digit', hour: '2-digit', minute: '2-digit' })}`
       : null
-    const adjuntoExtra = adjunto ? { adjunto_nombre: adjunto.nombre, adjunto_datos: adjunto.datos || '' } : {}
-    const dataWithActor = { ...(modificadoPor ? { ...form, modificado_por: modificadoPor } : form), ...adjuntoExtra }
-    const updated = { ...req, ...form, fecha: new Date(form.fecha), promocionado: form.promocionado ? 'Sí' : 'No' }
+
+    let contenidoFinal = form.contenido
+    if (adjunto?.datos && scriptUrl) {
+      try {
+        const result = await uploadFile(scriptUrl, adjunto.nombre, adjunto.tipo, adjunto.datos)
+        if (result?.url) contenidoFinal = contenidoFinal ? `${contenidoFinal}, ${result.url}` : result.url
+      } catch (err) {
+        console.warn('Error al subir adjunto:', err)
+      }
+    }
+
+    const formWithContenido = { ...form, contenido: contenidoFinal }
+    const dataWithActor = modificadoPor ? { ...formWithContenido, modificado_por: modificadoPor } : formWithContenido
+    const updated = { ...req, ...formWithContenido, fecha: new Date(form.fecha), promocionado: form.promocionado ? 'Sí' : 'No' }
     try {
       if (scriptUrl && req.id.startsWith('sheet-')) {
         const rowIndex = parseInt(req.id.replace('sheet-', ''))
