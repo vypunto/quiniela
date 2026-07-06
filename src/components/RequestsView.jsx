@@ -1,11 +1,31 @@
 import { useState, useEffect, useMemo } from 'react'
 import RequestForm from './RequestForm'
+import { TypeIcon } from './Icons'
 import { getProjectColor } from '../utils/colors'
 import { DAYS_ES, MONTHS_ES, parseDate } from '../utils/dateUtils'
 import { fetchRequestsData, updateRequest, deleteRequest } from '../utils/googleSheets'
 import { REQUESTS_SHEET_URL, PROJECTS } from '../config'
 
 const SOLICITANTE_KEY = 'pubcal_solicitante'
+
+const TIPOS = ['imagen', 'video', 'reel', 'carrusel', 'historia', 'texto']
+const TIPO_ACTIVE = {
+  imagen:   'bg-violet-600 text-white border-violet-600',
+  video:    'bg-amber-500 text-white border-amber-500',
+  reel:     'bg-pink-600 text-white border-pink-600',
+  carrusel: 'bg-sky-600 text-white border-sky-600',
+  historia: 'bg-emerald-600 text-white border-emerald-600',
+  texto:    'bg-gray-700 text-white border-gray-700',
+}
+
+const CANALES = ['Instagram', 'TikTok', 'LinkedIn', 'Facebook', 'Web', 'Otros']
+const CANAL_ICONS = {
+  Instagram: <svg width="12" height="12" viewBox="0 0 24 24" fill="none"><rect x="2" y="2" width="20" height="20" rx="5" stroke="currentColor" strokeWidth="1.5"/><circle cx="12" cy="12" r="5" stroke="currentColor" strokeWidth="1.5"/><circle cx="17.5" cy="6.5" r="1" fill="currentColor"/></svg>,
+  TikTok:    <svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor"><path d="M19.59 6.69a4.83 4.83 0 0 1-3.77-4.25V2h-3.45v13.67a2.89 2.89 0 0 1-2.88 2.5 2.89 2.89 0 0 1-2.89-2.89 2.89 2.89 0 0 1 2.89-2.89c.28 0 .54.04.79.1V9.01a6.33 6.33 0 0 0-.79-.05 6.34 6.34 0 0 0-6.34 6.34 6.34 6.34 0 0 0 6.34 6.34 6.34 6.34 0 0 0 6.33-6.34V8.69a8.18 8.18 0 0 0 4.78 1.52V6.78a4.85 4.85 0 0 1-1.01-.09z"/></svg>,
+  LinkedIn:  <svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor"><path d="M16 8a6 6 0 0 1 6 6v7h-4v-7a2 2 0 0 0-2-2 2 2 0 0 0-2 2v7h-4v-7a6 6 0 0 1 6-6zM2 9h4v12H2z"/><circle cx="4" cy="4" r="2"/></svg>,
+  Facebook:  <svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor"><path d="M18 2h-3a5 5 0 0 0-5 5v3H7v4h3v8h4v-8h3l1-4h-4V7a1 1 0 0 1 1-1h3z"/></svg>,
+  Web:       <svg width="12" height="12" viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="1.5"/><path d="M2 12h20M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z" stroke="currentColor" strokeWidth="1.5"/></svg>,
+}
 
 const PRIORIDAD_STYLES = {
   'Baja':     { bg: '#F3F4F6', text: '#6B7280', dot: '#9CA3AF' },
@@ -38,13 +58,16 @@ function StatusBadge({ estado }) {
 
 const inputClass = "w-full px-3.5 py-2.5 text-sm border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#e84530]/15 focus:border-[#e84530]/30 transition-all duration-150"
 
-function EditModal({ req, scriptUrl, isAuth, actorName, onSave, onClose }) {
+function EditModal({ req, scriptUrl, isAuth, actorName, projects, onSave, onClose }) {
   const [form, setForm] = useState({
+    proyecto: req.proyecto || '',
     titulo: req.titulo || '',
     info: req.info || '',
     estado: req.estado || 'Pendiente',
     fecha: req.fecha instanceof Date ? req.fecha.toISOString().slice(0, 10) : '',
     canal: req.canal || '',
+    tipo: (req.tipo || 'imagen').toLowerCase().trim(),
+    contenido: req.contenido || '',
     prioridad: req.prioridad || 'Media',
     promocionado: (req.promocionado || 'No').startsWith('S') || (req.promocionado || 'No').startsWith('s'),
     presupuesto: req.presupuesto || '',
@@ -172,18 +195,71 @@ function EditModal({ req, scriptUrl, isAuth, actorName, onSave, onClose }) {
             </div>
           </div>
 
+          {/* Proyecto */}
+          {projects && projects.length > 0 && (
+            <div>
+              <label className="block text-xs font-semibold text-gray-400 uppercase tracking-[0.1em] mb-2">Proyecto</label>
+              <select
+                value={form.proyecto}
+                onChange={e => set('proyecto', e.target.value)}
+                className={inputClass}
+                style={{ appearance: 'none', backgroundImage: `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath d='M2 4l4 4 4-4' stroke='%239CA3AF' stroke-width='1.5' stroke-linecap='round' stroke-linejoin='round' fill='none'/%3E%3C/svg%3E")`, backgroundRepeat: 'no-repeat', backgroundPosition: 'right 12px center', paddingRight: '36px' }}
+              >
+                {projects.map(p => <option key={p} value={p}>{p}</option>)}
+              </select>
+            </div>
+          )}
+
+          {/* Canal */}
           <div>
-            <label className="block text-xs font-semibold text-gray-400 uppercase tracking-[0.1em] mb-2">Título</label>
-            <input type="text" value={form.titulo} onChange={e => set('titulo', e.target.value)} className={inputClass} />
+            <label className="block text-xs font-semibold text-gray-400 uppercase tracking-[0.1em] mb-2">Canal</label>
+            <div className="flex flex-wrap gap-1.5">
+              {CANALES.map(c => {
+                const isActive = form.canal === c
+                const icon = CANAL_ICONS[c]
+                const activeStyle = { backgroundColor: '#111827', color: '#fff', borderColor: '#111827' }
+                const idleStyle = { backgroundColor: '#fff', color: '#6B7280', borderColor: '#E5E7EB' }
+                if (c === 'Web') {
+                  return (
+                    <button key={c} type="button" onClick={() => set('canal', isActive ? '' : c)}
+                      className="flex items-center gap-1 px-2.5 py-1 rounded-full text-[11px] font-medium border transition-all duration-150"
+                      style={isActive ? activeStyle : idleStyle}
+                    >{icon} WEB</button>
+                  )
+                }
+                if (c === 'Otros') {
+                  return (
+                    <button key={c} type="button" onClick={() => set('canal', isActive ? '' : c)}
+                      className="px-2.5 py-1 rounded-full text-[11px] font-medium border transition-all duration-150"
+                      style={isActive ? activeStyle : idleStyle}
+                    >Otros</button>
+                  )
+                }
+                return (
+                  <button key={c} type="button" title={c} onClick={() => set('canal', isActive ? '' : c)}
+                    className="w-7 h-7 flex items-center justify-center rounded-full border transition-all duration-150"
+                    style={isActive ? activeStyle : idleStyle}
+                  >{icon}</button>
+                )
+              })}
+            </div>
           </div>
 
+          {/* Fecha */}
           <div>
-            <label className="block text-xs font-semibold text-gray-400 uppercase tracking-[0.1em] mb-2">Fecha</label>
+            <label className="block text-xs font-semibold text-gray-400 uppercase tracking-[0.1em] mb-2">Fecha deseada</label>
             <div className="w-full overflow-hidden rounded-xl">
               <input type="date" value={form.fecha} onChange={e => set('fecha', e.target.value)} className={inputClass} style={{ minWidth: 0 }} />
             </div>
           </div>
 
+          {/* Título */}
+          <div>
+            <label className="block text-xs font-semibold text-gray-400 uppercase tracking-[0.1em] mb-2">Título del post</label>
+            <input type="text" value={form.titulo} onChange={e => set('titulo', e.target.value)} className={inputClass} />
+          </div>
+
+          {/* Info */}
           <div>
             <label className="block text-xs font-semibold text-gray-400 uppercase tracking-[0.1em] mb-2">Información adicional</label>
             <textarea
@@ -194,6 +270,41 @@ function EditModal({ req, scriptUrl, isAuth, actorName, onSave, onClose }) {
             />
           </div>
 
+          {/* Link de contenido */}
+          <div>
+            <label className="block text-xs font-semibold text-gray-400 uppercase tracking-[0.1em] mb-2">Link de contenido</label>
+            <input
+              type="url"
+              value={form.contenido}
+              onChange={e => set('contenido', e.target.value)}
+              placeholder="Link de Drive, imagen o vídeo…"
+              className={inputClass}
+            />
+          </div>
+
+          {/* Tipo de contenido */}
+          <div>
+            <label className="block text-xs font-semibold text-gray-400 uppercase tracking-[0.1em] mb-2">Tipo de contenido</label>
+            <div className="flex flex-wrap gap-1.5">
+              {TIPOS.map(t => (
+                <button
+                  key={t}
+                  type="button"
+                  onClick={() => set('tipo', t)}
+                  className={`flex items-center gap-1.5 px-3 py-1 rounded-full text-[11px] font-medium border transition-all duration-150 capitalize ${
+                    form.tipo === t
+                      ? (TIPO_ACTIVE[t] || 'bg-black text-white border-black')
+                      : 'bg-white text-gray-500 border-gray-200'
+                  }`}
+                >
+                  <TypeIcon tipo={t} size={12} />
+                  {t}
+                </button>
+              ))}
+            </div>
+          </div>
+
+          {/* Prioridad */}
           <div>
             <label className="block text-xs font-semibold text-gray-400 uppercase tracking-[0.1em] mb-2.5">Prioridad</label>
             <div className="flex flex-wrap gap-1.5">
@@ -218,6 +329,7 @@ function EditModal({ req, scriptUrl, isAuth, actorName, onSave, onClose }) {
             </div>
           </div>
 
+          {/* Campaña de Ads */}
           <div>
             <label className="block text-xs font-semibold text-gray-400 uppercase tracking-[0.1em] mb-2">Campaña de Ads</label>
             <div className="flex items-center gap-3">
@@ -249,6 +361,7 @@ function EditModal({ req, scriptUrl, isAuth, actorName, onSave, onClose }) {
             )}
           </div>
 
+          {/* Tu nombre (no-admin) */}
           {!isAuth && (
             <div>
               <label className="block text-xs font-semibold text-gray-400 uppercase tracking-[0.1em] mb-2">Tu nombre</label>
@@ -630,6 +743,7 @@ export default function RequestsView({ config, isDemo, isAuth, calendarPubs = []
           scriptUrl={config.requestsScriptUrl}
           isAuth={isAuth}
           actorName={localStorage.getItem(SOLICITANTE_KEY) || ''}
+          projects={projects}
           onSave={handleSaveEdit}
           onClose={() => setEditingReq(null)}
         />
