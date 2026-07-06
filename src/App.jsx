@@ -11,8 +11,8 @@ import RequestsView from './components/RequestsView'
 import MonthSummary from './components/MonthSummary'
 import LoginModal from './components/LoginModal'
 import NewPublicationModal from './components/NewPublicationModal'
-import { fetchSheetData } from './utils/googleSheets'
-import { SPREADSHEET_URL, REQUESTS_SCRIPT_URL, PROJECTS } from './config'
+import { fetchSheetData, fetchRequestsData } from './utils/googleSheets'
+import { SPREADSHEET_URL, REQUESTS_SHEET_URL, REQUESTS_SCRIPT_URL, PROJECTS } from './config'
 
 const now = new Date()
 const Y = now.getFullYear()
@@ -126,12 +126,37 @@ export default function App() {
     setLoading(true)
     setError(null)
     try {
-      const data = await fetchSheetData(config.spreadsheetId)
-      setRealPublications(data)
-      setPublications(data)
-      // Persist for next load
+      // Fetch publications sheet + requests sheet in parallel
+      const [pubsData, reqsData] = await Promise.all([
+        fetchSheetData(config.spreadsheetId),
+        REQUESTS_SHEET_URL ? fetchRequestsData(REQUESTS_SHEET_URL).catch(() => []) : Promise.resolve([]),
+      ])
+
+      // Approved requests become calendar entries visible to everyone
+      const pubKeys = new Set(pubsData.map(p => `${p.proyecto}||${p.titulo}`))
+      const approvedFromSheet = reqsData
+        .filter(r => r.estado === 'Aprobado' && r.fecha)
+        .map(r => ({
+          id: `approved-${r.id}`,
+          proyecto: r.proyecto,
+          fecha: r.fecha,
+          titulo: r.titulo,
+          copy: r.info || '',
+          media: r.contenido || '',
+          url_post: '',
+          tipo: r.tipo || 'imagen',
+          canal: r.canal || '',
+          estado: 'Aprobado',
+          promocionado: r.promocionado || 'No',
+          presupuesto: r.presupuesto || '',
+        }))
+        .filter(p => !pubKeys.has(`${p.proyecto}||${p.titulo}`))
+
+      const merged = [...pubsData, ...approvedFromSheet]
+      setRealPublications(merged)
+      setPublications(merged)
       localStorage.setItem('pubcal_pubs_cache', JSON.stringify(
-        data.map(p => ({ ...p, fecha: p.fecha instanceof Date ? p.fecha.toISOString() : p.fecha }))
+        merged.map(p => ({ ...p, fecha: p.fecha instanceof Date ? p.fecha.toISOString() : p.fecha }))
       ))
     } catch (e) {
       setError(e.message)
