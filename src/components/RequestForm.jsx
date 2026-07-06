@@ -1,4 +1,4 @@
-import { useState, useRef, useEffect } from 'react'
+import { useState, useRef, useEffect, useCallback } from 'react'
 import { submitRequest } from '../utils/googleSheets'
 import { TypeIcon } from './Icons'
 
@@ -143,8 +143,27 @@ export default function RequestForm({ projects, scriptUrl, onSubmitted }) {
   const [sending, setSending] = useState(false)
   const [sent, setSent] = useState(false)
   const [error, setError] = useState(null)
+  const [adjunto, setAdjunto] = useState(null)
+  const fileInputRef = useRef(null)
+  const prevPreviewRef = useRef(null)
 
   const set = (k, v) => setForm(f => ({ ...f, [k]: v }))
+
+  const handleFile = useCallback((file) => {
+    if (prevPreviewRef.current) { URL.revokeObjectURL(prevPreviewRef.current); prevPreviewRef.current = null }
+    if (!file) { setAdjunto(null); return }
+    const isImage = file.type.startsWith('image/')
+    const preview = isImage ? URL.createObjectURL(file) : null
+    prevPreviewRef.current = preview
+    setAdjunto({ nombre: file.name, tipo: file.type, preview, size: file.size })
+    if (isImage && file.size < 8 * 1024 * 1024) {
+      const reader = new FileReader()
+      reader.onload = ev => setAdjunto(prev => prev ? { ...prev, datos: ev.target.result } : prev)
+      reader.readAsDataURL(file)
+    }
+  }, [])
+
+  useEffect(() => () => { if (prevPreviewRef.current) URL.revokeObjectURL(prevPreviewRef.current) }, [])
 
   const proyectoFinal = form.proyecto === '__otros__' ? form.proyectoOtros.trim() : form.proyecto
 
@@ -161,6 +180,7 @@ export default function RequestForm({ projects, scriptUrl, onSubmitted }) {
       fechaSolicitud: new Date().toLocaleDateString('es-ES'),
       estado: 'Pendiente',
       promocionado: form.promocionado ? 'Sí' : 'No',
+      ...(adjunto ? { adjunto_nombre: adjunto.nombre, adjunto_datos: adjunto.datos || '' } : {}),
     }
     delete payload.proyectoOtros
 
@@ -188,6 +208,8 @@ export default function RequestForm({ projects, scriptUrl, onSubmitted }) {
     setTimeout(() => {
       setSent(false)
       setForm({ ...EMPTY_FORM, solicitante: localStorage.getItem(SOLICITANTE_KEY) || '' })
+      handleFile(null)
+      if (fileInputRef.current) fileInputRef.current.value = ''
     }, 2500)
   }
 
@@ -329,14 +351,54 @@ export default function RequestForm({ projects, scriptUrl, onSubmitted }) {
 
           {/* Contenido */}
           <div>
-            <label className={labelClass}>Link de contenido</label>
+            <label className={labelClass}>Contenido</label>
             <input
-              type="url"
+              type="text"
               value={form.contenido}
               onChange={e => set('contenido', e.target.value)}
-              placeholder="Link de Drive, imagen o vídeo..."
+              placeholder="Link de Drive, imagen o vídeo… (separa varios con comas)"
               className={inputClass}
             />
+            <label className="mt-2 flex items-center gap-2 px-3 py-2 rounded-xl border border-dashed border-gray-200 text-xs font-medium text-gray-400 cursor-pointer hover:border-[#e84530]/40 hover:text-gray-500 hover:bg-gray-50/60 transition-all duration-150">
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+                <polyline points="17 8 12 3 7 8"/>
+                <line x1="12" y1="3" x2="12" y2="15"/>
+              </svg>
+              {adjunto ? <span className="truncate text-gray-600 font-semibold">{adjunto.nombre}</span> : 'o adjunta un archivo del dispositivo'}
+              <input
+                ref={fileInputRef}
+                type="file"
+                accept="image/*,video/*"
+                className="hidden"
+                onChange={e => handleFile(e.target.files[0])}
+              />
+            </label>
+            {adjunto && (
+              <div className="mt-1.5 flex items-center gap-2.5 px-3 py-2 bg-gray-50 rounded-xl">
+                {adjunto.preview && (
+                  <img src={adjunto.preview} alt="" className="w-10 h-10 object-cover rounded-lg flex-shrink-0" />
+                )}
+                {!adjunto.preview && (
+                  <div className="w-10 h-10 rounded-lg bg-gray-100 flex items-center justify-center flex-shrink-0">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#9CA3AF" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+                      <rect x="2" y="2" width="20" height="20" rx="2.18"/><line x1="7" y1="2" x2="7" y2="22"/><line x1="17" y1="2" x2="17" y2="22"/><line x1="2" y1="12" x2="22" y2="12"/><line x1="2" y1="7" x2="7" y2="7"/><line x1="2" y1="17" x2="7" y2="17"/><line x1="17" y1="17" x2="22" y2="17"/><line x1="17" y1="7" x2="22" y2="7"/>
+                    </svg>
+                  </div>
+                )}
+                <div className="flex-1 min-w-0">
+                  <div className="text-xs font-semibold text-gray-700 truncate">{adjunto.nombre}</div>
+                  <div className="text-[11px] text-gray-400">{adjunto.size >= 1024*1024 ? `${(adjunto.size/1024/1024).toFixed(1)} MB` : `${(adjunto.size/1024).toFixed(0)} KB`}</div>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => { handleFile(null); if (fileInputRef.current) fileInputRef.current.value = '' }}
+                  className="w-6 h-6 rounded-full flex items-center justify-center text-gray-400 hover:text-gray-600 hover:bg-gray-200 transition-all duration-150 flex-shrink-0"
+                >
+                  <svg width="10" height="10" viewBox="0 0 12 12" fill="none"><path d="M1 1l10 10M11 1L1 11" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round"/></svg>
+                </button>
+              </div>
+            )}
           </div>
 
           {/* Tipo */}

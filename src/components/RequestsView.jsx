@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo } from 'react'
+import { useState, useEffect, useMemo, useRef, useCallback } from 'react'
 import RequestForm from './RequestForm'
 import { TypeIcon } from './Icons'
 import { getProjectColor } from '../utils/colors'
@@ -75,7 +75,26 @@ function EditModal({ req, scriptUrl, isAuth, actorName, projects, onSave, onClos
   const [localName, setLocalName] = useState(actorName || '')
   const [saving, setSaving] = useState(false)
   const [error, setError] = useState(null)
+  const [adjunto, setAdjunto] = useState(null)
+  const fileInputRef = useRef(null)
+  const prevPreviewRef = useRef(null)
   const set = (k, v) => setForm(f => ({ ...f, [k]: v }))
+
+  const handleFile = useCallback((file) => {
+    if (prevPreviewRef.current) { URL.revokeObjectURL(prevPreviewRef.current); prevPreviewRef.current = null }
+    if (!file) { setAdjunto(null); return }
+    const isImage = file.type.startsWith('image/')
+    const preview = isImage ? URL.createObjectURL(file) : null
+    prevPreviewRef.current = preview
+    setAdjunto({ nombre: file.name, tipo: file.type, preview, size: file.size })
+    if (isImage && file.size < 8 * 1024 * 1024) {
+      const reader = new FileReader()
+      reader.onload = ev => setAdjunto(prev => prev ? { ...prev, datos: ev.target.result } : prev)
+      reader.readAsDataURL(file)
+    }
+  }, [])
+
+  useEffect(() => () => { if (prevPreviewRef.current) URL.revokeObjectURL(prevPreviewRef.current) }, [])
 
   const handleSave = async () => {
     setSaving(true)
@@ -85,7 +104,8 @@ function EditModal({ req, scriptUrl, isAuth, actorName, projects, onSave, onClos
     const modificadoPor = actor
       ? `${actor} · ${new Date().toLocaleString('es-ES', { day: '2-digit', month: '2-digit', year: '2-digit', hour: '2-digit', minute: '2-digit' })}`
       : null
-    const dataWithActor = modificadoPor ? { ...form, modificado_por: modificadoPor } : form
+    const adjuntoExtra = adjunto ? { adjunto_nombre: adjunto.nombre, adjunto_datos: adjunto.datos || '' } : {}
+    const dataWithActor = { ...(modificadoPor ? { ...form, modificado_por: modificadoPor } : form), ...adjuntoExtra }
     const updated = { ...req, ...form, fecha: new Date(form.fecha), promocionado: form.promocionado ? 'Sí' : 'No' }
     try {
       if (scriptUrl && req.id.startsWith('sheet-')) {
@@ -136,7 +156,7 @@ function EditModal({ req, scriptUrl, isAuth, actorName, projects, onSave, onClos
         style={{
           animation: 'modalIn 200ms cubic-bezier(0.16,1,0.3,1)',
           boxShadow: '0 8px 40px rgba(0,0,0,0.14), 0 32px 80px rgba(0,0,0,0.08)',
-          maxHeight: '92vh',
+          maxHeight: '78vh',
         }}
       >
         {/* Handle */}
@@ -205,7 +225,7 @@ function EditModal({ req, scriptUrl, isAuth, actorName, projects, onSave, onClos
                 className={inputClass}
                 style={{ appearance: 'none', backgroundImage: `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath d='M2 4l4 4 4-4' stroke='%239CA3AF' stroke-width='1.5' stroke-linecap='round' stroke-linejoin='round' fill='none'/%3E%3C/svg%3E")`, backgroundRepeat: 'no-repeat', backgroundPosition: 'right 12px center', paddingRight: '36px' }}
               >
-                {projects.map(p => <option key={p} value={p}>{p}</option>)}
+                {(projects && !projects.includes(form.proyecto) && form.proyecto ? [form.proyecto, ...projects] : (projects || [])).map(p => <option key={p} value={p}>{p}</option>)}
               </select>
             </div>
           )}
@@ -274,12 +294,47 @@ function EditModal({ req, scriptUrl, isAuth, actorName, projects, onSave, onClos
           <div>
             <label className="block text-xs font-semibold text-gray-400 uppercase tracking-[0.1em] mb-2">Link de contenido</label>
             <input
-              type="url"
+              type="text"
               value={form.contenido}
               onChange={e => set('contenido', e.target.value)}
-              placeholder="Link de Drive, imagen o vídeo…"
+              placeholder="Link de Drive, imagen o vídeo… (separa varios con comas)"
               className={inputClass}
             />
+            <div className="mt-2">
+              <input
+                ref={fileInputRef}
+                type="file"
+                accept="image/*,video/*"
+                className="hidden"
+                onChange={e => handleFile(e.target.files?.[0] || null)}
+              />
+              {!adjunto ? (
+                <label
+                  onClick={() => fileInputRef.current?.click()}
+                  className="flex items-center gap-2 px-3 py-2 rounded-xl border border-dashed border-gray-300 text-xs text-gray-400 cursor-pointer hover:border-gray-400 hover:text-gray-500 transition-colors w-fit"
+                >
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+                  Adjuntar imagen o vídeo
+                </label>
+              ) : (
+                <div className="flex items-center gap-3 p-2.5 rounded-xl border border-gray-200 bg-gray-50">
+                  {adjunto.preview ? (
+                    <img src={adjunto.preview} alt="" className="w-12 h-12 object-cover rounded-lg flex-shrink-0" />
+                  ) : (
+                    <div className="w-12 h-12 rounded-lg bg-gray-200 flex items-center justify-center flex-shrink-0">
+                      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#9CA3AF" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"><polygon points="23 7 16 12 23 17 23 7"/><rect x="1" y="5" width="15" height="14" rx="2" ry="2"/></svg>
+                    </div>
+                  )}
+                  <div className="flex-1 min-w-0">
+                    <p className="text-xs font-medium text-gray-700 truncate">{adjunto.nombre}</p>
+                    <p className="text-[10px] text-gray-400">{adjunto.size < 1024*1024 ? `${(adjunto.size/1024).toFixed(0)} KB` : `${(adjunto.size/(1024*1024)).toFixed(1)} MB`}</p>
+                  </div>
+                  <button type="button" onClick={() => { handleFile(null); if (fileInputRef.current) fileInputRef.current.value = '' }} className="flex-shrink-0 text-gray-400 hover:text-gray-600 transition-colors">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+                  </button>
+                </div>
+              )}
+            </div>
           </div>
 
           {/* Tipo de contenido */}
