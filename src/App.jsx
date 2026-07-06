@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from 'react'
+import { useState, useEffect, useCallback, useMemo } from 'react'
 import Header from './components/Header'
 import CalendarGrid from './components/CalendarGrid'
 import CalendarList from './components/CalendarList'
@@ -91,6 +91,13 @@ export default function App() {
   const [error, setError]         = useState(null)
   const [pendingCount, setPendingCount] = useState(0)
 
+  const [approvedPubs, setApprovedPubs] = useState(() => {
+    try {
+      const saved = JSON.parse(localStorage.getItem('pubcal_approved_pubs') || '[]')
+      return saved.map(p => ({ ...p, fecha: p.fecha ? new Date(p.fecha) : null }))
+    } catch { return [] }
+  })
+
   const [config] = useState(() => {
     try {
       const saved = JSON.parse(localStorage.getItem('pubcal_config') || '{}')
@@ -135,13 +142,46 @@ export default function App() {
 
   useEffect(() => { syncData() }, [syncData])
 
+  const handleApprove = useCallback((req) => {
+    const pub = {
+      id: `approved-${req.id}`,
+      proyecto: req.proyecto,
+      fecha: req.fecha instanceof Date ? req.fecha : (req.fecha ? new Date(req.fecha) : null),
+      titulo: req.titulo,
+      copy: req.info || '',
+      media: req.contenido || '',
+      url_post: '',
+      tipo: req.tipo || 'imagen',
+      canal: req.canal || '',
+      estado: 'Aprobado',
+      promocionado: req.promocionado || 'No',
+      presupuesto: req.presupuesto || '',
+    }
+    if (!pub.fecha) return
+    setApprovedPubs(prev => {
+      const key = `${pub.proyecto}||${pub.titulo}`
+      const next = [...prev.filter(p => `${p.proyecto}||${p.titulo}` !== key), pub]
+      try {
+        localStorage.setItem('pubcal_approved_pubs', JSON.stringify(
+          next.map(p => ({ ...p, fecha: p.fecha instanceof Date ? p.fecha.toISOString() : p.fecha }))
+        ))
+      } catch { /* ignore */ }
+      return next
+    })
+  }, [])
+
   const toggleFilter = name => setActiveFilter(prev => prev.includes(name) ? prev.filter(n => n !== name) : [...prev, name])
   const clearFilter = () => setActiveFilter([])
 
   const loadDemo = () => { setIsDemo(true); setYear(Y); setMonth(M); setActiveFilter([]) }
   const exitDemo = () => { setIsDemo(false); setPublications(realPublications) }
 
-  const displayPubs = isDemo ? DEMO : publications
+  const displayPubs = useMemo(() => {
+    const base = isDemo ? DEMO : publications
+    const keys = new Set(base.map(p => `${p.proyecto}||${p.titulo}`))
+    const extra = approvedPubs.filter(p => p.fecha && !keys.has(`${p.proyecto}||${p.titulo}`))
+    return [...base, ...extra]
+  }, [isDemo, publications, approvedPubs])
 
   const prevMonth = () => {
     setNavDir(-1)
@@ -219,28 +259,6 @@ export default function App() {
 
       <main className="max-w-7xl mx-auto px-4 sm:px-6 py-4 sm:py-6">
 
-        {/* Debug info — remove once confirmed working */}
-        {activeTab === 'publicaciones' && (
-          <div style={{ fontSize: '11px', padding: '4px 12px', background: '#f0f4ff', borderRadius: '8px', marginBottom: '8px', color: '#555' }}>
-            <div style={{ display: 'flex', gap: '16px', flexWrap: 'wrap' }}>
-              <span>Publicaciones cargadas: <b>{publications.length}</b></span>
-              <span>Cargando: <b>{loading ? 'sí' : 'no'}</b></span>
-              {error && <span style={{ color: 'red' }}>Error: <b>{error}</b></span>}
-              {!loading && !error && typeof window._dbg !== 'undefined' && (
-                <>
-                  <span>Filas CSV: <b>{window._dbg.total}</b></span>
-                  <span>Con proyecto: <b>{window._dbg.withProyecto}</b></span>
-                  <span>Con fecha: <b>{window._dbg.withFecha}</b></span>
-                </>
-              )}
-            </div>
-            {!loading && !error && typeof window._dbg !== 'undefined' && window._dbg.headers.length > 0 && (
-              <div style={{ marginTop: '2px', color: '#888' }}>
-                Columnas: <b>{window._dbg.headers.join(', ')}</b>
-              </div>
-            )}
-          </div>
-        )}
 
         {/* Error */}
         {error && activeTab === 'publicaciones' && (
@@ -317,7 +335,7 @@ export default function App() {
 
         {/* Requests tab */}
         {activeTab === 'peticiones' && (
-          <RequestsView config={config} isDemo={isDemo} calendarPubs={displayPubs} onCountChange={setPendingCount} />
+          <RequestsView config={config} isDemo={isDemo} calendarPubs={displayPubs} onCountChange={setPendingCount} onApprove={handleApprove} />
         )}
       </main>
 

@@ -93,15 +93,7 @@ export async function fetchSheetData(sheetUrl) {
   const url = buildCsvUrl(sheetUrl)
   const csv = await fetchCsv(url)
   const { data } = safeParse(csv)
-  const rows = data.map(parseRow)
-  // Diagnostics (temporary)
-  window._dbg = {
-    total: data.length,
-    withProyecto: rows.filter(r => r.proyecto).length,
-    withFecha: rows.filter(r => r.proyecto && r.fecha).length,
-    headers: data.length > 0 ? Object.keys(data[0]) : [],
-  }
-  return rows.filter(p => p.proyecto && p.fecha)
+  return data.map(parseRow).filter(p => p.proyecto && p.fecha)
 }
 
 export async function fetchRequestsData(sheetUrl) {
