@@ -155,6 +155,22 @@ export default function Header({
           </button>
         )}
 
+        {/* Help link */}
+        <a
+          href="./help.html"
+          title="Ayuda"
+          className="hidden sm:flex w-8 h-8 rounded-xl items-center justify-center transition-all duration-150 flex-shrink-0"
+          style={{ border: '1.5px solid #e8e8ec', backgroundColor: 'transparent', color: '#9ca3af' }}
+          onMouseEnter={e => { e.currentTarget.style.backgroundColor = '#f9fafb'; e.currentTarget.style.color = '#6b7280' }}
+          onMouseLeave={e => { e.currentTarget.style.backgroundColor = 'transparent'; e.currentTarget.style.color = '#9ca3af' }}
+        >
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+            <circle cx="12" cy="12" r="10"/>
+            <path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"/>
+            <line x1="12" y1="17" x2="12.01" y2="17"/>
+          </svg>
+        </a>
+
         {/* Auth button */}
         <button
           onClick={onAuth}
@@ -234,6 +250,17 @@ export default function Header({
         {viewMode === 'feed' && <div className="flex-1" />}
 
           <div className="flex items-center gap-1.5">
+            <a
+              href="./help.html"
+              title="Ayuda"
+              className="w-8 h-8 rounded-xl border border-gray-200 flex items-center justify-center text-gray-400"
+            >
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <circle cx="12" cy="12" r="10"/>
+                <path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"/>
+                <line x1="12" y1="17" x2="12.01" y2="17"/>
+              </svg>
+            </a>
             <div className="flex items-center gap-0.5 p-1 bg-gray-100/70 rounded-xl">
               {[['grid','Mes'],['list','Lista'],['feed','Feed']].map(([mode, label]) => (
                 <button
