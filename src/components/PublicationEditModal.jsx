@@ -45,12 +45,12 @@ export default function PublicationEditModal({ publication: pub, projects = PROJ
 
   return (
     <div
-      className="fixed inset-0 z-[60] flex items-end sm:items-center justify-center sm:p-6"
+      className="fixed inset-0 z-[60] flex items-center justify-center p-4"
       onClick={e => { if (e.target === e.currentTarget) onClose() }}
     >
       <div className="absolute inset-0 bg-black/30 backdrop-blur-[6px]" onClick={onClose} />
       <div
-        className="relative bg-white rounded-t-[28px] sm:rounded-[24px] sm:max-w-md w-full overflow-hidden max-h-[92vh] flex flex-col"
+        className="relative bg-white rounded-[24px] max-w-md w-full overflow-hidden max-h-[92vh] flex flex-col"
         style={{ animation: 'modalIn 200ms cubic-bezier(0.16,1,0.3,1)', boxShadow: '0 8px 40px rgba(0,0,0,0.14), 0 32px 80px rgba(0,0,0,0.08)' }}
       >
         {/* Mobile handle */}

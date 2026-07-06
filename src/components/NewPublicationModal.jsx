@@ -53,11 +53,11 @@ export default function NewPublicationModal({ onClose, config, projects, onSaved
 
   return (
     <div
-      className="fixed inset-0 z-50 flex items-end sm:items-center justify-center"
+      className="fixed inset-0 z-50 flex items-center justify-center p-4"
       style={{ backgroundColor: 'rgba(0,0,0,0.45)', backdropFilter: 'blur(8px)' }}
     >
       <div
-        className="w-full max-w-lg bg-white rounded-t-3xl sm:rounded-3xl overflow-hidden"
+        className="w-full max-w-lg bg-white rounded-3xl overflow-hidden"
         style={{ maxHeight: '92vh', boxShadow: '0 24px 80px rgba(0,0,0,0.2)' }}
       >
         {/* Header */}
