@@ -161,8 +161,8 @@ export default function Header({
           title={isAuth ? 'Modo equipo activo' : 'Acceso equipo'}
           className="flex w-8 h-8 rounded-xl items-center justify-center transition-all duration-150 flex-shrink-0"
           style={isAuth
-            ? { backgroundColor: '#fa523c', border: 'none', boxShadow: '0 2px 8px rgba(250,82,60,0.35)' }
-            : { border: '1.5px solid #e8e8ec', backgroundColor: '#fff' }
+            ? { backgroundColor: '#22c55e', border: 'none', boxShadow: '0 2px 8px rgba(34,197,94,0.35)' }
+            : { border: '1.5px solid #e8e8ec', backgroundColor: 'transparent' }
           }
         >
           <svg width="16" height="16" viewBox="0 0 24 24" fill={isAuth ? '#fff' : '#9ca3af'}>
