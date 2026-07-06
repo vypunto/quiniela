@@ -1,4 +1,3 @@
-import Papa from 'papaparse'
 import { parseDate } from './dateUtils'
 
 function buildCsvUrl(input) {
@@ -41,6 +40,38 @@ async function fetchCsv(url) {
   throw new Error('No se pudo acceder a la hoja. Asegúrate de haberla publicado en Archivo → Compartir → Publicar en la web (formato CSV).')
 }
 
+function normalizeHeader(h) {
+  try {
+    const s = h.trim().toLowerCase()
+    return s
+      .replace(/[áàäâã]/g, 'a')
+      .replace(/[éèëê]/g, 'e')
+      .replace(/[íìïî]/g, 'i')
+      .replace(/[óòöôõ]/g, 'o')
+      .replace(/[úùüû]/g, 'u')
+      .replace(/[ñ]/g, 'n')
+  } catch { return h.trim() }
+}
+
+function safeParse(csv) {
+  if (typeof csv !== 'string' || !csv.trim()) return { data: [] }
+  try {
+    const str = String(csv).replace(/^﻿/, '')
+    const lines = str.split(/\r?\n/)
+    const headers = lines[0].split(',').map(normalizeHeader)
+    const rows = lines.slice(1).filter(l => l.trim())
+    const data = rows.map(row => {
+      const vals = row.split(',')
+      const obj = {}
+      headers.forEach((h, i) => { obj[h] = vals[i] || '' })
+      return obj
+    })
+    return { data }
+  } catch {
+    return { data: [] }
+  }
+}
+
 function parseRow(row, i) {
   return {
     id: String(i),
@@ -58,36 +89,19 @@ function parseRow(row, i) {
   }
 }
 
-function safeParse(csv) {
-  if (typeof csv !== 'string' || !csv.trim()) return { data: [] }
-  try {
-    return Papa.parse(String(csv), {
-      header: true,
-      skipEmptyLines: true,
-      transformHeader: h => {
-        try { return String(h == null ? '' : h).trim().toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g, '') }
-        catch { return String(h == null ? '' : h) }
-      },
-    })
-  } catch {
-    return { data: [] }
-  }
-}
-
 export async function fetchSheetData(sheetUrl) {
   const url = buildCsvUrl(sheetUrl)
   const csv = await fetchCsv(url)
   const { data } = safeParse(csv)
   const rows = data.map(parseRow)
-  // Expose raw parse info for diagnostics (temporary)
+  // Diagnostics (temporary)
   window._dbg = {
     total: data.length,
     withProyecto: rows.filter(r => r.proyecto).length,
     withFecha: rows.filter(r => r.proyecto && r.fecha).length,
     headers: data.length > 0 ? Object.keys(data[0]) : [],
-    sample: data.length > 0 ? data[0] : {},
   }
-  return rows.filter(p => p.proyecto)
+  return rows.filter(p => p.proyecto && p.fecha)
 }
 
 export async function fetchRequestsData(sheetUrl) {
