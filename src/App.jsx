@@ -11,7 +11,7 @@ import RequestsView from './components/RequestsView'
 import MonthSummary from './components/MonthSummary'
 import LoginModal from './components/LoginModal'
 import NewPublicationModal from './components/NewPublicationModal'
-import { fetchSheetData, fetchRequestsData } from './utils/googleSheets'
+import { fetchSheetData, fetchRequestsData, updatePublication } from './utils/googleSheets'
 import { SPREADSHEET_URL, REQUESTS_SHEET_URL, REQUESTS_SCRIPT_URL, PROJECTS } from './config'
 import PublicationEditModal from './components/PublicationEditModal'
 
@@ -92,20 +92,8 @@ export default function App() {
   const [error, setError]         = useState(null)
   const [pendingCount, setPendingCount] = useState(0)
 
-  const [approvedPubs, setApprovedPubs] = useState(() => {
-    try {
-      const saved = JSON.parse(localStorage.getItem('pubcal_approved_pubs') || '[]')
-      return saved.map(p => ({ ...p, fecha: p.fecha ? new Date(p.fecha) : null }))
-    } catch { return [] }
-  })
-
-  const [pubOverrides, setPubOverrides] = useState(() => {
-    try {
-      const saved = JSON.parse(localStorage.getItem('pubcal_pub_overrides') || '[]')
-      return saved.map(p => ({ ...p, fecha: p.fecha ? new Date(p.fecha) : null }))
-    } catch { return [] }
-  })
-
+  // In-memory optimistic updates — reset on reload, source of truth is always the Sheet
+  const [pendingEdits, setPendingEdits] = useState(new Map())
   const [editingPub, setEditingPub] = useState(null)
 
   const [config] = useState(() => {
@@ -177,53 +165,61 @@ export default function App() {
 
   useEffect(() => { syncData() }, [syncData])
 
-  const saveApprovedPubs = (next) => {
-    try {
-      localStorage.setItem('pubcal_approved_pubs', JSON.stringify(
-        next.map(p => ({ ...p, fecha: p.fecha instanceof Date ? p.fecha.toISOString() : p.fecha }))
-      ))
-    } catch { /* ignore */ }
-    return next
-  }
+  // Auto-poll every 60 s so all users see changes without manual refresh
+  useEffect(() => {
+    if (!config.spreadsheetId) return
+    const id = setInterval(() => syncData(), 60000)
+    return () => clearInterval(id)
+  }, [config.spreadsheetId, syncData])
 
+  const addPending = useCallback((id, pub) => {
+    setPendingEdits(prev => { const m = new Map(prev); m.set(id, pub); return m })
+  }, [])
+
+  const removePending = useCallback((id) => {
+    setPendingEdits(prev => { const m = new Map(prev); m.delete(id); return m })
+  }, [])
+
+  // Called from RequestsView whenever a petition is saved
   const handleRequestSave = useCallback((updated, prevEstado) => {
-    const key = `${updated.proyecto}||${updated.titulo}`
+    const pendingId = `approved-${updated.id}`
     if (updated.estado === 'Aprobado') {
       const fecha = updated.fecha instanceof Date ? updated.fecha : (updated.fecha ? new Date(updated.fecha) : null)
-      if (!fecha) return
-      const pub = {
-        id: `approved-${updated.id}`,
-        proyecto: updated.proyecto,
-        fecha,
-        titulo: updated.titulo,
-        copy: updated.info || '',
-        media: updated.contenido || '',
-        url_post: '',
-        tipo: updated.tipo || 'imagen',
-        canal: updated.canal || '',
-        estado: 'Aprobado',
-        promocionado: updated.promocionado || 'No',
-        presupuesto: updated.presupuesto || '',
+      if (fecha) {
+        addPending(pendingId, {
+          id: pendingId,
+          proyecto: updated.proyecto, fecha,
+          titulo: updated.titulo,
+          copy: updated.info || '',
+          media: updated.contenido || '',
+          url_post: '',
+          tipo: updated.tipo || 'imagen',
+          canal: updated.canal || '',
+          estado: 'Aprobado',
+          promocionado: updated.promocionado || 'No',
+          presupuesto: updated.presupuesto || '',
+        })
       }
-      setApprovedPubs(prev => saveApprovedPubs([...prev.filter(p => `${p.proyecto}||${p.titulo}` !== key), pub]))
     } else if (prevEstado === 'Aprobado') {
-      setApprovedPubs(prev => saveApprovedPubs(prev.filter(p => `${p.proyecto}||${p.titulo}` !== key)))
+      removePending(pendingId)
     }
-  }, [])
+    // Re-sync after Apps Script write so other users see the change
+    setTimeout(() => syncData(), 2000)
+  }, [addPending, removePending, syncData])
 
-  const handleEditPub = useCallback((updated) => {
-    setPubOverrides(prev => {
-      const next = [...prev.filter(p => p.id !== updated.id), updated]
-      try {
-        localStorage.setItem('pubcal_pub_overrides', JSON.stringify(
-          next.map(p => ({ ...p, fecha: p.fecha instanceof Date ? p.fecha.toISOString() : p.fecha }))
-        ))
-      } catch { /* ignore */ }
-      return next
-    })
+  // Called from PublicationEditModal — writes to Sheet via Apps Script, optimistic update meanwhile
+  const handleEditPub = useCallback(async (updated) => {
+    addPending(updated.id, updated)
     setSelectedPub(updated)
     setEditingPub(null)
-  }, [])
+    if (config.requestsScriptUrl) {
+      try {
+        const rowIndex = parseInt(updated.id) // 0-based index from CSV
+        await updatePublication(config.requestsScriptUrl, rowIndex, updated)
+      } catch { /* Script not yet updated — optimistic edit stays until reload */ }
+      setTimeout(() => syncData(), 2000)
+    }
+  }, [addPending, config.requestsScriptUrl, syncData])
 
   const toggleFilter = name => setActiveFilter(prev => prev.includes(name) ? prev.filter(n => n !== name) : [...prev, name])
   const clearFilter = () => setActiveFilter([])
@@ -233,13 +229,16 @@ export default function App() {
 
   const displayPubs = useMemo(() => {
     const base = isDemo ? DEMO : publications
-    const keys = new Set(base.map(p => `${p.proyecto}||${p.titulo}`))
-    const extra = approvedPubs.filter(p => p.fecha && !keys.has(`${p.proyecto}||${p.titulo}`))
-    const combined = [...base, ...extra]
-    if (pubOverrides.length === 0) return combined
-    const overrideMap = new Map(pubOverrides.map(p => [p.id, p]))
-    return combined.map(p => overrideMap.has(p.id) ? { ...p, ...overrideMap.get(p.id) } : p)
-  }, [isDemo, publications, approvedPubs, pubOverrides])
+    if (pendingEdits.size === 0) return base
+    // Merge: existing pubs get overrides applied; new pending pubs (approved requests) are appended
+    const baseMap = new Map(base.map(p => [p.id, p]))
+    const extra = []
+    for (const [id, pub] of pendingEdits) {
+      if (baseMap.has(id)) baseMap.set(id, { ...baseMap.get(id), ...pub })
+      else if (pub.fecha) extra.push(pub)
+    }
+    return [...baseMap.values(), ...extra]
+  }, [isDemo, publications, pendingEdits])
 
   const prevMonth = () => {
     setNavDir(-1)

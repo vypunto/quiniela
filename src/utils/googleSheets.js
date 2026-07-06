@@ -116,6 +116,15 @@ export async function fetchRequestsData(sheetUrl) {
   })).filter(r => r.proyecto)
 }
 
+export async function updatePublication(scriptUrl, rowIndex, data) {
+  const res = await fetch(scriptUrl, {
+    method: 'POST',
+    body: JSON.stringify({ action: 'updatePublication', rowIndex, data }),
+  })
+  if (!res.ok) throw new Error(`Error ${res.status}`)
+  return res.json()
+}
+
 export async function submitRequest(scriptUrl, payload) {
   // no-cors avoids CORS/redirect errors from Apps Script; response is opaque but the request lands
   await fetch(scriptUrl, {
