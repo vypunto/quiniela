@@ -481,18 +481,32 @@ a:focus-visible, button:focus-visible, summary:focus-visible {
         <div class="step-n" aria-hidden="true">2</div>
         <div class="step-body">
           <strong>Nueva petición</strong>
-          <p>Pulsa el botón <strong>+</strong>. Rellena: proyecto, fecha, título, descripción, tipo de contenido y canal.</p>
+          <p>Pulsa el botón <strong>+</strong>. Rellena: proyecto, fecha, título, información adicional, tipo de contenido, canal y prioridad.</p>
         </div>
       </li>
       <li>
         <div class="step-n" aria-hidden="true">3</div>
+        <div class="step-body">
+          <strong>Adjunta el archivo o el link</strong>
+          <p>En el campo <em>Link de contenido</em> puedes pegar una URL de Drive, o pulsar <em>Adjuntar imagen o vídeo</em> para subir el archivo directamente desde tu dispositivo (hasta 25 MB). Si son varios links, sepáralos con comas.</p>
+        </div>
+      </li>
+      <li>
+        <div class="step-n" aria-hidden="true">4</div>
+        <div class="step-body">
+          <strong>Indica tu nombre</strong>
+          <p>Escribe tu nombre en el campo <em>Tu nombre</em>. Se guarda automáticamente en el navegador para la próxima vez.</p>
+        </div>
+      </li>
+      <li>
+        <div class="step-n" aria-hidden="true">5</div>
         <div class="step-body">
           <strong>Enviar</strong>
           <p>La petición se guarda con estado <em>Pendiente</em> y queda visible para los administradores.</p>
         </div>
       </li>
       <li>
-        <div class="step-n" aria-hidden="true">4</div>
+        <div class="step-n" aria-hidden="true">6</div>
         <div class="step-body">
           <strong>Seguimiento</strong>
           <p>Cuando un administrador la apruebe, aparece automáticamente en el calendario en la fecha indicada.</p>
@@ -501,7 +515,30 @@ a:focus-visible, button:focus-visible, summary:focus-visible {
     </ol>
 
     <div class="callout tip">
-      <strong>Consejo:</strong> Cuanta más información incluyas en la descripción (referencias, formato, mensaje clave), antes podrá el equipo producir el contenido.
+      <strong>Consejo:</strong> Cuanta más información incluyas (referencias, formato, mensaje clave, archivo adjunto), antes podrá el equipo producir el contenido.
+    </div>
+  </div>
+
+  <div class="section" id="adjuntos">
+    <div class="section-head">
+      <div class="section-icon" aria-hidden="true">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2.2" stroke-linecap="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+      </div>
+      <h2>Adjuntar archivos</h2>
+    </div>
+
+    <p>Tanto al crear una petición como al editarla, puedes adjuntar imágenes o vídeos directamente desde tu dispositivo — muy útil si tienes el archivo guardado en el móvil y no quieres subirlo a Drive manualmente.</p>
+
+    <ul class="item-list" style="margin-top: 8px; margin-bottom: 16px;">
+      <li><strong>Formatos admitidos:</strong> imágenes (JPG, PNG, GIF, WebP…) y vídeos (MP4, MOV…)</li>
+      <li><strong>Tamaño máximo:</strong> 25 MB por archivo</li>
+      <li>El archivo se sube a una carpeta de Google Drive llamada <strong>"Calendapp Adjuntos"</strong> con acceso público por enlace</li>
+      <li>La URL de Drive se añade automáticamente al campo <em>Link de contenido</em> de la petición</li>
+      <li>Si ya había un link en ese campo, la URL del adjunto se añade al final separada por coma</li>
+    </ul>
+
+    <div class="callout warn">
+      <strong>Importante:</strong> Para que la subida funcione, el Google Apps Script debe tener la función <code>uploadFile</code> activa y estar desplegado con permisos de Drive. Si el adjunto no se sube, la petición se envía igualmente sin el archivo.
     </div>
   </div>
 
@@ -698,12 +735,20 @@ a:focus-visible, button:focus-visible, summary:focus-visible {
 
     <p>Desde la pestaña <strong>Peticiones</strong>, los administradores tienen control total sobre las solicitudes del equipo:</p>
 
-    <ul class="item-list" style="margin-top: 10px;">
+    <ul class="item-list" style="margin-top: 10px; margin-bottom: 16px;">
       <li><strong>Ver todas las peticiones</strong> con su estado actual e información del solicitante</li>
-      <li><strong>Editar cualquier campo</strong> antes de aprobar — fecha, descripción, tipo o canal</li>
+      <li><strong>Editar cualquier campo</strong> — estado, proyecto, canal, fecha, título, descripción, link de contenido, tipo, prioridad y campaña de Ads. También puedes adjuntar o reemplazar el archivo en ese momento.</li>
       <li><strong>Cambiar el estado</strong> — Pendiente → Aprobado / Rechazado / En proceso</li>
       <li><strong>Aprobar</strong> — la petición aparece automáticamente en el calendario</li>
-      <li><strong>Eliminar</strong> — se archiva (no se borra definitivamente) por si se necesita recuperar</li>
+      <li><strong>Eliminar</strong> — abre un modal de confirmación. La fila no se borra definitivamente: se mueve a la hoja <em>ARCHIVO</em> del Google Sheets por si hace falta recuperarla</li>
+    </ul>
+
+    <span class="sub-label">Trazabilidad de cambios</span>
+    <p>Cada vez que alguien edita o borra una petición, CALENDAPP registra quién lo hizo y cuándo:</p>
+    <ul class="item-list" style="margin-top: 6px;">
+      <li>Al editar, el campo <em>modificado_por</em> se escribe en la hoja con el formato <code>Nombre · DD/MM/AA HH:MM</code></li>
+      <li>Los miembros del equipo (sin acceso de admin) deben identificarse con su nombre antes de poder editar o borrar. Ese nombre se guarda en el navegador para la próxima vez.</li>
+      <li>Los administradores no necesitan nombre porque la sesión ya identifica su acceso</li>
     </ul>
 
     <div class="callout tip" style="margin-top:16px">
@@ -772,6 +817,26 @@ a:focus-visible, button:focus-visible, summary:focus-visible {
       <summary>¿Cómo añado un nuevo proyecto?</summary>
       <div class="faq-body">Basta con añadir una fila con el nombre del nuevo proyecto en la columna correspondiente — CALENDAPP lo detecta automáticamente. Si quieres un color específico en la paleta del grupo, el equipo técnico puede añadirlo al código.</div>
     </details>
+
+    <details>
+      <summary>Adjunto un archivo pero no aparece en la petición</summary>
+      <div class="faq-body">El adjunto se sube a Google Drive a través del Apps Script. Si la subida falla (por timeout, permisos o tamaño), la petición se envía igualmente sin el archivo y no aparece ningún error visible. Verifica que el script está desplegado correctamente con permisos de Drive y que el archivo no supera los 25 MB. Como alternativa, sube el archivo a Drive manualmente y pega la URL en el campo <em>Link de contenido</em>.</div>
+    </details>
+
+    <details>
+      <summary>¿Dónde se guardan los archivos adjuntos?</summary>
+      <div class="faq-body">En una carpeta llamada <strong>"Calendapp Adjuntos"</strong> en el Google Drive asociado a la cuenta que ejecuta el Apps Script. Los archivos tienen acceso público por enlace (cualquiera con el link puede verlos). La URL se guarda en la columna <em>contenido</em> de la hoja PETICIONES.</div>
+    </details>
+
+    <details>
+      <summary>He borrado una petición por error, ¿puedo recuperarla?</summary>
+      <div class="faq-body">Sí. Las peticiones borradas no se eliminan: se mueven automáticamente a la hoja <strong>ARCHIVO</strong> del Google Sheets, con la fecha y hora del borrado en la primera columna. Un administrador puede copiar la fila de vuelta a PETICIONES si es necesario.</div>
+    </details>
+
+    <details>
+      <summary>¿Para qué sirve el campo "Tu nombre" en las peticiones?</summary>
+      <div class="faq-body">Permite saber quién creó, editó o borró cada petición. Al enviar o modificar una petición, tu nombre queda registrado en la hoja (<em>solicitante</em> o <em>modificado_por</em>). El navegador lo recuerda automáticamente para que no tengas que escribirlo cada vez. Los administradores no necesitan rellenarlo porque su acceso ya queda identificado por la sesión.</div>
+    </details>
   </div>
 
 </main>
@@ -799,7 +864,7 @@ a:focus-visible, button:focus-visible, summary:focus-visible {
 <script>
 // Resaltar la pill activa según sección visible
 const anchors = [
-  { ids: ['equipo','peticiones','modo-demo','ver-calendario','filtros'], tab: 'tab-equipo' },
+  { ids: ['equipo','peticiones','adjuntos','modo-demo','ver-calendario','filtros'], tab: 'tab-equipo' },
   { ids: ['admin','admin-acceso','editar','gestionar-peticiones','tipos'], tab: 'tab-admin' },
   { ids: ['faq-section'], tab: 'tab-faq' },
 ]
