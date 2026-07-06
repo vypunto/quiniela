@@ -22,10 +22,12 @@ export function parseDate(str) {
     const [d, m, y] = s.split('-').map(Number)
     return new Date(y, m - 1, d)
   }
-  // MM/DD/YYYY (Excel default)
-  if (/^\d{1,2}\/\d{1,2}\/\d{4}$/.test(s)) {
-    const parts = s.split('/')
-    return new Date(parseInt(parts[2]), parseInt(parts[0]) - 1, parseInt(parts[1]))
+  // Excel/Google Sheets serial date (5-digit numbers 40000-55000 = years ~2009-2050)
+  if (/^\d{5}$/.test(s)) {
+    const n = parseInt(s)
+    if (n >= 40000 && n <= 55000) {
+      return new Date(Date.UTC(1899, 11, 30) + n * 86400000)
+    }
   }
 
   const d = new Date(s)

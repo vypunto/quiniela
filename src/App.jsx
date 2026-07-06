@@ -219,6 +219,29 @@ export default function App() {
 
       <main className="max-w-7xl mx-auto px-4 sm:px-6 py-4 sm:py-6">
 
+        {/* Debug info — remove once confirmed working */}
+        {activeTab === 'publicaciones' && (
+          <div style={{ fontSize: '11px', padding: '4px 12px', background: '#f0f4ff', borderRadius: '8px', marginBottom: '8px', color: '#555' }}>
+            <div style={{ display: 'flex', gap: '16px', flexWrap: 'wrap' }}>
+              <span>Publicaciones cargadas: <b>{publications.length}</b></span>
+              <span>Cargando: <b>{loading ? 'sí' : 'no'}</b></span>
+              {error && <span style={{ color: 'red' }}>Error: <b>{error}</b></span>}
+              {!loading && !error && typeof window._dbg !== 'undefined' && (
+                <>
+                  <span>Filas CSV: <b>{window._dbg.total}</b></span>
+                  <span>Con proyecto: <b>{window._dbg.withProyecto}</b></span>
+                  <span>Con fecha: <b>{window._dbg.withFecha}</b></span>
+                </>
+              )}
+            </div>
+            {!loading && !error && typeof window._dbg !== 'undefined' && window._dbg.headers.length > 0 && (
+              <div style={{ marginTop: '2px', color: '#888' }}>
+                Columnas: <b>{window._dbg.headers.join(', ')}</b>
+              </div>
+            )}
+          </div>
+        )}
+
         {/* Error */}
         {error && activeTab === 'publicaciones' && (
           <div className="mb-4 p-3 bg-red-50 border border-red-100 rounded-xl text-red-700 text-sm flex items-start gap-2">
