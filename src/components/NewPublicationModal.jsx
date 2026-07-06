@@ -1,4 +1,5 @@
-import { useState } from 'react'
+import { useState, useRef, useEffect, useCallback } from 'react'
+import { uploadFile } from '../utils/googleSheets'
 
 const TIPOS = ['imagen', 'video', 'reel', 'carrusel', 'historia', 'texto']
 const CANALES = ['Instagram', 'TikTok', 'Facebook', 'LinkedIn', 'Twitter', 'YouTube', 'Web']
@@ -8,7 +9,7 @@ const labelClass = 'text-[10px] font-bold text-gray-400 mb-1.5 tracking-[0.12em]
 const inputClass = 'w-full px-3 py-2.5 rounded-xl text-[13px] font-medium border border-gray-200 bg-white focus:outline-none focus:border-[#fa523c]'
 
 const EMPTY = {
-  proyecto: '', fecha: '', titulo: '', copy: '', media: [''],
+  proyecto: '', fecha: '', titulo: '', copy: '', media: '',
   tipo: 'imagen', canal: '', estado: 'Programado', presupuesto: '',
 }
 
@@ -17,20 +18,46 @@ export default function NewPublicationModal({ onClose, config, projects, onSaved
   const [sending, setSending] = useState(false)
   const [error, setError] = useState('')
   const [sent, setSent] = useState(false)
+  const [adjunto, setAdjunto] = useState(null)
+  const fileInputRef = useRef(null)
+  const prevPreviewRef = useRef(null)
 
-  const addMedia = () => setForm(f => ({ ...f, media: [...f.media, ''] }))
-  const removeMedia = i => setForm(f => ({ ...f, media: f.media.filter((_, n) => n !== i) }))
-  const updateMedia = (i, v) => setForm(f => ({ ...f, media: f.media.map((m, n) => n === i ? v : m) }))
   const handleChange = e => setForm(f => ({ ...f, [e.target.name]: e.target.value }))
+
+  const handleFile = useCallback((file) => {
+    if (prevPreviewRef.current) { URL.revokeObjectURL(prevPreviewRef.current); prevPreviewRef.current = null }
+    if (!file) { setAdjunto(null); return }
+    const isImage = file.type.startsWith('image/')
+    const preview = isImage ? URL.createObjectURL(file) : null
+    prevPreviewRef.current = preview
+    setAdjunto({ nombre: file.name, tipo: file.type, preview, size: file.size })
+    if (file.size < 25 * 1024 * 1024) {
+      const reader = new FileReader()
+      reader.onload = ev => setAdjunto(prev => prev ? { ...prev, datos: ev.target.result } : prev)
+      reader.readAsDataURL(file)
+    }
+  }, [])
+
+  useEffect(() => () => { if (prevPreviewRef.current) URL.revokeObjectURL(prevPreviewRef.current) }, [])
 
   const handleSubmit = async e => {
     e.preventDefault()
     setSending(true)
     setError('')
     try {
+      let mediaFinal = form.media
+      if (adjunto?.datos && config.requestsScriptUrl) {
+        try {
+          const result = await uploadFile(config.requestsScriptUrl, adjunto.nombre, adjunto.tipo, adjunto.datos)
+          if (result?.url) mediaFinal = mediaFinal ? `${mediaFinal}, ${result.url}` : result.url
+        } catch (err) {
+          console.warn('Error al subir adjunto:', err)
+        }
+      }
+
       const payload = {
         ...form,
-        media: form.media.filter(m => m.trim()).join(','),
+        media: mediaFinal,
         action: 'publicacion',
         fechaSolicitud: new Date().toLocaleDateString('es-ES'),
       }
@@ -42,6 +69,8 @@ export default function NewPublicationModal({ onClose, config, projects, onSaved
       })
       setSent(true)
       setForm({ ...EMPTY, proyecto: form.proyecto })
+      handleFile(null)
+      if (fileInputRef.current) fileInputRef.current.value = ''
       onSaved && onSaved()
       setTimeout(() => setSent(false), 3000)
     } catch {
@@ -92,7 +121,9 @@ export default function NewPublicationModal({ onClose, config, projects, onSaved
               </div>
               <div>
                 <label className={labelClass}>Fecha *</label>
-                <input type="date" name="fecha" value={form.fecha} onChange={handleChange} required className={inputClass} />
+                <div className="w-full overflow-hidden rounded-xl">
+                  <input type="date" name="fecha" value={form.fecha} onChange={handleChange} required className={inputClass} style={{ minWidth: 0 }} />
+                </div>
               </div>
             </div>
 
@@ -107,41 +138,49 @@ export default function NewPublicationModal({ onClose, config, projects, onSaved
             </div>
 
             <div>
-              <div className="flex items-center justify-between mb-1.5">
-                <label className={labelClass}>Imagen / Vídeo</label>
-                {form.media.length < 8 && (
-                  <button type="button" onClick={addMedia} className="flex items-center gap-1 text-[11px] font-bold text-[#fa523c]">
-                    <svg width="12" height="12" viewBox="0 0 12 12" fill="none">
-                      <path d="M6 2v8M2 6h8" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round"/>
-                    </svg>
-                    Añadir
-                  </button>
-                )}
-              </div>
-              <div className="space-y-2">
-                {form.media.map((m, i) => (
-                  <div key={i} className="flex gap-2">
-                    <input
-                      type="text"
-                      value={m}
-                      onChange={e => updateMedia(i, e.target.value)}
-                      placeholder={i === 0 ? 'URL de Drive...' : `URL ${i + 1}...`}
-                      className={`flex-1 ${inputClass}`}
-                    />
-                    {form.media.length > 1 && (
-                      <button
-                        type="button"
-                        onClick={() => removeMedia(i)}
-                        className="w-9 h-9 flex items-center justify-center rounded-xl flex-shrink-0"
-                        style={{ backgroundColor: '#fff0ee', color: '#fa523c' }}
-                      >
-                        <svg width="12" height="12" viewBox="0 0 12 12" fill="none">
-                          <path d="M2 2l8 8M10 2l-8 8" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round"/>
-                        </svg>
-                      </button>
+              <label className={labelClass}>Imagen / Vídeo</label>
+              <input
+                type="text"
+                name="media"
+                value={form.media}
+                onChange={handleChange}
+                placeholder="URL de Drive, imagen o vídeo… (separa varios con comas)"
+                className={inputClass}
+              />
+              <div className="mt-2">
+                <input
+                  ref={fileInputRef}
+                  type="file"
+                  accept="image/*,video/*"
+                  className="hidden"
+                  onChange={e => handleFile(e.target.files?.[0] || null)}
+                />
+                {!adjunto ? (
+                  <label
+                    onClick={() => fileInputRef.current?.click()}
+                    className="flex items-center gap-2 px-3 py-2 rounded-xl border border-dashed border-gray-300 text-xs text-gray-400 cursor-pointer hover:border-gray-400 hover:text-gray-500 transition-colors w-fit"
+                  >
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+                    Adjuntar imagen o vídeo
+                  </label>
+                ) : (
+                  <div className="flex items-center gap-3 p-2.5 rounded-xl border border-gray-200 bg-gray-50">
+                    {adjunto.preview ? (
+                      <img src={adjunto.preview} alt="" className="w-12 h-12 object-cover rounded-lg flex-shrink-0" />
+                    ) : (
+                      <div className="w-12 h-12 rounded-lg bg-gray-200 flex items-center justify-center flex-shrink-0">
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#9CA3AF" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"><polygon points="23 7 16 12 23 17 23 7"/><rect x="1" y="5" width="15" height="14" rx="2" ry="2"/></svg>
+                      </div>
                     )}
+                    <div className="flex-1 min-w-0">
+                      <p className="text-xs font-medium text-gray-700 truncate">{adjunto.nombre}</p>
+                      <p className="text-[10px] text-gray-400">{adjunto.size < 1024*1024 ? `${(adjunto.size/1024).toFixed(0)} KB` : `${(adjunto.size/(1024*1024)).toFixed(1)} MB`}</p>
+                    </div>
+                    <button type="button" onClick={() => { handleFile(null); if (fileInputRef.current) fileInputRef.current.value = '' }} className="flex-shrink-0 text-gray-400 hover:text-gray-600 transition-colors">
+                      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+                    </button>
                   </div>
-                ))}
+                )}
               </div>
             </div>
 
