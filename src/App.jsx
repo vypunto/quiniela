@@ -510,7 +510,7 @@ export default function App() {
 
         {/* Requests tab */}
         {activeTab === 'peticiones' && (
-          <RequestsView config={config} isDemo={isDemo} calendarPubs={displayPubs} onCountChange={setPendingCount} onRequestSave={handleRequestSave} />
+          <RequestsView config={config} isDemo={isDemo} isAuth={_auth} calendarPubs={displayPubs} onCountChange={setPendingCount} onRequestSave={handleRequestSave} />
         )}
       </main>
 

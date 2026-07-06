@@ -5,6 +5,8 @@ import { DAYS_ES, MONTHS_ES, parseDate } from '../utils/dateUtils'
 import { fetchRequestsData, updateRequest, deleteRequest } from '../utils/googleSheets'
 import { REQUESTS_SHEET_URL, PROJECTS } from '../config'
 
+const SOLICITANTE_KEY = 'pubcal_solicitante'
+
 const PRIORIDAD_STYLES = {
   'Baja':     { bg: '#F3F4F6', text: '#6B7280', dot: '#9CA3AF' },
   'Media':    { bg: '#EFF6FF', text: '#3B82F6', dot: '#3B82F6' },
@@ -36,7 +38,7 @@ function StatusBadge({ estado }) {
 
 const inputClass = "w-full px-3.5 py-2.5 text-sm border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#e84530]/15 focus:border-[#e84530]/30 transition-all duration-150"
 
-function EditModal({ req, scriptUrl, onSave, onClose }) {
+function EditModal({ req, scriptUrl, isAuth, actorName, onSave, onClose }) {
   const [form, setForm] = useState({
     titulo: req.titulo || '',
     info: req.info || '',
@@ -47,6 +49,7 @@ function EditModal({ req, scriptUrl, onSave, onClose }) {
     promocionado: (req.promocionado || 'No').startsWith('S') || (req.promocionado || 'No').startsWith('s'),
     presupuesto: req.presupuesto || '',
   })
+  const [localName, setLocalName] = useState(actorName || '')
   const [saving, setSaving] = useState(false)
   const [error, setError] = useState(null)
   const set = (k, v) => setForm(f => ({ ...f, [k]: v }))
@@ -54,17 +57,23 @@ function EditModal({ req, scriptUrl, onSave, onClose }) {
   const handleSave = async () => {
     setSaving(true)
     setError(null)
+    const actor = isAuth ? null : (localName.trim() || actorName)
+    if (actor) localStorage.setItem(SOLICITANTE_KEY, actor)
+    const modificadoPor = actor
+      ? `${actor} · ${new Date().toLocaleString('es-ES', { day: '2-digit', month: '2-digit', year: '2-digit', hour: '2-digit', minute: '2-digit' })}`
+      : null
+    const dataWithActor = modificadoPor ? { ...form, modificado_por: modificadoPor } : form
     const updated = { ...req, ...form, fecha: new Date(form.fecha), promocionado: form.promocionado ? 'Sí' : 'No' }
     try {
       if (scriptUrl && req.id.startsWith('sheet-')) {
         const rowIndex = parseInt(req.id.replace('sheet-', ''))
-        await updateRequest(scriptUrl, rowIndex, form)
+        await updateRequest(scriptUrl, rowIndex, dataWithActor)
       }
       try {
         const saved = JSON.parse(localStorage.getItem('pubcal_requests') || '[]')
         const idx = saved.findIndex(r => r.id === req.id)
         if (idx >= 0) {
-          saved[idx] = { ...saved[idx], ...form }
+          saved[idx] = { ...saved[idx], ...dataWithActor }
           localStorage.setItem('pubcal_requests', JSON.stringify(saved))
         }
       } catch { /* ignore */ }
@@ -75,7 +84,7 @@ function EditModal({ req, scriptUrl, onSave, onClose }) {
         const saved = JSON.parse(localStorage.getItem('pubcal_requests') || '[]')
         const idx = saved.findIndex(r => r.id === req.id)
         if (idx >= 0) {
-          saved[idx] = { ...saved[idx], ...form }
+          saved[idx] = { ...saved[idx], ...dataWithActor }
           localStorage.setItem('pubcal_requests', JSON.stringify(saved))
         }
       } catch { /* ignore */ }
@@ -235,6 +244,19 @@ function EditModal({ req, scriptUrl, onSave, onClose }) {
             )}
           </div>
 
+          {!isAuth && (
+            <div>
+              <label className="block text-xs font-semibold text-gray-400 uppercase tracking-[0.1em] mb-2">Tu nombre</label>
+              <input
+                type="text"
+                value={localName}
+                onChange={e => setLocalName(e.target.value)}
+                placeholder="¿Quién hace este cambio?"
+                className={inputClass}
+              />
+            </div>
+          )}
+
           {error && (
             <p className="text-xs font-medium text-amber-700 bg-amber-50 rounded-xl px-4 py-2.5">{error}</p>
           )}
@@ -261,6 +283,91 @@ function EditModal({ req, scriptUrl, onSave, onClose }) {
   )
 }
 
+function DeleteConfirmModal({ req, isAuth, onConfirm, onClose }) {
+  const [name, setName] = useState(localStorage.getItem(SOLICITANTE_KEY) || '')
+
+  useEffect(() => {
+    const handle = e => { if (e.key === 'Escape') onClose() }
+    document.addEventListener('keydown', handle)
+    return () => document.removeEventListener('keydown', handle)
+  }, [onClose])
+
+  const canConfirm = isAuth || name.trim()
+
+  const handleConfirm = () => {
+    const actor = isAuth ? null : name.trim()
+    if (actor) localStorage.setItem(SOLICITANTE_KEY, actor)
+    onConfirm(actor)
+  }
+
+  return (
+    <div
+      className="fixed inset-0 z-50 flex items-end sm:items-center justify-center sm:p-6"
+      onClick={e => { if (e.target === e.currentTarget) onClose() }}
+    >
+      <div className="absolute inset-0 bg-black/30 backdrop-blur-[6px]" onClick={onClose} />
+      <div
+        className="relative bg-white rounded-t-[28px] sm:rounded-[24px] sm:max-w-sm w-full overflow-hidden"
+        style={{
+          animation: 'modalIn 200ms cubic-bezier(0.16,1,0.3,1)',
+          boxShadow: '0 8px 40px rgba(0,0,0,0.14), 0 32px 80px rgba(0,0,0,0.08)',
+        }}
+      >
+        <div className="sm:hidden flex justify-center pt-3 pb-1">
+          <div className="w-8 h-1 rounded-full bg-gray-200" />
+        </div>
+        <div className="p-6">
+          <div className="w-11 h-11 rounded-2xl flex items-center justify-center mb-4" style={{ backgroundColor: '#FFF1F2' }}>
+            <svg width="18" height="18" viewBox="0 0 682.66669 682.66669" fill="none">
+              <g transform="matrix(1.3333333,0,0,-1.3333333,0,682.66667)">
+                <g transform="translate(196,435)"><path d="M 0,0 V 62 H 120 V 0" stroke="#e84530" strokeWidth="75" strokeLinecap="round" strokeLinejoin="round"/></g>
+                <g transform="translate(406,375)"><path d="M 0,0 -30,-360 H -270 L -300,0" stroke="#e84530" strokeWidth="75" strokeLinecap="round" strokeLinejoin="round"/></g>
+                <path d="M 436,375 H 76 v 60 h 360 z" stroke="#e84530" strokeWidth="75" strokeLinecap="round" strokeLinejoin="round"/>
+                <g transform="translate(256,285)"><path d="M 0,0 V -180" stroke="#e84530" strokeWidth="75" strokeLinecap="round" strokeLinejoin="round"/></g>
+                <g transform="translate(196,285)"><path d="M 0,0 V -180" stroke="#e84530" strokeWidth="75" strokeLinecap="round" strokeLinejoin="round"/></g>
+                <g transform="translate(316,285)"><path d="M 0,0 V -180" stroke="#e84530" strokeWidth="75" strokeLinecap="round" strokeLinejoin="round"/></g>
+              </g>
+            </svg>
+          </div>
+          <h3 className="text-base font-bold text-gray-900 mb-1">Eliminar petición</h3>
+          <p className="text-sm text-gray-500 mb-4">
+            ¿Eliminar <span className="font-semibold text-gray-700">"{req.titulo}"</span>? Esta acción no se puede deshacer.
+          </p>
+          {!isAuth && (
+            <div className="mb-4">
+              <label className="block text-xs font-semibold text-gray-400 uppercase tracking-[0.1em] mb-2">Tu nombre</label>
+              <input
+                type="text"
+                value={name}
+                onChange={e => setName(e.target.value)}
+                placeholder="¿Quién elimina esta petición?"
+                autoFocus
+                className={inputClass}
+              />
+            </div>
+          )}
+          <div className="flex gap-2.5">
+            <button
+              onClick={onClose}
+              className="flex-1 py-2.5 border border-gray-200 rounded-xl text-sm font-semibold text-gray-500 hover:bg-gray-50 transition-all duration-150"
+            >
+              Cancelar
+            </button>
+            <button
+              onClick={handleConfirm}
+              disabled={!canConfirm}
+              className="flex-1 py-2.5 rounded-xl text-sm font-bold text-white transition-all duration-150 disabled:opacity-35 disabled:cursor-not-allowed"
+              style={{ backgroundColor: '#e84530' }}
+            >
+              Eliminar
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  )
+}
+
 const DEMO_REQUESTS = [
   { id: 'r0', proyecto: 'GASTRO LEAGUE', fecha: new Date(), titulo: 'Post inauguración menú de verano', info: 'Queremos anunciar el nuevo menú con foco en productos locales y de temporada.', solicitante: 'Carlos M.', estado: 'Aprobado', tipo: 'imagen', canal: 'Instagram' },
   { id: 'r1', proyecto: 'TEATRO ALICANTE', fecha: new Date(new Date().setDate(new Date().getDate() + 5)), titulo: 'Vídeo promocional obra de julio', info: 'Vídeo corto para redes sobre la obra de este mes. Tono emotivo.', solicitante: 'Ana P.', estado: 'En revisión', tipo: 'video', canal: 'Instagram' },
@@ -268,9 +375,10 @@ const DEMO_REQUESTS = [
   { id: 'r3', proyecto: 'PREVENIDOS Y ACCION', fecha: new Date(new Date().setDate(new Date().getDate() + 15)), titulo: 'Infografía prevención verano', info: 'Medidas de seguridad en la playa. Estilo visual limpio, colores claros.', solicitante: 'María G.', estado: 'Pendiente', tipo: 'imagen', canal: 'LinkedIn' },
 ]
 
-export default function RequestsView({ config, isDemo, calendarPubs = [], onCountChange, onRequestSave }) {
+export default function RequestsView({ config, isDemo, isAuth, calendarPubs = [], onCountChange, onRequestSave }) {
   const [requests, setRequests] = useState([])
   const [editingReq, setEditingReq] = useState(null)
+  const [deletingReq, setDeletingReq] = useState(null)
   const [loadingSheet, setLoadingSheet] = useState(false)
 
   const projects = useMemo(() => {
@@ -338,13 +446,20 @@ export default function RequestsView({ config, isDemo, calendarPubs = [], onCoun
     onRequestSave && onRequestSave(updated, prevEstado)
   }
 
-  const handleDelete = async (req) => {
-    if (!window.confirm(`¿Eliminar la petición "${req.titulo}"?`)) return
+  const handleDelete = async (req, actorName) => {
+    setDeletingReq(null)
     setRequests(prev => {
       const next = prev.filter(r => r.id !== req.id)
       onCountChange && onCountChange(next.filter(r => !r.estado || r.estado === 'Pendiente').length)
       return next
     })
+    if (actorName) {
+      try {
+        const log = JSON.parse(localStorage.getItem('pubcal_delete_log') || '[]')
+        log.unshift({ titulo: req.titulo, proyecto: req.proyecto, actor: actorName, ts: new Date().toISOString() })
+        localStorage.setItem('pubcal_delete_log', JSON.stringify(log.slice(0, 100)))
+      } catch { /* ignore */ }
+    }
     try {
       const saved = JSON.parse(localStorage.getItem('pubcal_requests') || '[]')
       localStorage.setItem('pubcal_requests', JSON.stringify(saved.filter(r => r.id !== req.id)))
@@ -471,7 +586,7 @@ export default function RequestsView({ config, isDemo, calendarPubs = [], onCoun
                       </svg>
                     </button>
                     <button
-                      onClick={() => handleDelete(req)}
+                      onClick={() => setDeletingReq(req)}
                       className="flex-shrink-0 w-8 h-8 rounded-xl border border-gray-200 flex items-center justify-center text-gray-400 hover:text-red-500 hover:border-red-200 hover:bg-red-50 transition-all duration-150"
                       title="Eliminar"
                     >
@@ -508,8 +623,18 @@ export default function RequestsView({ config, isDemo, calendarPubs = [], onCoun
         <EditModal
           req={editingReq}
           scriptUrl={config.requestsScriptUrl}
+          isAuth={isAuth}
+          actorName={localStorage.getItem(SOLICITANTE_KEY) || ''}
           onSave={handleSaveEdit}
           onClose={() => setEditingReq(null)}
+        />
+      )}
+      {deletingReq && (
+        <DeleteConfirmModal
+          req={deletingReq}
+          isAuth={isAuth}
+          onConfirm={actor => handleDelete(deletingReq, actor)}
+          onClose={() => setDeletingReq(null)}
         />
       )}
     </div>

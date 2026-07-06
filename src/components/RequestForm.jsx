@@ -132,10 +132,14 @@ const PRIORIDAD_STYLES = {
   'Muy alta': { active: { backgroundColor: '#e84530', color: '#fff', borderColor: '#e84530' } },
 }
 
+const SOLICITANTE_KEY = 'pubcal_solicitante'
 const EMPTY_FORM = { proyecto: '', proyectoOtros: '', fecha: '', titulo: '', info: '', contenido: '', solicitante: '', tipo: 'imagen', canal: '', prioridad: 'Media', promocionado: false, presupuesto: '' }
 
 export default function RequestForm({ projects, scriptUrl, onSubmitted }) {
-  const [form, setForm] = useState(EMPTY_FORM)
+  const [form, setForm] = useState(() => ({
+    ...EMPTY_FORM,
+    solicitante: localStorage.getItem(SOLICITANTE_KEY) || '',
+  }))
   const [sending, setSending] = useState(false)
   const [sent, setSent] = useState(false)
   const [error, setError] = useState(null)
@@ -166,6 +170,10 @@ export default function RequestForm({ projects, scriptUrl, onSubmitted }) {
       localStorage.setItem('pubcal_requests', JSON.stringify(existing))
     } catch { /* ignore */ }
 
+    if (form.solicitante.trim()) {
+      localStorage.setItem(SOLICITANTE_KEY, form.solicitante.trim())
+    }
+
     if (scriptUrl) {
       try {
         await submitRequest(scriptUrl, payload)
@@ -179,7 +187,7 @@ export default function RequestForm({ projects, scriptUrl, onSubmitted }) {
     onSubmitted && onSubmitted(payload)
     setTimeout(() => {
       setSent(false)
-      setForm(EMPTY_FORM)
+      setForm({ ...EMPTY_FORM, solicitante: localStorage.getItem(SOLICITANTE_KEY) || '' })
     }, 2500)
   }
 
