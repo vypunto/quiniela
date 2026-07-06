@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback, useMemo } from 'react'
+import { useState, useEffect, useCallback, useMemo, useRef } from 'react'
 import Header from './components/Header'
 import CalendarGrid from './components/CalendarGrid'
 import CalendarList from './components/CalendarList'
@@ -12,6 +12,9 @@ import MonthSummary from './components/MonthSummary'
 import LoginModal from './components/LoginModal'
 import NewPublicationModal from './components/NewPublicationModal'
 import { fetchSheetData, fetchRequestsData, updatePublication } from './utils/googleSheets'
+import { TypeIcon, StatusIcon } from './components/Icons'
+import { formatShortDate } from './utils/dateUtils'
+import { getProjectColor } from './utils/colors'
 import { SPREADSHEET_URL, REQUESTS_SHEET_URL, REQUESTS_SCRIPT_URL, PROJECTS } from './config'
 import PublicationEditModal from './components/PublicationEditModal'
 
@@ -91,6 +94,8 @@ export default function App() {
   const [loading, setLoading]     = useState(false)
   const [error, setError]         = useState(null)
   const [pendingCount, setPendingCount] = useState(0)
+  const [searchQuery, setSearchQuery]   = useState('')
+  const searchRef = useRef(null)
 
   // In-memory optimistic updates — reset on reload, source of truth is always the Sheet
   const [pendingEdits, setPendingEdits] = useState(new Map())
@@ -255,6 +260,19 @@ export default function App() {
     if (month === 11) { setYear(y => y + 1); setMonth(0) } else setMonth(m => m + 1)
   }
 
+  const searchResults = useMemo(() => {
+    const q = searchQuery.trim().toLowerCase()
+    if (q.length < 2) return null
+    return [...displayPubs]
+      .filter(p =>
+        (p.titulo  && p.titulo.toLowerCase().includes(q)) ||
+        (p.copy    && p.copy.toLowerCase().includes(q))   ||
+        (p.proyecto && p.proyecto.toLowerCase().includes(q)) ||
+        (p.canal   && p.canal.toLowerCase().includes(q))
+      )
+      .sort((a, b) => (a.fecha || 0) - (b.fecha || 0))
+  }, [searchQuery, displayPubs])
+
   const hasConfig    = !!config.spreadsheetId
   const showCalendar = hasConfig || isDemo
   const animClass    = navDir > 0 ? 'slide-next' : navDir < 0 ? 'slide-prev' : ''
@@ -379,12 +397,86 @@ export default function App() {
 
             {showCalendar && (
               <>
-                {viewMode !== 'feed' && <ProjectLegend publications={displayPubs} activeFilter={activeFilter} onFilter={toggleFilter} onClear={clearFilter} />}
-                {viewMode !== 'feed' && <MonthSummary publications={displayPubs} year={year} month={month} />}
+                {/* Search bar */}
+                <div className="mb-3 relative">
+                  <div className="relative flex items-center">
+                    <svg className="absolute left-3.5 text-gray-400 pointer-events-none" width="15" height="15" viewBox="0 0 20 20" fill="none">
+                      <circle cx="8.5" cy="8.5" r="5.75" stroke="currentColor" strokeWidth="1.6"/>
+                      <path d="M13 13l3.5 3.5" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round"/>
+                    </svg>
+                    <input
+                      ref={searchRef}
+                      type="text"
+                      value={searchQuery}
+                      onChange={e => setSearchQuery(e.target.value)}
+                      onKeyDown={e => e.key === 'Escape' && setSearchQuery('')}
+                      placeholder="Buscar publicaciones…"
+                      className="w-full pl-9 pr-9 py-2.5 text-sm bg-white border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#e84530]/15 focus:border-[#e84530]/40 transition-all"
+                    />
+                    {searchQuery && (
+                      <button
+                        onClick={() => setSearchQuery('')}
+                        className="absolute right-3 text-gray-400 hover:text-gray-600 transition-colors"
+                      >
+                        <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
+                          <path d="M2 2l10 10M12 2L2 12" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round"/>
+                        </svg>
+                      </button>
+                    )}
+                  </div>
+                </div>
+
+                {/* Search results */}
+                {searchResults !== null && (
+                  <div className="mb-2">
+                    <div className="text-[11px] font-semibold text-gray-400 mb-2 px-0.5">
+                      {searchResults.length === 0
+                        ? 'Sin resultados'
+                        : `${searchResults.length} resultado${searchResults.length > 1 ? 's' : ''}`}
+                    </div>
+                    <div className="bg-white rounded-2xl overflow-hidden" style={{ border: '1px solid #E8EAED', boxShadow: '0 1px 3px rgba(0,0,0,0.04)' }}>
+                      {searchResults.length === 0 ? (
+                        <div className="py-10 text-center text-sm text-gray-400">No hay publicaciones que coincidan</div>
+                      ) : (
+                        <div className="divide-y divide-gray-50">
+                          {searchResults.map(pub => {
+                            const color = getProjectColor(pub.proyecto)
+                            return (
+                              <button
+                                key={pub.id}
+                                onClick={() => { setSelectedPub(pub); setSearchQuery('') }}
+                                className="w-full text-left flex items-center gap-3 px-5 py-3.5 hover:bg-gray-50/80 transition-all duration-150 group"
+                              >
+                                <div className="w-1 h-8 rounded-full flex-shrink-0" style={{ backgroundColor: color.dot }} />
+                                <div className="flex-1 min-w-0">
+                                  <div className="flex items-center gap-2 mb-0.5">
+                                    <span className="text-[10px] font-bold px-2 py-0.5 rounded-full" style={{ backgroundColor: color.bg, color: color.text }}>{pub.proyecto}</span>
+                                    {pub.fecha && <span className="text-[10px] text-gray-400">{formatShortDate(pub.fecha)}</span>}
+                                  </div>
+                                  <div className="text-sm font-semibold text-gray-800 truncate">{pub.titulo || pub.proyecto}</div>
+                                </div>
+                                <div className="flex items-center gap-1.5 flex-shrink-0">
+                                  {pub.estado && <StatusIcon estado={pub.estado} size={14} />}
+                                  {pub.tipo && <span className="text-gray-300"><TypeIcon tipo={pub.tipo} size={13} /></span>}
+                                </div>
+                                <svg width="12" height="12" viewBox="0 0 14 14" fill="none" className="flex-shrink-0 text-gray-200 group-hover:text-gray-400 transition-colors">
+                                  <path d="M5 3l4 4-4 4" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+                                </svg>
+                              </button>
+                            )
+                          })}
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                )}
+
+                {searchResults === null && viewMode !== 'feed' && <ProjectLegend publications={displayPubs} activeFilter={activeFilter} onFilter={toggleFilter} onClear={clearFilter} />}
+                {searchResults === null && viewMode !== 'feed' && <MonthSummary publications={displayPubs} year={year} month={month} />}
 
                 {loading && publications.length === 0 && <CalendarSkeleton />}
 
-                {(!loading || displayPubs.length > 0) && (
+                {searchResults === null && (!loading || displayPubs.length > 0) && (
                   <div key={`${year}-${month}`} className={animClass}>
                     {viewMode === 'grid' && <CalendarGrid year={year} month={month} publications={displayPubs} onSelect={setSelectedPub} activeFilter={activeFilter} />}
                     {viewMode === 'list' && <CalendarList year={year} month={month} publications={displayPubs} onSelect={setSelectedPub} activeFilter={activeFilter} />}

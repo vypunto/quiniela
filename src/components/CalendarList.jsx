@@ -1,7 +1,7 @@
 import { useMemo, useState } from 'react'
 import { getProjectColor } from '../utils/colors'
 import { DAYS_ES, MONTHS_ES } from '../utils/dateUtils'
-import { TypeIcon } from './Icons'
+import { TypeIcon, StatusIcon } from './Icons'
 
 const TIPO_LABELS = { imagen: 'Imagen', video: 'Video', reel: 'Reel', carrusel: 'Carrusel', historia: 'Historia', texto: 'Texto' }
 const CANAL_LABELS = ['Instagram', 'TikTok', 'LinkedIn', 'Facebook', 'Web', 'Otros']
@@ -210,6 +210,11 @@ export default function CalendarList({ year, month, publications, onSelect, acti
                         {/* Canal badge */}
                         {pub.canal && (
                           <div className="flex-shrink-0 text-[10px] font-bold text-gray-400 hidden sm:block">{pub.canal}</div>
+                        )}
+
+                        {/* Status icon */}
+                        {pub.estado && (
+                          <div className="flex-shrink-0"><StatusIcon estado={pub.estado} size={15} /></div>
                         )}
 
                         {/* Type icon */}

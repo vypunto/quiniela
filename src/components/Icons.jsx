@@ -72,6 +72,79 @@ export function TypeIcon({ tipo, size = 18 }) {
   return null
 }
 
+// ── Status icon (play/pause/stop) ────────────────────────────────────────
+
+export function StatusIcon({ estado, size = 15 }) {
+  if (!estado) return null
+  const e = estado.toLowerCase().trim()
+
+  // Publicado → play verde
+  if (e.includes('publicad')) return (
+    <svg width={size} height={size} viewBox="0 0 16 16" fill="none">
+      <circle cx="8" cy="8" r="7" fill="#22C55E" fillOpacity="0.15" stroke="#22C55E" strokeWidth="1.2"/>
+      <path d="M6.5 5.5l4.5 2.5-4.5 2.5V5.5z" fill="#22C55E"/>
+    </svg>
+  )
+
+  // Programado → pausa ámbar
+  if (e.includes('program')) return (
+    <svg width={size} height={size} viewBox="0 0 16 16" fill="none">
+      <circle cx="8" cy="8" r="7" fill="#F59E0B" fillOpacity="0.15" stroke="#F59E0B" strokeWidth="1.2"/>
+      <rect x="5.5" y="5.3" width="1.7" height="5.4" rx="0.65" fill="#F59E0B"/>
+      <rect x="8.8" y="5.3" width="1.7" height="5.4" rx="0.65" fill="#F59E0B"/>
+    </svg>
+  )
+
+  // Borrador → stop gris
+  if (e.includes('borrad') || e.includes('draft')) return (
+    <svg width={size} height={size} viewBox="0 0 16 16" fill="none">
+      <circle cx="8" cy="8" r="7" fill="#9CA3AF" fillOpacity="0.15" stroke="#9CA3AF" strokeWidth="1.2"/>
+      <rect x="5" y="5" width="6" height="6" rx="1.2" fill="#9CA3AF"/>
+    </svg>
+  )
+
+  // Cancelado → × rojo
+  if (e.includes('cancel')) return (
+    <svg width={size} height={size} viewBox="0 0 16 16" fill="none">
+      <circle cx="8" cy="8" r="7" fill="#EF4444" fillOpacity="0.15" stroke="#EF4444" strokeWidth="1.2"/>
+      <path d="M5.5 5.5l5 5M10.5 5.5l-5 5" stroke="#EF4444" strokeWidth="1.5" strokeLinecap="round"/>
+    </svg>
+  )
+
+  // Aprobado → check verde
+  if (e.includes('aprobad')) return (
+    <svg width={size} height={size} viewBox="0 0 16 16" fill="none">
+      <circle cx="8" cy="8" r="7" fill="#22C55E" fillOpacity="0.15" stroke="#22C55E" strokeWidth="1.2"/>
+      <path d="M5 8l2.5 2.5L11 5.5" stroke="#22C55E" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+    </svg>
+  )
+
+  // En edición → lápiz azul
+  if (e.includes('edici') || e.includes('edit')) return (
+    <svg width={size} height={size} viewBox="0 0 16 16" fill="none">
+      <circle cx="8" cy="8" r="7" fill="#3B82F6" fillOpacity="0.15" stroke="#3B82F6" strokeWidth="1.2"/>
+      <path d="M5.5 10.5l1-2.8L9.8 4.5l2 2-3.3 3.2-3 .8z" stroke="#3B82F6" strokeWidth="1" strokeLinecap="round" strokeLinejoin="round" fill="none"/>
+    </svg>
+  )
+
+  // Pendiente → reloj naranja
+  if (e.includes('pendient')) return (
+    <svg width={size} height={size} viewBox="0 0 16 16" fill="none">
+      <circle cx="8" cy="8" r="7" fill="#F97316" fillOpacity="0.15" stroke="#F97316" strokeWidth="1.2"/>
+      <circle cx="8" cy="8" r="3.2" stroke="#F97316" strokeWidth="1.1" fill="none"/>
+      <path d="M8 6v2.2l1.3 1" stroke="#F97316" strokeWidth="1" strokeLinecap="round" strokeLinejoin="round"/>
+    </svg>
+  )
+
+  // Default → círculo punteado neutro
+  return (
+    <svg width={size} height={size} viewBox="0 0 16 16" fill="none">
+      <circle cx="8" cy="8" r="7" stroke="#D1D5DB" strokeWidth="1.2" strokeDasharray="2.5 1.5"/>
+      <circle cx="8" cy="8" r="2" fill="#D1D5DB"/>
+    </svg>
+  )
+}
+
 // ── App logo ─────────────────────────────────────────────────────────────
 
 export function CalendappLogo({ height = 38 }) {
