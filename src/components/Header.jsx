@@ -6,6 +6,7 @@ export default function Header({
   onPrev, onNext, onSettings, onSync, loading, hasConfig,
   isDemo, onDemo, onExitDemo,
   pendingCount,
+  onAuth, isAuth,
 }) {
   const tabBar = (extraClass = '') => (
     <div
@@ -153,6 +154,23 @@ export default function Header({
             </svg>
           </button>
         )}
+
+        {/* Auth button */}
+        <button
+          onClick={onAuth}
+          title={isAuth ? 'Modo equipo activo' : 'Acceso equipo'}
+          className="flex w-8 h-8 rounded-xl items-center justify-center transition-all duration-150 flex-shrink-0"
+          style={isAuth
+            ? { backgroundColor: '#fa523c', border: 'none', boxShadow: '0 2px 8px rgba(250,82,60,0.35)' }
+            : { border: '1.5px solid #e8e8ec', backgroundColor: '#fff' }
+          }
+        >
+          <svg width="16" height="16" viewBox="0 0 24 24" fill={isAuth ? '#fff' : '#9ca3af'}>
+            <path d="M18 2c2.206 0 4 1.794 4 4v12c0 2.206-1.794 4-4 4h-12c-2.206 0-4-1.794-4-4v-12c0-2.206 1.794-4 4-4zm0-2h-12c-3.314 0-6 2.686-6 6v12c0 3.314 2.686 6 6 6h12c3.314 0 6-2.686 6-6v-12c0-3.314-2.686-6-6-6z"/>
+            <path d="M12 15c-2.757 0-5-2.243-5-5s2.243-5 5-5 5 2.243 5 5-2.243 5-5 5zm0-8c-1.654 0-3 1.346-3 3s1.346 3 3 3 3-1.346 3-3-1.346-3-3-3z"/>
+            <path d="M18.92 22h-2.02c-.46-2.28-2.48-4-4.9-4s-4.44 1.72-4.9 4h-2.02c.48-3.39 3.4-6 6.92-6s6.44 2.61 6.92 6z"/>
+          </svg>
+        </button>
       </div>
 
       {/* ── Mobile second row — peticiones ───────────────────────── */}

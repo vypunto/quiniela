@@ -9,8 +9,10 @@ import SettingsModal from './components/SettingsModal'
 import ProjectLegend from './components/ProjectLegend'
 import RequestsView from './components/RequestsView'
 import MonthSummary from './components/MonthSummary'
+import LoginModal from './components/LoginModal'
+import NewPublicationModal from './components/NewPublicationModal'
 import { fetchSheetData } from './utils/googleSheets'
-import { SPREADSHEET_URL, REQUESTS_SCRIPT_URL } from './config'
+import { SPREADSHEET_URL, REQUESTS_SCRIPT_URL, PROJECTS } from './config'
 
 const now = new Date()
 const Y = now.getFullYear()
@@ -71,6 +73,9 @@ const DEMO = [
 ]
 
 export default function App() {
+  const [_auth, _setAuth]         = useState(() => localStorage.getItem('pubcal_auth') === '1')
+  const [showLogin, setShowLogin] = useState(false)
+  const [showPub, setShowPub]     = useState(false)
   const [year, setYear]           = useState(Y)
   const [month, setMonth]         = useState(M)
   const [navDir, setNavDir]       = useState(0)
@@ -193,6 +198,8 @@ export default function App() {
         onSync={syncData} loading={loading} hasConfig={hasConfig}
         isDemo={isDemo} onDemo={loadDemo} onExitDemo={exitDemo}
         pendingCount={pendingCount}
+        onAuth={() => _auth ? setShowPub(true) : setShowLogin(true)}
+        isAuth={_auth}
       />
 
       <main className="max-w-7xl mx-auto px-4 sm:px-6 py-4 sm:py-6">
@@ -285,6 +292,20 @@ export default function App() {
         />
       )}
       {showSettings && <SettingsModal config={config} onClose={() => setShowSettings(false)} />}
+      {showLogin && (
+        <LoginModal onClose={ok => {
+          setShowLogin(false)
+          if (ok) { _setAuth(true); setShowPub(true) }
+        }} />
+      )}
+      {showPub && _auth && (
+        <NewPublicationModal
+          onClose={() => setShowPub(false)}
+          config={config}
+          projects={[...new Set([...PROJECTS, ...(displayPubs || []).map(p => p.proyecto).filter(Boolean)].map(p => p.toUpperCase()))].sort()}
+          onSaved={syncData}
+        />
+      )}
       </div>
     </div>
   )
