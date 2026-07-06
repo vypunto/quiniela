@@ -293,9 +293,18 @@ export default function RequestsView({ config, isDemo, calendarPubs = [], onCoun
       local = saved.map((r, i) => ({ ...r, fecha: parseDate(r.fecha) || new Date(), id: r.id || String(i) }))
     } catch { /* ignore */ }
 
-    // Show local items immediately so the list never appears empty while the sheet loads
-    setRequests(local)
-    onCountChange && onCountChange(local.filter(r => !r.estado || r.estado === 'Pendiente').length)
+    // Also load cached sheet data so list is never blank
+    let sheetCache = []
+    try {
+      const raw = localStorage.getItem('pubcal_requests_cache')
+      if (raw) sheetCache = JSON.parse(raw).map((r, i) => ({ ...r, fecha: parseDate(r.fecha) || new Date(), id: r.id || String(i) }))
+    } catch { /* ignore */ }
+
+    const localKeys = new Set(local.map(r => `${r.proyecto}||${r.titulo}`))
+    const merged = [...local, ...sheetCache.filter(r => !localKeys.has(`${r.proyecto}||${r.titulo}`))]
+      .sort((a, b) => (a.fecha || 0) - (b.fecha || 0))
+    setRequests(merged)
+    onCountChange && onCountChange(merged.filter(r => !r.estado || r.estado === 'Pendiente').length)
 
     if (REQUESTS_SHEET_URL) {
       setLoadingSheet(true)
@@ -306,6 +315,10 @@ export default function RequestsView({ config, isDemo, calendarPubs = [], onCoun
         const all = [...sheetData, ...localOnly].sort((a, b) => (a.fecha || 0) - (b.fecha || 0))
         setRequests(all)
         onCountChange && onCountChange(all.filter(r => !r.estado || r.estado === 'Pendiente').length)
+        // Update cache
+        localStorage.setItem('pubcal_requests_cache', JSON.stringify(
+          sheetData.map(r => ({ ...r, fecha: r.fecha instanceof Date ? r.fecha.toISOString() : r.fecha }))
+        ))
       } catch {
         // local items already displayed; nothing extra to do
       } finally {

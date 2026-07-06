@@ -105,12 +105,27 @@ export default function App() {
 
   const syncData = useCallback(async () => {
     if (!config.spreadsheetId) return
+
+    // Show cached data immediately so the calendar is never blank
+    try {
+      const raw = localStorage.getItem('pubcal_pubs_cache')
+      if (raw) {
+        const cached = JSON.parse(raw).map(p => ({ ...p, fecha: p.fecha ? new Date(p.fecha) : null }))
+        setRealPublications(cached)
+        setPublications(cached)
+      }
+    } catch { /* ignore bad cache */ }
+
     setLoading(true)
     setError(null)
     try {
       const data = await fetchSheetData(config.spreadsheetId)
       setRealPublications(data)
       setPublications(data)
+      // Persist for next load
+      localStorage.setItem('pubcal_pubs_cache', JSON.stringify(
+        data.map(p => ({ ...p, fecha: p.fecha instanceof Date ? p.fecha.toISOString() : p.fecha }))
+      ))
     } catch (e) {
       setError(e.message)
     } finally {
