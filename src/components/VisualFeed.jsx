@@ -148,36 +148,139 @@ function ReelMediaArea({ pub, color }) {
   const isDirectVid = /\.(mp4|mov|webm)$/i.test(url)
 
   const embedSrc = ytMatch
-    ? `https://www.youtube.com/embed/${ytMatch[1]}?autoplay=1&playsinline=1`
+    ? `https://www.youtube.com/embed/${ytMatch[1]}?autoplay=1&playsinline=1&rel=0`
     : driveMatch
     ? `https://drive.google.com/file/d/${driveMatch[1]}/preview`
     : null
 
   return (
-    <div className="w-full relative" style={{ aspectRatio: '9/16', backgroundColor: '#000', overflow: 'hidden' }}>
+    // Use 4:5 to match standard posts — YouTube is 16:9 so 9:16 would letterbox badly
+    <div style={{ position: 'relative', width: '100%', paddingTop: '125%', backgroundColor: '#000', overflow: 'hidden' }}>
       {playing ? (
-        embedSrc
-          ? <iframe src={embedSrc} className="w-full h-full border-0" allow="autoplay; encrypted-media" allowFullScreen title="reel" />
-          : isDirectVid
-          ? <video src={url} className="w-full h-full object-cover" controls autoPlay playsInline />
-          : <div className="w-full h-full flex items-center justify-center" style={{ backgroundColor: color.bg }}><TypeIcon tipo="reel" size={32} color={color.dot} /></div>
+        embedSrc ? (
+          <iframe
+            src={embedSrc}
+            style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', border: 'none' }}
+            allow="autoplay; encrypted-media"
+            allowFullScreen
+            title="reel"
+          />
+        ) : isDirectVid ? (
+          <video
+            src={url}
+            style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', objectFit: 'cover' }}
+            controls autoPlay playsInline
+          />
+        ) : (
+          <div style={{ position: 'absolute', inset: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', backgroundColor: color.bg }}>
+            <TypeIcon tipo="reel" size={32} color={color.dot} />
+          </div>
+        )
       ) : (
         <>
           {thumb
-            ? <img src={thumb} alt="" className="w-full h-full object-cover" onError={e => { e.target.style.display = 'none' }} />
-            : <div className="w-full h-full flex items-center justify-center" style={{ backgroundColor: color.bg }}><TypeIcon tipo="reel" size={32} color={color.dot} /></div>
+            ? <img src={thumb} alt="" style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', objectFit: 'cover' }} onError={e => { e.target.style.display = 'none' }} />
+            : <div style={{ position: 'absolute', inset: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', backgroundColor: color.bg }}><TypeIcon tipo="reel" size={32} color={color.dot} /></div>
           }
-          <div className="absolute inset-0 flex items-center justify-center">
+          <div style={{ position: 'absolute', inset: 0, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
             <button
               onClick={() => setPlaying(true)}
-              className="w-14 h-14 rounded-full flex items-center justify-center"
-              style={{ backgroundColor: 'rgba(0,0,0,0.55)', backdropFilter: 'blur(2px)' }}
+              style={{ width: 52, height: 52, borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', backgroundColor: 'rgba(0,0,0,0.55)', backdropFilter: 'blur(2px)', border: 'none', cursor: 'pointer' }}
             >
-              <svg width="22" height="22" viewBox="0 0 20 20" fill="white"><path d="M5 3l13 7-13 7V3z"/></svg>
+              <svg width="20" height="20" viewBox="0 0 20 20" fill="white"><path d="M5 3l13 7-13 7V3z"/></svg>
             </button>
           </div>
         </>
       )}
+    </div>
+  )
+}
+
+/* ── Story viewer (full-screen Instagram-style) ── */
+function StoryView({ pub, onBack, onOpenDetails }) {
+  const color = getProjectColor(pub.proyecto)
+  const mediaList = parseMediaList(pub.media)
+  const [slide, setSlide] = useState(0)
+  const [progress, setProgress] = useState(0)
+  const mediaUrl = mediaList[slide] || ''
+  const thumb = getThumb(mediaUrl)
+  const isVid = isVideoMedia(mediaUrl)
+  const DURATION = 5000
+
+  useEffect(() => {
+    if (isVid) return
+    setProgress(0)
+    const start = Date.now()
+    const raf = { id: null }
+    const tick = () => {
+      const p = Math.min(1, (Date.now() - start) / DURATION)
+      setProgress(p)
+      if (p < 1) { raf.id = requestAnimationFrame(tick) }
+      else if (slide < mediaList.length - 1) { setSlide(s => s + 1) }
+    }
+    raf.id = requestAnimationFrame(tick)
+    return () => cancelAnimationFrame(raf.id)
+  }, [slide, isVid, mediaList.length])
+
+  return (
+    <div
+      className="absolute inset-0 z-25 flex flex-col"
+      style={{ backgroundColor: '#000', animation: 'slideInRight 200ms cubic-bezier(0.16,1,0.3,1)' }}
+    >
+      <StatusBar />
+      <div className="flex-1 relative" style={{ marginTop: '54px' }}>
+        {/* Media */}
+        {thumb
+          ? <img src={thumb} alt="" className="absolute inset-0 w-full h-full object-cover" />
+          : <div className="absolute inset-0 flex items-center justify-center" style={{ backgroundColor: color.bg }}><TypeIcon tipo="historia" size={40} color={color.dot} /></div>
+        }
+        {/* Gradient overlays */}
+        <div className="absolute inset-0" style={{ background: 'linear-gradient(to bottom, rgba(0,0,0,0.55) 0%, transparent 28%, transparent 58%, rgba(0,0,0,0.65) 100%)' }} />
+
+        {/* Progress bars */}
+        <div className="absolute left-3 right-3 flex gap-1" style={{ top: 10 }}>
+          {mediaList.map((_, i) => (
+            <div key={i} className="flex-1 rounded-full overflow-hidden" style={{ height: 2, backgroundColor: 'rgba(255,255,255,0.35)' }}>
+              <div style={{ height: '100%', borderRadius: 9999, backgroundColor: '#fff', width: i < slide ? '100%' : i === slide ? `${progress * 100}%` : '0%' }} />
+            </div>
+          ))}
+        </div>
+
+        {/* Top user row */}
+        <div className="absolute left-3 right-3 flex items-center gap-2" style={{ top: 22 }}>
+          <div className="w-7 h-7 rounded-full flex items-center justify-center font-black text-[9px] flex-shrink-0"
+            style={{ backgroundColor: color.bg, color: color.dot, border: '1.5px solid rgba(255,255,255,0.7)' }}>
+            {getInitials(pub.proyecto)}
+          </div>
+          <div className="flex-1 min-w-0">
+            <div className="text-[11px] font-black text-white truncate leading-tight">{pub.proyecto.toLowerCase()}</div>
+            {pub.fecha && <div className="text-[9px] leading-tight" style={{ color: 'rgba(255,255,255,0.7)' }}>{relativeDate(pub.fecha)}</div>}
+          </div>
+          <button onClick={onBack} className="w-8 h-8 flex items-center justify-center">
+            <svg width="13" height="13" viewBox="0 0 13 13" fill="none">
+              <path d="M1 1l11 11M12 1L1 12" stroke="white" strokeWidth="1.6" strokeLinecap="round"/>
+            </svg>
+          </button>
+        </div>
+
+        {/* Bottom caption + CTA */}
+        <div className="absolute left-4 right-4 bottom-4">
+          {pub.titulo && <p className="text-white text-[11px] italic mb-1" style={{ opacity: 0.8 }}>{pub.titulo}</p>}
+          {pub.copy && <p className="text-white text-[11px] font-medium leading-snug mb-3">{pub.copy}</p>}
+          <button
+            onClick={onOpenDetails}
+            className="w-full py-2 rounded-xl text-[11px] font-bold text-white transition-all active:opacity-70"
+            style={{ backgroundColor: 'rgba(255,255,255,0.18)', backdropFilter: 'blur(6px)', border: '1px solid rgba(255,255,255,0.35)' }}
+          >
+            Ver ficha completa →
+          </button>
+        </div>
+
+        {/* Tap zones prev / next */}
+        {slide > 0 && <button className="absolute left-0 top-0 bottom-0 w-1/3" style={{ background: 'none', border: 'none' }} onClick={() => setSlide(s => s - 1)} />}
+        {slide < mediaList.length - 1 && <button className="absolute right-0 top-0 bottom-0 w-1/3" style={{ background: 'none', border: 'none' }} onClick={() => setSlide(s => s + 1)} />}
+      </div>
+      <div className="absolute bottom-1.5 left-1/2 -translate-x-1/2 rounded-full" style={{ width: 120, height: 5, backgroundColor: '#fff', opacity: 0.2 }} />
     </div>
   )
 }
@@ -820,14 +923,20 @@ export default function VisualFeed({ publications, onSelect, selectedPub, active
             />
           )}
 
-          {/* Instagram post view */}
-          {openPost && (
+          {/* Post / Story / Reel viewer */}
+          {openPost && (openPost.tipo || '').toLowerCase() === 'historia' ? (
+            <StoryView
+              pub={openPost}
+              onBack={() => setOpenPost(null)}
+              onOpenDetails={() => { onSelect(openPost); setOpenPost(null) }}
+            />
+          ) : openPost ? (
             <InstaPostView
               pub={openPost}
               onBack={() => setOpenPost(null)}
               onOpenDetails={() => { onSelect(openPost); setOpenPost(null) }}
             />
-          )}
+          ) : null}
 
           {/* Home indicator */}
           <div className="absolute bottom-1.5 left-1/2 -translate-x-1/2 rounded-full" style={{ width: '120px', height: '5px', backgroundColor: '#111', opacity: 0.18 }} />
