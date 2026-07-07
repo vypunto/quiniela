@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef, useMemo } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { getProjectColor } from '../utils/colors'
 import { formatDate } from '../utils/dateUtils'
 import { TypeIcon } from './Icons'
@@ -19,23 +19,6 @@ const INSTAGRAM = {
   'CLUB TEMERARIA':        'clubtemeraria',
 }
 
-const MOBILE_CHANNELS = new Set(['Instagram', 'TikTok'])
-
-const CHANNEL_BRAND = {
-  LinkedIn: { accent: '#0077B5', light: '#EBF5FB' },
-  Facebook: { accent: '#1877F2', light: '#EBF3FF' },
-  Web:      { accent: '#059669', light: '#ECFDF5' },
-  Otros:    { accent: '#6B7280', light: '#F3F4F6' },
-}
-
-function ChannelIcon({ canal, size = 12 }) {
-  if (canal === 'Instagram') return <svg width={size} height={size} viewBox="0 0 24 24" fill="none"><rect x="2" y="2" width="20" height="20" rx="5" stroke="currentColor" strokeWidth="1.5"/><circle cx="12" cy="12" r="5" stroke="currentColor" strokeWidth="1.5"/><circle cx="17.5" cy="6.5" r="1" fill="currentColor"/></svg>
-  if (canal === 'TikTok') return <svg width={size} height={size} viewBox="0 0 24 24" fill="currentColor"><path d="M19.59 6.69a4.83 4.83 0 0 1-3.77-4.25V2h-3.45v13.67a2.89 2.89 0 0 1-2.88 2.5 2.89 2.89 0 0 1-2.89-2.89 2.89 2.89 0 0 1 2.89-2.89c.28 0 .54.04.79.1V9.01a6.33 6.33 0 0 0-.79-.05 6.34 6.34 0 0 0-6.34 6.34 6.34 6.34 0 0 0 6.34 6.34 6.34 6.34 0 0 0 6.33-6.34V8.69a8.18 8.18 0 0 0 4.78 1.52V6.78a4.85 4.85 0 0 1-1.01-.09z"/></svg>
-  if (canal === 'LinkedIn') return <svg width={size} height={size} viewBox="0 0 24 24" fill="currentColor"><path d="M16 8a6 6 0 0 1 6 6v7h-4v-7a2 2 0 0 0-4 0v7h-4v-7a6 6 0 0 1 6-6zM2 9h4v12H2z"/><circle cx="4" cy="4" r="2"/></svg>
-  if (canal === 'Facebook') return <svg width={size} height={size} viewBox="0 0 24 24" fill="currentColor"><path d="M18 2h-3a5 5 0 0 0-5 5v3H7v4h3v8h4v-8h3l1-4h-4V7a1 1 0 0 1 1-1h3z"/></svg>
-  if (canal === 'Web') return <svg width={size} height={size} viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="1.5"/><path d="M2 12h20M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z" stroke="currentColor" strokeWidth="1.5"/></svg>
-  return null
-}
 
 function igUrl(proyecto) {
   const h = INSTAGRAM[proyecto]
@@ -715,133 +698,6 @@ function GridTabIcon({ tab, active }) {
   )
 }
 
-/* ── TikTok view (inside iPhone) ── */
-function TikTokView({ pubs, color, project, onOpenPost }) {
-  const handle = project ? `@${project.toLowerCase().replace(/\s+/g, '.')}` : '@usuario'
-  return (
-    <div className="absolute inset-0 overflow-y-auto" style={{ backgroundColor: '#000' }}>
-      <div className="sticky top-0 z-10 pt-12 pb-2 flex items-center justify-center gap-8" style={{ backgroundColor: 'rgba(0,0,0,0.85)', backdropFilter: 'blur(8px)' }}>
-        <span className="text-[13px] font-semibold" style={{ color: 'rgba(255,255,255,0.4)' }}>Siguiendo</span>
-        <div className="flex flex-col items-center gap-0.5">
-          <span className="text-[13px] font-bold text-white">Para ti</span>
-          <div className="rounded-full" style={{ width: 16, height: 2, backgroundColor: '#fff' }} />
-        </div>
-      </div>
-      {pubs.length === 0 ? (
-        <div className="flex items-center justify-center py-20">
-          <p className="text-[11px]" style={{ color: 'rgba(255,255,255,0.3)' }}>Sin contenido TikTok para este proyecto</p>
-        </div>
-      ) : (
-        <div className="pb-6 space-y-2 px-1.5 pt-2">
-          {pubs.map(pub => {
-            const thumb = getThumb(pub.media)
-            const likes = mockLikes(pub.id)
-            return (
-              <button key={pub.id} onClick={() => onOpenPost(pub)}
-                className="w-full text-left relative overflow-hidden rounded-xl active:opacity-80 transition-opacity"
-                style={{ aspectRatio: '3/4', backgroundColor: color.bg, display: 'block' }}
-              >
-                {thumb
-                  ? <img src={thumb} alt="" className="absolute inset-0 w-full h-full object-cover" />
-                  : <div className="absolute inset-0 flex items-center justify-center">
-                      <div className="w-12 h-12 rounded-full flex items-center justify-center" style={{ backgroundColor: 'rgba(0,0,0,0.25)' }}>
-                        <svg width="20" height="20" viewBox="0 0 24 24" fill="white"><path d="M5 3l14 9L5 21V3z"/></svg>
-                      </div>
-                    </div>
-                }
-                <div className="absolute inset-0" style={{ background: 'linear-gradient(to top, rgba(0,0,0,0.8) 0%, rgba(0,0,0,0.1) 55%, transparent 100%)' }} />
-                <div className="absolute bottom-0 left-0 right-10 p-2.5">
-                  <p className="text-white text-[10px] font-bold mb-0.5">{handle}</p>
-                  <p className="text-[9px] leading-tight" style={{ color: 'rgba(255,255,255,0.75)' }}>
-                    {pub.titulo || pub.copy || ''}
-                  </p>
-                </div>
-                <div className="absolute right-2 bottom-3 flex flex-col items-center gap-3">
-                  <div className="flex flex-col items-center">
-                    <div className="w-8 h-8 rounded-full flex items-center justify-center text-[9px] font-black border-2 border-white"
-                      style={{ backgroundColor: color.dot, color: '#fff' }}>
-                      {getInitials(project)}
-                    </div>
-                    <div className="w-3.5 h-3.5 rounded-full flex items-center justify-center -mt-2 border border-black" style={{ backgroundColor: '#fe2c55' }}>
-                      <svg width="6" height="6" viewBox="0 0 8 8" fill="none"><path d="M4 1v6M1 4h6" stroke="white" strokeWidth="1.5" strokeLinecap="round"/></svg>
-                    </div>
-                  </div>
-                  {[
-                    { val: likes > 1000 ? (likes/1000).toFixed(1)+'K' : likes, icon: <svg width="16" height="16" viewBox="0 0 24 24" fill="white"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg> },
-                    { val: Math.round(likes/15), icon: <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg> },
-                    { val: Math.round(likes/6), icon: <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2"><path d="M4 12v8a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-8"/><polyline points="16 6 12 2 8 6"/><line x1="12" y1="2" x2="12" y2="15"/></svg> },
-                  ].map(({ val, icon }, i) => (
-                    <div key={i} className="flex flex-col items-center gap-0.5">
-                      {icon}
-                      <span className="text-white text-[9px] font-semibold">{val}</span>
-                    </div>
-                  ))}
-                </div>
-              </button>
-            )
-          })}
-        </div>
-      )}
-    </div>
-  )
-}
-
-/* ── Desktop channel view (LinkedIn / Facebook / Web) ── */
-function DesktopChannelView({ channel, pubs, color, project, onSelect }) {
-  const brand = CHANNEL_BRAND[channel] || CHANNEL_BRAND['Otros']
-  return (
-    <div className="max-w-2xl w-full">
-      {pubs.length === 0 ? (
-        <div className="bg-white rounded-2xl flex flex-col items-center justify-center py-16"
-          style={{ border: '1px solid #E8EAED', boxShadow: '0 1px 3px rgba(0,0,0,0.04)' }}>
-          <div className="w-12 h-12 rounded-2xl flex items-center justify-center mb-3" style={{ backgroundColor: brand.light, color: brand.accent }}>
-            <ChannelIcon canal={channel} size={22} />
-          </div>
-          <p className="text-sm font-medium text-gray-400">Sin publicaciones de {channel}</p>
-          <p className="text-xs text-gray-300 mt-1">para {project}</p>
-        </div>
-      ) : (
-        <div className="space-y-3">
-          {pubs.map(pub => (
-            <button key={pub.id} onClick={() => onSelect(pub)}
-              className="w-full text-left bg-white rounded-2xl overflow-hidden transition-all duration-150 hover:shadow-md active:opacity-80"
-              style={{ border: '1px solid #E8EAED', boxShadow: '0 1px 3px rgba(0,0,0,0.04)' }}
-            >
-              <div style={{ height: 3, backgroundColor: brand.accent }} />
-              <div className="p-4">
-                <div className="flex items-start justify-between gap-3 mb-3">
-                  <div className="flex items-center gap-2.5">
-                    <div className="w-9 h-9 rounded-full flex items-center justify-center text-white font-black text-[11px] flex-shrink-0"
-                      style={{ backgroundColor: color.dot }}>
-                      {getInitials(project)}
-                    </div>
-                    <div>
-                      <p className="text-[12px] font-bold text-gray-900 leading-none">{project}</p>
-                      <p className="text-[10px] text-gray-400 mt-0.5">{pub.fecha ? formatDate(pub.fecha) : ''}</p>
-                    </div>
-                  </div>
-                  <span className="flex items-center gap-1 px-2 py-1 rounded-full text-[10px] font-semibold flex-shrink-0"
-                    style={{ backgroundColor: brand.light, color: brand.accent }}>
-                    <ChannelIcon canal={channel} size={10} />{channel}
-                  </span>
-                </div>
-                {pub.titulo && <p className="text-[13px] font-bold text-gray-900 mb-1 leading-snug">{pub.titulo}</p>}
-                {pub.copy && <p className="text-[11px] text-gray-500 leading-relaxed line-clamp-3">{pub.copy}</p>}
-                {pub.tipo && (
-                  <div className="flex items-center gap-1.5 mt-3 pt-3 border-t border-gray-100">
-                    <TypeIcon tipo={pub.tipo} size={10} />
-                    <span className="text-[10px] font-semibold text-gray-400 capitalize">{pub.tipo}</span>
-                  </div>
-                )}
-              </div>
-            </button>
-          ))}
-        </div>
-      )}
-    </div>
-  )
-}
-
 /* ══════════════════════════════════════════════════════ */
 export default function VisualFeed({ publications, onSelect, selectedPub, activeFilter }) {
   const projects = [...new Set(publications.map(p => p.proyecto))].filter(Boolean).sort()
@@ -856,7 +712,6 @@ export default function VisualFeed({ publications, onSelect, selectedPub, active
   const [gridTab, setGridTab] = useState(TAB_POSTS)
   const [openPost, setOpenPost] = useState(null)
   const [openStories, setOpenStories] = useState(false)
-  const [selectedChannel, setSelectedChannel] = useState(null)
 
   const project = selectedProject || projects[0] || null
   const color = project ? getProjectColor(project) : { bg: '#F3F4F6', dot: '#9CA3AF', text: '#6B7280' }
@@ -865,31 +720,14 @@ export default function VisualFeed({ publications, onSelect, selectedPub, active
     .filter(p => p.proyecto === project)
     .sort((a, b) => (a.fecha || 0) - (b.fecha || 0))
 
-  const channelsForProject = useMemo(() => {
-    const found = new Set(allForProject.map(p => p.canal).filter(Boolean))
-    return ['Instagram', 'TikTok', 'LinkedIn', 'Facebook', 'Web', 'Otros'].filter(c => found.has(c))
-  }, [allForProject])
-
-  useEffect(() => { setSelectedChannel(null) }, [project])
-
-  const activeChannel = (selectedChannel && channelsForProject.includes(selectedChannel))
-    ? selectedChannel
-    : (channelsForProject[0] || null)
-
-  const channelPubs = activeChannel
-    ? allForProject.filter(p => p.canal === activeChannel)
-    : allForProject
-
-  const isMobileChannel = !activeChannel || MOBILE_CHANNELS.has(activeChannel)
-
-  const storiesForProject = channelPubs
+  const storiesForProject = allForProject
     .filter(p => (p.tipo || '').toLowerCase() === 'historia')
     .sort((a, b) => (a.fecha || 0) - (b.fecha || 0))
   const hasStories = storiesForProject.length > 0
 
-  const filtered = channelPubs.filter(p => tabMatch(p, gridTab))
-  const postCount = channelPubs.length
-  const latestDate = channelPubs.length > 0 ? channelPubs[channelPubs.length - 1].fecha : null
+  const filtered = allForProject.filter(p => tabMatch(p, gridTab))
+  const postCount = allForProject.length
+  const latestDate = allForProject.length > 0 ? allForProject[allForProject.length - 1].fecha : null
 
   const steps = [
     {
@@ -922,27 +760,7 @@ export default function VisualFeed({ publications, onSelect, selectedPub, active
         ))}
       </div>
 
-      {/* Channel selector */}
-      {channelsForProject.length > 1 && (
-        <div className="mb-4 flex gap-2 flex-wrap max-w-2xl w-full">
-          {channelsForProject.map(ch => (
-            <button key={ch} onClick={() => setSelectedChannel(ch)}
-              className="flex items-center gap-1.5 px-3 py-1.5 rounded-full text-[11px] font-semibold border transition-all duration-150"
-              style={activeChannel === ch
-                ? { backgroundColor: '#111827', color: '#fff', borderColor: '#111827' }
-                : { backgroundColor: '#fff', color: '#6B7280', borderColor: '#E5E7EB' }
-              }
-            >
-              <ChannelIcon canal={ch} size={11} />{ch}
-            </button>
-          ))}
-        </div>
-      )}
-
-      {/* Content: iPhone (Instagram/TikTok) or desktop cards (LinkedIn/Facebook/Web) */}
-      {!isMobileChannel ? (
-        <DesktopChannelView channel={activeChannel} pubs={channelPubs} color={color} project={project} onSelect={onSelect} />
-      ) : (
+      {/* iPhone mockup */}
       <div className="relative flex-shrink-0" style={{ width: '320px', height: '690px' }}>
 
 <div className="absolute inset-0 rounded-[48px]" style={{
@@ -963,9 +781,6 @@ export default function VisualFeed({ publications, onSelect, selectedPub, active
 
           <StatusBar />
 
-          {activeChannel === 'TikTok' ? (
-            <TikTokView pubs={channelPubs} color={color} project={project} onOpenPost={setOpenPost} />
-          ) : (
           <div className="absolute left-0 right-0 bottom-0 overflow-y-auto" style={{ top: '54px', paddingBottom: '20px' }}>
 
             {/* Account switcher trigger */}
@@ -1107,7 +922,6 @@ export default function VisualFeed({ publications, onSelect, selectedPub, active
               </div>
             )}
           </div>
-          )} {/* end TikTok/Instagram conditional */}
 
           {/* Dropdown */}
           {showDropdown && (
@@ -1148,8 +962,6 @@ export default function VisualFeed({ publications, onSelect, selectedPub, active
           <div className="absolute bottom-1.5 left-1/2 -translate-x-1/2 rounded-full" style={{ width: '120px', height: '5px', backgroundColor: '#111', opacity: 0.18 }} />
         </div>
       </div>
-
-      )}
 
     </div>
   )
