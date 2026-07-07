@@ -528,6 +528,7 @@ export default function App() {
         <PublicationEditModal
           publication={editingPub}
           projects={[...new Set([...PROJECTS, ...(displayPubs || []).map(p => p.proyecto).filter(Boolean)].map(p => p.toUpperCase()))].sort()}
+          scriptUrl={config.requestsScriptUrl}
           onSave={handleEditPub}
           onClose={() => setEditingPub(null)}
         />

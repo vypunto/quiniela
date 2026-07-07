@@ -116,7 +116,7 @@ export default function NewPublicationModal({ onClose, config, projects, onSaved
         <div className="overflow-y-auto flex-1" style={{ overscrollBehavior: 'contain', WebkitOverflowScrolling: 'touch' }}>
           <form onSubmit={handleSubmit} className="px-6 py-5 space-y-5">
 
-            <div className="grid grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div>
                 <label className={labelClass}>Proyecto *</label>
                 <select name="proyecto" value={form.proyecto} onChange={handleChange} required className={inputClass}>
@@ -126,9 +126,7 @@ export default function NewPublicationModal({ onClose, config, projects, onSaved
               </div>
               <div>
                 <label className={labelClass}>Fecha *</label>
-                <div className="w-full overflow-hidden rounded-xl">
-                  <input type="date" name="fecha" value={form.fecha} onChange={handleChange} required className={inputClass} style={{ minWidth: 0 }} />
-                </div>
+                <input type="date" name="fecha" value={form.fecha} onChange={handleChange} required className={inputClass} style={{ minWidth: 0, maxWidth: '100%' }} />
               </div>
             </div>
 
