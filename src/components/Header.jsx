@@ -151,22 +151,17 @@ export default function Header({
 
         {/* Sync — desktop */}
         {hasConfig && (
-          <div className="hidden sm:flex flex-col items-center gap-0.5">
-            <button
-              onClick={onSync}
-              disabled={loading}
-              title="Sincronizar"
-              className="w-8 h-8 rounded-xl border border-gray-200 flex items-center justify-center hover:bg-gray-50 transition-all duration-150 text-gray-400 hover:text-gray-600 disabled:opacity-40"
-            >
-              <svg width="13" height="13" viewBox="0 0 14 14" fill="none" className={loading ? 'animate-spin' : ''}>
-                <path d="M12 7A5 5 0 1 1 7 2" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/>
-                <path d="M10 2h2v2" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
-              </svg>
-            </button>
-            {lastSynced && !loading && (
-              <span className="text-[9px] text-gray-300 leading-none tabular-nums">{relTime(lastSynced)}</span>
-            )}
-          </div>
+          <button
+            onClick={onSync}
+            disabled={loading}
+            title={lastSynced && !loading ? `Sincronizar · actualizado ${relTime(lastSynced)}` : 'Sincronizar'}
+            className="hidden sm:flex w-8 h-8 rounded-xl border border-gray-200 items-center justify-center hover:bg-gray-50 transition-all duration-150 text-gray-400 hover:text-gray-600 disabled:opacity-40"
+          >
+            <svg width="13" height="13" viewBox="0 0 14 14" fill="none" className={loading ? 'animate-spin' : ''}>
+              <path d="M12 7A5 5 0 1 1 7 2" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/>
+              <path d="M10 2h2v2" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+            </svg>
+          </button>
         )}
 
         {/* Help link */}
