@@ -602,8 +602,7 @@ a:focus-visible, button:focus-visible, summary:focus-visible {
     <span class="sub-label">📋 Vista Lista</span>
     <p>Publicaciones del mes ordenadas cronológicamente, agrupadas por semana. Cada fila muestra proyecto, título, tipo, canal y estado de un vistazo. Es la vista ideal para revisar la planificación semana a semana.</p>
     <ul class="item-list" style="margin-top: 6px; margin-bottom: 14px;">
-      <li>La barra superior contiene <strong>Proyectos</strong>, <strong>Tipo</strong> y <strong>Canal</strong> en una misma línea, como botones desplegables con checkboxes</li>
-      <li>Se muestran siempre todas las opciones de tipo y canal, aunque no haya publicaciones con esa combinación ese mes</li>
+      <li>Filtros rápidos de <strong>Tipo</strong> y <strong>Canal</strong> aparecen encima de la lista — solo se muestran los que existen ese mes</li>
       <li>Los filtros se pueden combinar: por ejemplo, ver solo reels de Instagram</li>
       <li>Haz clic en cualquier fila para abrir el detalle</li>
     </ul>
@@ -631,16 +630,6 @@ a:focus-visible, button:focus-visible, summary:focus-visible {
       <span class="status-pill s-can">✕ Cancelado</span>
       <span class="status-pill s-edi">✏ En edición</span>
     </div>
-
-    <span class="sub-label" style="margin-top: 20px;">Estados de las peticiones</span>
-    <div class="status-row">
-      <span class="status-pill s-bor">Pendiente</span>
-      <span class="status-pill s-prog">En revisión</span>
-      <span class="status-pill s-edi">En proceso</span>
-      <span class="status-pill s-pub">Aprobado</span>
-      <span class="status-pill s-can">Rechazado</span>
-    </div>
-    <p style="margin-top: 10px; font-size: 12.5px; color: #6b7280;">El contador de peticiones pendientes en la pestaña superior incluye tanto las peticiones <em>Pendiente</em> como las <em>En revisión</em>.</p>
   </div>
 
   <div class="section" id="filtros">
@@ -658,7 +647,7 @@ a:focus-visible, button:focus-visible, summary:focus-visible {
     <p>Haz clic en <em>"Proyectos ▾"</em> para ver los chips de proyectos activos. Puedes seleccionar uno o varios a la vez.</p>
 
     <span class="sub-label">Filtros en Vista Lista</span>
-    <p>En Vista Lista aparecen desplegables de <strong>Proyectos</strong>, <strong>Tipo</strong> y <strong>Canal</strong> en la misma barra. Se muestran siempre todas las opciones disponibles (no solo las del mes actual) y se pueden combinar entre sí.</p>
+    <p>En Vista Lista aparecen chips de <strong>Tipo</strong> (imagen, vídeo, reel…) y <strong>Canal</strong> (Instagram, TikTok…). Solo muestra los que existen en ese mes y se pueden combinar entre sí.</p>
   </div>
 
   <!-- ════ PARA ADMINISTRADORES ════ -->
@@ -748,9 +737,8 @@ a:focus-visible, button:focus-visible, summary:focus-visible {
 
     <ul class="item-list" style="margin-top: 10px; margin-bottom: 16px;">
       <li><strong>Ver todas las peticiones</strong> con su estado actual e información del solicitante</li>
-      <li><strong>Aprobar o rechazar de un clic</strong> — los botones ✓ y ✗ en cada fila de la lista permiten aprobar o rechazar sin abrir el detalle</li>
       <li><strong>Editar cualquier campo</strong> — estado, proyecto, canal, fecha, título, descripción, link de contenido, tipo, prioridad y campaña de Ads. También puedes adjuntar o reemplazar el archivo en ese momento.</li>
-      <li><strong>Cambiar el estado</strong> — Pendiente → En revisión → Aprobado / Rechazado / En proceso</li>
+      <li><strong>Cambiar el estado</strong> — Pendiente → Aprobado / Rechazado / En proceso</li>
       <li><strong>Aprobar</strong> — la petición aparece automáticamente en el calendario</li>
       <li><strong>Eliminar</strong> — abre un modal de confirmación. La fila no se borra definitivamente: se mueve a la hoja <em>ARCHIVO</em> del Google Sheets por si hace falta recuperarla</li>
     </ul>

@@ -341,13 +341,15 @@ function InstaPostView({ pub, onBack, onOpenDetails }) {
             <div className="text-[11px] font-black text-black truncate leading-tight">{pub.proyecto.toLowerCase()}</div>
             {pub.fecha && <div className="text-[9px] text-gray-400 leading-tight">{formatDate(pub.fecha)}</div>}
           </div>
-          <button
-            onClick={() => ig && window.open(ig, '_blank')}
-            className="px-3 py-1 rounded-lg text-[10px] font-bold flex-shrink-0 transition-opacity duration-150 active:opacity-70"
-            style={{ backgroundColor: color.dot, color: '#fff' }}
-          >
-            Seguir
-          </button>
+          {ig && (
+            <button
+              onClick={() => window.open(ig, '_blank')}
+              className="px-3 py-1 rounded-lg text-[10px] font-bold flex-shrink-0 transition-opacity duration-150 active:opacity-70"
+              style={{ backgroundColor: color.dot, color: '#fff' }}
+            >
+              Seguir
+            </button>
+          )}
           <button className="w-6 h-6 flex items-center justify-center flex-shrink-0">
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
               <circle cx="5" cy="12" r="1.5" fill="#111"/>
