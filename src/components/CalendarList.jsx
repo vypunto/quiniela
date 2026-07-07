@@ -19,8 +19,6 @@ function FilterDropdown({ label, options, selected, onToggle, onClearThis, rende
     return () => { document.removeEventListener('mousedown', handle); document.removeEventListener('touchstart', handle) }
   }, [open])
 
-  if (options.length < 2) return null
-
   return (
     <div ref={ref} className="relative flex-shrink-0">
       <button
@@ -87,12 +85,12 @@ function FilterDropdown({ label, options, selected, onToggle, onClearThis, rende
   )
 }
 
-function FilterBar({ availableTipos, availableCanales, tipoFilter, canalFilter, onTipo, onCanal, onClearTipo, onClearCanal }) {
+function FilterBar({ projectTrigger, availableTipos, availableCanales, tipoFilter, canalFilter, onTipo, onCanal, onClearTipo, onClearCanal }) {
   const active = tipoFilter.length + canalFilter.length
-  if (availableTipos.length < 2 && availableCanales.length < 2) return null
 
   return (
     <div className="flex items-center gap-2 mb-3">
+      {projectTrigger}
       <FilterDropdown
         label="Tipo"
         options={availableTipos}
@@ -124,7 +122,7 @@ function FilterBar({ availableTipos, availableCanales, tipoFilter, canalFilter, 
   )
 }
 
-export default function CalendarList({ year, month, publications, onSelect, activeFilter }) {
+export default function CalendarList({ year, month, publications, onSelect, activeFilter, projectTrigger }) {
   const [tipoFilter, setTipoFilter]   = useState([])
   const [canalFilter, setCanalFilter] = useState([])
 
@@ -143,8 +141,8 @@ export default function CalendarList({ year, month, publications, onSelect, acti
     return list.sort((a, b) => a.fecha - b.fecha)
   }, [publications, year, month, activeFilter])
 
-  const availableTipos   = useMemo(() => [...new Set(inMonth.map(p => p.tipo).filter(Boolean))], [inMonth])
-  const availableCanales = useMemo(() => CANAL_LABELS.filter(c => inMonth.some(p => p.canal === c)), [inMonth])
+  const availableTipos   = Object.keys(TIPO_LABELS)
+  const availableCanales = CANAL_LABELS
 
   const filtered = useMemo(() => {
     let list = inMonth
@@ -169,6 +167,7 @@ export default function CalendarList({ year, month, publications, onSelect, acti
   return (
     <div>
       <FilterBar
+        projectTrigger={projectTrigger}
         availableTipos={availableTipos}
         availableCanales={availableCanales}
         tipoFilter={tipoFilter}

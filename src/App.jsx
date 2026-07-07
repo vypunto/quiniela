@@ -437,8 +437,8 @@ export default function App() {
                       </button>
                     )}
                   </div>
-                  {/* Proyectos + resumen — segunda fila en móvil */}
-                  {searchResults === null && viewMode !== 'feed' && (
+                  {/* Proyectos (solo en mes/feed) + resumen */}
+                  {searchResults === null && viewMode !== 'feed' && viewMode !== 'list' && (
                     <div className="flex items-center gap-2">
                       <ProjectTrigger
                         open={filterOpen}
@@ -513,7 +513,9 @@ export default function App() {
                 {searchResults === null && (!loading || displayPubs.length > 0) && (
                   <div key={`${year}-${month}`} className={animClass}>
                     {viewMode === 'grid' && <CalendarGrid year={year} month={month} publications={displayPubs} onSelect={setSelectedPub} activeFilter={activeFilter} />}
-                    {viewMode === 'list' && <CalendarList year={year} month={month} publications={displayPubs} onSelect={setSelectedPub} activeFilter={activeFilter} />}
+                    {viewMode === 'list' && <CalendarList year={year} month={month} publications={displayPubs} onSelect={setSelectedPub} activeFilter={activeFilter}
+                      projectTrigger={searchResults === null ? <ProjectTrigger open={filterOpen} onToggle={() => setFilterOpen(o => !o)} hasFilter={activeFilter.length > 0} filterCount={activeFilter.length} /> : null}
+                    />}
                     {viewMode === 'feed' && <VisualFeed publications={displayPubs} onSelect={setSelectedPub} selectedPub={selectedPub} activeFilter={activeFilter} />}
                   </div>
                 )}
