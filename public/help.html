@@ -488,7 +488,7 @@ a:focus-visible, button:focus-visible, summary:focus-visible {
         <div class="step-n" aria-hidden="true">3</div>
         <div class="step-body">
           <strong>Adjunta el archivo o el link</strong>
-          <p>En el campo <em>Link de contenido</em> puedes pegar una URL de Drive, o pulsar <em>Adjuntar imagen o vídeo</em> para subir el archivo directamente desde tu dispositivo (hasta 25 MB). Si son varios links, sepáralos con comas.</p>
+          <p>En el campo <em>Link de contenido</em> puedes pegar una URL de Drive, o pulsar <em>Adjuntar imagen o vídeo</em> para subir el archivo directamente desde tu dispositivo (hasta 50 MB). Si son varios links, sepáralos con comas.</p>
         </div>
       </li>
       <li>
@@ -531,7 +531,7 @@ a:focus-visible, button:focus-visible, summary:focus-visible {
 
     <ul class="item-list" style="margin-top: 8px; margin-bottom: 16px;">
       <li><strong>Formatos admitidos:</strong> imágenes (JPG, PNG, GIF, WebP…) y vídeos (MP4, MOV…)</li>
-      <li><strong>Tamaño máximo:</strong> 25 MB por archivo</li>
+      <li><strong>Tamaño máximo:</strong> 50 MB por archivo</li>
       <li>El archivo se sube a una carpeta de Google Drive llamada <strong>"Calendapp Adjuntos"</strong> con acceso público por enlace</li>
       <li>La URL de Drive se añade automáticamente al campo <em>Link de contenido</em> de la petición</li>
       <li>Si ya había un link en ese campo, la URL del adjunto se añade al final separada por coma</li>
@@ -820,7 +820,7 @@ a:focus-visible, button:focus-visible, summary:focus-visible {
 
     <details>
       <summary>Adjunto un archivo pero no aparece en la petición</summary>
-      <div class="faq-body">El adjunto se sube a Google Drive a través del Apps Script. Si la subida falla (por timeout, permisos o tamaño), la petición se envía igualmente sin el archivo y no aparece ningún error visible. Verifica que el script está desplegado correctamente con permisos de Drive y que el archivo no supera los 25 MB. Como alternativa, sube el archivo a Drive manualmente y pega la URL en el campo <em>Link de contenido</em>.</div>
+      <div class="faq-body">El adjunto se sube a Google Drive a través del Apps Script. Si la subida falla (por timeout, permisos o tamaño), la petición se envía igualmente sin el archivo y no aparece ningún error visible. Verifica que el script está desplegado correctamente con permisos de Drive y que el archivo no supera los 50 MB. Como alternativa, sube el archivo a Drive manualmente y pega la URL en el campo <em>Link de contenido</em>.</div>
     </details>
 
     <details>

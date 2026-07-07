@@ -49,7 +49,7 @@ export default function NewPublicationModal({ onClose, config, projects, onSaved
         setAdjunto(prev => prev ? { ...prev, status: 'error' } : null)
       }
     } catch (err) {
-      console.warn('Upload error:', err)
+      console.error('Upload error:', err?.message || err)
       setAdjunto(prev => prev ? { ...prev, status: 'error' } : null)
     }
   }, [config?.requestsScriptUrl])

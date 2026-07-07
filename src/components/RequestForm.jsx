@@ -173,7 +173,7 @@ export default function RequestForm({ projects, scriptUrl, onSubmitted }) {
         setAdjunto(prev => prev ? { ...prev, status: 'error' } : null)
       }
     } catch (err) {
-      console.warn('Upload error:', err)
+      console.error('Upload error:', err?.message || err)
       setAdjunto(prev => prev ? { ...prev, status: 'error' } : null)
     }
   }, [scriptUrl])

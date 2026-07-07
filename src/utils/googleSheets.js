@@ -185,6 +185,16 @@ export async function uploadFile(scriptUrl, nombre, tipo, datos) {
     method: 'POST',
     body: JSON.stringify({ action: 'uploadFile', nombre, tipo, datos }),
   }, 90000)
-  if (!res.ok) throw new Error(`Error ${res.status}`)
-  return res.json()
+  if (!res.ok) throw new Error(`HTTP ${res.status}`)
+  const text = await res.text()
+  let json
+  try { json = JSON.parse(text) } catch {
+    console.error('uploadFile: respuesta no es JSON:', text.slice(0, 300))
+    throw new Error('Respuesta inválida del script')
+  }
+  if (!json.url) {
+    console.error('uploadFile: sin URL en respuesta:', JSON.stringify(json).slice(0, 300))
+    throw new Error('El script no devolvió URL')
+  }
+  return json
 }

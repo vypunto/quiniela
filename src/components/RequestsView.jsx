@@ -104,7 +104,7 @@ function EditModal({ req, scriptUrl, isAuth, actorName, projects, onSave, onClos
         setAdjunto(prev => prev ? { ...prev, status: 'error' } : null)
       }
     } catch (err) {
-      console.warn('Upload error:', err)
+      console.error('Upload error:', err?.message || err)
       setAdjunto(prev => prev ? { ...prev, status: 'error' } : null)
     }
   }, [scriptUrl])
