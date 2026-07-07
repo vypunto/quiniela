@@ -94,6 +94,7 @@ export default function App() {
   const [loading, setLoading]     = useState(false)
   const [error, setError]         = useState(null)
   const [pendingCount, setPendingCount] = useState(0)
+  const [lastSynced, setLastSynced]     = useState(null)
   const [searchQuery, setSearchQuery]   = useState('')
   const [filterOpen, setFilterOpen]     = useState(false)
   const searchRef = useRef(null)
@@ -164,6 +165,7 @@ export default function App() {
       localStorage.setItem('pubcal_pubs_cache', JSON.stringify(
         merged.map(p => ({ ...p, fecha: p.fecha instanceof Date ? p.fecha.toISOString() : p.fecha }))
       ))
+      setLastSynced(new Date())
     } catch (e) {
       setError(e.message)
     } finally {
@@ -229,9 +231,9 @@ export default function App() {
       } catch (err) {
         console.error('[EditPub] error:', err)
       }
-      setTimeout(() => syncData(true), 5000)
+      setTimeout(async () => { await syncData(true); removePending(updated.id) }, 5000)
     }
-  }, [addPending, config.requestsScriptUrl, syncData])
+  }, [addPending, removePending, config.requestsScriptUrl, syncData])
 
   const toggleFilter = name => setActiveFilter(prev => prev.includes(name) ? prev.filter(n => n !== name) : [...prev, name])
   const clearFilter = () => setActiveFilter([])
@@ -338,6 +340,7 @@ export default function App() {
         pendingCount={pendingCount}
         onAuth={() => _auth ? setShowPub(true) : setShowLogin(true)}
         isAuth={_auth}
+        lastSynced={lastSynced}
       />
 
       <main className="max-w-7xl mx-auto px-4 sm:px-6 py-4 sm:py-6 pb-16">

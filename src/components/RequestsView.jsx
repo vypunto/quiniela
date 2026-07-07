@@ -579,7 +579,7 @@ export default function RequestsView({ config, isDemo, isAuth, calendarPubs = []
   const loadRequests = async () => {
     if (isDemo) {
       setRequests(DEMO_REQUESTS)
-      const pending = DEMO_REQUESTS.filter(r => !r.estado || r.estado === 'Pendiente').length
+      const pending = DEMO_REQUESTS.filter(r => !r.estado || r.estado === 'Pendiente' || r.estado === 'En revisión').length
       onCountChange && onCountChange(pending)
       return
     }
@@ -601,7 +601,7 @@ export default function RequestsView({ config, isDemo, isAuth, calendarPubs = []
     const merged = [...local, ...sheetCache.filter(r => !localKeys.has(`${r.proyecto}||${r.titulo}`))]
       .sort((a, b) => (a.fecha || 0) - (b.fecha || 0))
     setRequests(merged)
-    onCountChange && onCountChange(merged.filter(r => !r.estado || r.estado === 'Pendiente').length)
+    onCountChange && onCountChange(merged.filter(r => !r.estado || r.estado === 'Pendiente' || r.estado === 'En revisión').length)
 
     if (REQUESTS_SHEET_URL) {
       setLoadingSheet(true)
@@ -611,7 +611,7 @@ export default function RequestsView({ config, isDemo, isAuth, calendarPubs = []
         const localOnly = local.filter(r => !sheetKeys.has(`${r.proyecto}||${r.titulo}`))
         const all = [...sheetData, ...localOnly].sort((a, b) => (a.fecha || 0) - (b.fecha || 0))
         setRequests(all)
-        onCountChange && onCountChange(all.filter(r => !r.estado || r.estado === 'Pendiente').length)
+        onCountChange && onCountChange(all.filter(r => !r.estado || r.estado === 'Pendiente' || r.estado === 'En revisión').length)
         // Update cache
         localStorage.setItem('pubcal_requests_cache', JSON.stringify(
           sheetData.map(r => ({ ...r, fecha: r.fecha instanceof Date ? r.fecha.toISOString() : r.fecha }))
@@ -631,7 +631,7 @@ export default function RequestsView({ config, isDemo, isAuth, calendarPubs = []
     setRequests(prev => prev.map(r => r.id === updated.id ? updated : r))
     setEditingReq(null)
     const all = requests.map(r => r.id === updated.id ? updated : r)
-    onCountChange && onCountChange(all.filter(r => !r.estado || r.estado === 'Pendiente').length)
+    onCountChange && onCountChange(all.filter(needsAction).length)
     onRequestSave && onRequestSave(updated, prevEstado)
   }
 
@@ -639,7 +639,7 @@ export default function RequestsView({ config, isDemo, isAuth, calendarPubs = []
     setDeletingReq(null)
     setRequests(prev => {
       const next = prev.filter(r => r.id !== req.id)
-      onCountChange && onCountChange(next.filter(r => !r.estado || r.estado === 'Pendiente').length)
+      onCountChange && onCountChange(next.filter(needsAction).length)
       return next
     })
     if (actorName) {
@@ -656,6 +656,23 @@ export default function RequestsView({ config, isDemo, isAuth, calendarPubs = []
     if (config.requestsScriptUrl && req.id.startsWith('sheet-')) {
       const rowIndex = parseInt(req.id.replace('sheet-', ''))
       try { await deleteRequest(config.requestsScriptUrl, rowIndex) } catch { /* ignore */ }
+    }
+  }
+
+  const needsAction = r => !r.estado || r.estado === 'Pendiente' || r.estado === 'En revisión'
+
+  const handleQuickStatus = async (req, newEstado) => {
+    const prevEstado = req.estado
+    const updated = { ...req, estado: newEstado }
+    setRequests(prev => prev.map(r => r.id === req.id ? updated : r))
+    const all = requests.map(r => r.id === req.id ? updated : r)
+    onCountChange && onCountChange(all.filter(needsAction).length)
+    onRequestSave && onRequestSave(updated, prevEstado)
+    if (config.requestsScriptUrl && req.id.startsWith('sheet-')) {
+      try {
+        const rowIndex = parseInt(req.id.replace('sheet-', ''))
+        await updateRequest(config.requestsScriptUrl, rowIndex, { estado: newEstado })
+      } catch { /* local state already updated */ }
     }
   }
 
@@ -759,6 +776,29 @@ export default function RequestsView({ config, isDemo, isAuth, calendarPubs = []
                     )}
 
                     <StatusBadge estado={req.estado} />
+
+                    {isAuth && req.estado !== 'Aprobado' && req.estado !== 'Rechazado' && (
+                      <>
+                        <button
+                          onClick={() => handleQuickStatus(req, 'Aprobado')}
+                          title="Aprobar"
+                          className="flex-shrink-0 w-8 h-8 rounded-xl border border-green-200 flex items-center justify-center text-green-500 hover:text-green-700 hover:bg-green-50 hover:border-green-300 transition-all duration-150"
+                        >
+                          <svg width="12" height="12" viewBox="0 0 14 14" fill="none">
+                            <path d="M2 7l4 4 6-7" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"/>
+                          </svg>
+                        </button>
+                        <button
+                          onClick={() => handleQuickStatus(req, 'Rechazado')}
+                          title="Rechazar"
+                          className="flex-shrink-0 w-8 h-8 rounded-xl border border-red-200 flex items-center justify-center text-red-400 hover:text-red-600 hover:bg-red-50 hover:border-red-300 transition-all duration-150"
+                        >
+                          <svg width="11" height="11" viewBox="0 0 12 12" fill="none">
+                            <path d="M2 2l8 8M10 2l-8 8" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round"/>
+                          </svg>
+                        </button>
+                      </>
+                    )}
 
                     <button
                       onClick={() => setEditingReq(req)}
