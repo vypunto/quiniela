@@ -409,9 +409,10 @@ export default function App() {
 
             {showCalendar && (
               <>
-                {/* Toolbar: search + proyectos + resumen en una línea */}
-                <div className={`flex items-center gap-2 mb-2 ${viewMode === 'feed' ? 'max-w-2xl mx-auto w-full' : ''}`}>
-                  <div className="relative flex-1 min-w-0">
+                {/* Toolbar: search + proyectos + resumen */}
+                <div className={`flex flex-col sm:flex-row sm:items-center gap-2 mb-2 ${viewMode === 'feed' ? 'max-w-2xl mx-auto w-full' : ''}`}>
+                  {/* Search — full width on mobile */}
+                  <div className="relative sm:flex-1 sm:min-w-0">
                     <svg className="absolute left-3.5 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none" width="15" height="15" viewBox="0 0 20 20" fill="none">
                       <circle cx="8.5" cy="8.5" r="5.75" stroke="currentColor" strokeWidth="1.6"/>
                       <path d="M13 13l3.5 3.5" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round"/>
@@ -436,16 +437,19 @@ export default function App() {
                       </button>
                     )}
                   </div>
+                  {/* Proyectos + resumen — segunda fila en móvil */}
                   {searchResults === null && viewMode !== 'feed' && (
-                    <ProjectTrigger
-                      open={filterOpen}
-                      onToggle={() => setFilterOpen(o => !o)}
-                      hasFilter={activeFilter.length > 0}
-                      filterCount={activeFilter.length}
-                    />
-                  )}
-                  {searchResults === null && viewMode !== 'feed' && (
-                    <MonthSummary publications={displayPubs} year={year} month={month} />
+                    <div className="flex items-center gap-2">
+                      <ProjectTrigger
+                        open={filterOpen}
+                        onToggle={() => setFilterOpen(o => !o)}
+                        hasFilter={activeFilter.length > 0}
+                        filterCount={activeFilter.length}
+                      />
+                      <div className="hidden sm:block">
+                        <MonthSummary publications={displayPubs} year={year} month={month} />
+                      </div>
+                    </div>
                   )}
                 </div>
 

@@ -8,62 +8,95 @@ const CANAL_LABELS = ['Instagram', 'TikTok', 'LinkedIn', 'Facebook', 'Web', 'Otr
 
 function FilterBar({ availableTipos, availableCanales, tipoFilter, canalFilter, onTipo, onCanal, onClear }) {
   const active = tipoFilter.length + canalFilter.length
+  const hasTipos = availableTipos.length > 1
+  const hasCanales = availableCanales.length > 1
+  if (!hasTipos && !hasCanales) return null
+
   return (
-    <div className="mb-3 space-y-2">
-      {/* Tipo chips */}
-      {availableTipos.length > 1 && (
-        <div className="flex items-center gap-1.5 flex-wrap">
-          <span className="text-[10px] font-bold text-gray-400 uppercase tracking-[0.1em] mr-1 flex-shrink-0">Tipo</span>
-          {availableTipos.map(t => {
-            const sel = tipoFilter.includes(t)
-            return (
+    <div className="mb-3">
+      {/* Mobile: scroll horizontal sin labels */}
+      <div
+        className="flex sm:hidden items-center gap-1.5 overflow-x-auto pb-0.5"
+        style={{ scrollbarWidth: 'none', WebkitOverflowScrolling: 'touch' }}
+      >
+        {hasTipos && availableTipos.map(t => (
+          <button
+            key={t}
+            onClick={() => onTipo(t)}
+            className="flex-shrink-0 flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] font-semibold border transition-all duration-150"
+            style={tipoFilter.includes(t)
+              ? { backgroundColor: '#111827', color: '#fff', borderColor: '#111827' }
+              : { backgroundColor: '#fff', color: '#6B7280', borderColor: '#E5E7EB' }
+            }
+          >
+            <TypeIcon tipo={t} size={11} />{TIPO_LABELS[t] || t}
+          </button>
+        ))}
+        {hasTipos && hasCanales && <div className="w-px h-4 bg-gray-200 flex-shrink-0" />}
+        {hasCanales && availableCanales.map(c => (
+          <button
+            key={c}
+            onClick={() => onCanal(c)}
+            className="flex-shrink-0 px-2.5 py-1 rounded-full text-[11px] font-semibold border transition-all duration-150"
+            style={canalFilter.includes(c)
+              ? { backgroundColor: '#e84530', color: '#fff', borderColor: '#e84530' }
+              : { backgroundColor: '#fff', color: '#6B7280', borderColor: '#E5E7EB' }
+            }
+          >{c}</button>
+        ))}
+        {active > 0 && (
+          <button
+            onClick={onClear}
+            className="flex-shrink-0 flex items-center gap-1 px-2.5 py-1 rounded-full text-[11px] font-semibold border border-gray-200 text-gray-400 transition-colors"
+          >
+            <svg width="9" height="9" viewBox="0 0 10 10" fill="none"><path d="M1 1l8 8M9 1L1 9" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/></svg>
+            Limpiar
+          </button>
+        )}
+      </div>
+
+      {/* Desktop: filas con labels */}
+      <div className="hidden sm:block space-y-2">
+        {hasTipos && (
+          <div className="flex items-center gap-1.5 flex-wrap">
+            <span className="text-[10px] font-bold text-gray-400 uppercase tracking-[0.1em] mr-1 flex-shrink-0">Tipo</span>
+            {availableTipos.map(t => (
               <button
                 key={t}
                 onClick={() => onTipo(t)}
                 className="flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] font-semibold border transition-all duration-150"
-                style={sel
+                style={tipoFilter.includes(t)
                   ? { backgroundColor: '#111827', color: '#fff', borderColor: '#111827' }
                   : { backgroundColor: '#fff', color: '#6B7280', borderColor: '#E5E7EB' }
                 }
               >
-                <TypeIcon tipo={t} size={11} />
-                {TIPO_LABELS[t] || t}
+                <TypeIcon tipo={t} size={11} />{TIPO_LABELS[t] || t}
               </button>
-            )
-          })}
-        </div>
-      )}
-
-      {/* Canal chips */}
-      {availableCanales.length > 1 && (
-        <div className="flex items-center gap-1.5 flex-wrap">
-          <span className="text-[10px] font-bold text-gray-400 uppercase tracking-[0.1em] mr-1 flex-shrink-0">Canal</span>
-          {availableCanales.map(c => {
-            const sel = canalFilter.includes(c)
-            return (
+            ))}
+          </div>
+        )}
+        {hasCanales && (
+          <div className="flex items-center gap-1.5 flex-wrap">
+            <span className="text-[10px] font-bold text-gray-400 uppercase tracking-[0.1em] mr-1 flex-shrink-0">Canal</span>
+            {availableCanales.map(c => (
               <button
                 key={c}
                 onClick={() => onCanal(c)}
                 className="px-2.5 py-1 rounded-full text-[11px] font-semibold border transition-all duration-150"
-                style={sel
+                style={canalFilter.includes(c)
                   ? { backgroundColor: '#e84530', color: '#fff', borderColor: '#e84530' }
                   : { backgroundColor: '#fff', color: '#6B7280', borderColor: '#E5E7EB' }
                 }
               >{c}</button>
-            )
-          })}
-        </div>
-      )}
-
-      {/* Quitar filtros */}
-      {active > 0 && (
-        <button
-          onClick={onClear}
-          className="text-[11px] font-semibold text-gray-400 hover:text-gray-600 transition-colors underline"
-        >
-          Quitar filtros ({active})
-        </button>
-      )}
+            ))}
+          </div>
+        )}
+        {active > 0 && (
+          <button onClick={onClear} className="text-[11px] font-semibold text-gray-400 hover:text-gray-600 transition-colors underline">
+            Quitar filtros ({active})
+          </button>
+        )}
+      </div>
     </div>
   )
 }
