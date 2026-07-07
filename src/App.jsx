@@ -410,7 +410,7 @@ export default function App() {
             {showCalendar && (
               <>
                 {/* Toolbar: search + proyectos + resumen en una línea */}
-                <div className="flex items-center gap-2 mb-2">
+                <div className={`flex items-center gap-2 mb-2 ${viewMode === 'feed' ? 'max-w-2xl mx-auto w-full' : ''}`}>
                   <div className="relative flex-1 min-w-0">
                     <svg className="absolute left-3.5 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none" width="15" height="15" viewBox="0 0 20 20" fill="none">
                       <circle cx="8.5" cy="8.5" r="5.75" stroke="currentColor" strokeWidth="1.6"/>
