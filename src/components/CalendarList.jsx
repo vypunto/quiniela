@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react'
+import { useMemo, useState, useRef, useEffect } from 'react'
 import { getProjectColor } from '../utils/colors'
 import { DAYS_ES, MONTHS_ES } from '../utils/dateUtils'
 import { TypeIcon, StatusIcon } from './Icons'
@@ -6,97 +6,120 @@ import { TypeIcon, StatusIcon } from './Icons'
 const TIPO_LABELS = { imagen: 'Imagen', video: 'Video', reel: 'Reel', carrusel: 'Carrusel', historia: 'Historia', texto: 'Texto' }
 const CANAL_LABELS = ['Instagram', 'TikTok', 'LinkedIn', 'Facebook', 'Web', 'Otros']
 
-function FilterBar({ availableTipos, availableCanales, tipoFilter, canalFilter, onTipo, onCanal, onClear }) {
-  const active = tipoFilter.length + canalFilter.length
-  const hasTipos = availableTipos.length > 1
-  const hasCanales = availableCanales.length > 1
-  if (!hasTipos && !hasCanales) return null
+function FilterDropdown({ label, options, selected, onToggle, onClearThis, renderOption }) {
+  const [open, setOpen] = useState(false)
+  const ref = useRef(null)
+  const count = selected.length
+
+  useEffect(() => {
+    if (!open) return
+    const handle = e => { if (ref.current && !ref.current.contains(e.target)) setOpen(false) }
+    document.addEventListener('mousedown', handle)
+    document.addEventListener('touchstart', handle)
+    return () => { document.removeEventListener('mousedown', handle); document.removeEventListener('touchstart', handle) }
+  }, [open])
+
+  if (options.length < 2) return null
 
   return (
-    <div className="mb-3">
-      {/* Mobile: scroll horizontal sin labels */}
-      <div
-        className="flex sm:hidden items-center gap-1.5 overflow-x-auto pb-0.5"
-        style={{ scrollbarWidth: 'none', WebkitOverflowScrolling: 'touch' }}
+    <div ref={ref} className="relative flex-shrink-0">
+      <button
+        onClick={() => setOpen(o => !o)}
+        className="flex items-center gap-1.5 px-3 py-1.5 rounded-full text-[11px] font-semibold border transition-all duration-150"
+        style={count > 0
+          ? { backgroundColor: '#111827', color: '#fff', borderColor: '#111827' }
+          : { backgroundColor: '#fff', color: '#6B7280', borderColor: '#E5E7EB' }
+        }
       >
-        {hasTipos && availableTipos.map(t => (
-          <button
-            key={t}
-            onClick={() => onTipo(t)}
-            className="flex-shrink-0 flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] font-semibold border transition-all duration-150"
-            style={tipoFilter.includes(t)
-              ? { backgroundColor: '#111827', color: '#fff', borderColor: '#111827' }
-              : { backgroundColor: '#fff', color: '#6B7280', borderColor: '#E5E7EB' }
-            }
-          >
-            <TypeIcon tipo={t} size={11} />{TIPO_LABELS[t] || t}
-          </button>
-        ))}
-        {hasTipos && hasCanales && <div className="w-px h-4 bg-gray-200 flex-shrink-0" />}
-        {hasCanales && availableCanales.map(c => (
-          <button
-            key={c}
-            onClick={() => onCanal(c)}
-            className="flex-shrink-0 px-2.5 py-1 rounded-full text-[11px] font-semibold border transition-all duration-150"
-            style={canalFilter.includes(c)
-              ? { backgroundColor: '#e84530', color: '#fff', borderColor: '#e84530' }
-              : { backgroundColor: '#fff', color: '#6B7280', borderColor: '#E5E7EB' }
-            }
-          >{c}</button>
-        ))}
-        {active > 0 && (
-          <button
-            onClick={onClear}
-            className="flex-shrink-0 flex items-center gap-1 px-2.5 py-1 rounded-full text-[11px] font-semibold border border-gray-200 text-gray-400 transition-colors"
-          >
-            <svg width="9" height="9" viewBox="0 0 10 10" fill="none"><path d="M1 1l8 8M9 1L1 9" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/></svg>
-            Limpiar
-          </button>
+        {label}
+        {count > 0 && (
+          <span className="w-4 h-4 rounded-full flex items-center justify-center text-[10px] font-black" style={{ backgroundColor: 'rgba(255,255,255,0.25)' }}>
+            {count}
+          </span>
         )}
-      </div>
+        <svg
+          width="10" height="10" viewBox="0 0 10 10" fill="none"
+          style={{ transition: 'transform 150ms', transform: open ? 'rotate(180deg)' : 'rotate(0deg)' }}
+        >
+          <path d="M2 3.5l3 3 3-3" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+        </svg>
+      </button>
 
-      {/* Desktop: filas con labels */}
-      <div className="hidden sm:block space-y-2">
-        {hasTipos && (
-          <div className="flex items-center gap-1.5 flex-wrap">
-            <span className="text-[10px] font-bold text-gray-400 uppercase tracking-[0.1em] mr-1 flex-shrink-0">Tipo</span>
-            {availableTipos.map(t => (
-              <button
-                key={t}
-                onClick={() => onTipo(t)}
-                className="flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] font-semibold border transition-all duration-150"
-                style={tipoFilter.includes(t)
-                  ? { backgroundColor: '#111827', color: '#fff', borderColor: '#111827' }
-                  : { backgroundColor: '#fff', color: '#6B7280', borderColor: '#E5E7EB' }
-                }
-              >
-                <TypeIcon tipo={t} size={11} />{TIPO_LABELS[t] || t}
+      {open && (
+        <div
+          className="absolute top-full left-0 mt-1.5 bg-white rounded-2xl z-30 overflow-hidden"
+          style={{ minWidth: '156px', boxShadow: '0 4px 24px rgba(0,0,0,0.12), 0 1px 4px rgba(0,0,0,0.06)', border: '1px solid #F3F4F6' }}
+        >
+          <div className="py-1.5">
+            {options.map(opt => {
+              const sel = selected.includes(opt)
+              return (
+                <button
+                  key={opt}
+                  onClick={() => onToggle(opt)}
+                  className="w-full flex items-center gap-2.5 px-3.5 py-2 text-left transition-colors duration-100 hover:bg-gray-50"
+                >
+                  <span
+                    className="w-4 h-4 rounded flex items-center justify-center flex-shrink-0 transition-all"
+                    style={{ backgroundColor: sel ? '#111827' : 'transparent', border: sel ? '1.5px solid #111827' : '1.5px solid #D1D5DB' }}
+                  >
+                    {sel && (
+                      <svg width="8" height="8" viewBox="0 0 8 8" fill="none">
+                        <path d="M1 4l2 2 4-4" stroke="#fff" strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round"/>
+                      </svg>
+                    )}
+                  </span>
+                  {renderOption ? renderOption(opt) : <span className="text-[12px] font-medium text-gray-700">{opt}</span>}
+                </button>
+              )
+            })}
+          </div>
+          {count > 0 && (
+            <div className="border-t border-gray-100 px-3.5 py-2">
+              <button onClick={() => { onClearThis(); setOpen(false) }} className="text-[11px] font-semibold text-gray-400 hover:text-gray-600 transition-colors">
+                Limpiar selección
               </button>
-            ))}
-          </div>
+            </div>
+          )}
+        </div>
+      )}
+    </div>
+  )
+}
+
+function FilterBar({ availableTipos, availableCanales, tipoFilter, canalFilter, onTipo, onCanal, onClearTipo, onClearCanal }) {
+  const active = tipoFilter.length + canalFilter.length
+  if (availableTipos.length < 2 && availableCanales.length < 2) return null
+
+  return (
+    <div className="flex items-center gap-2 mb-3">
+      <FilterDropdown
+        label="Tipo"
+        options={availableTipos}
+        selected={tipoFilter}
+        onToggle={onTipo}
+        onClearThis={onClearTipo}
+        renderOption={t => (
+          <span className="flex items-center gap-1.5 text-[12px] font-medium text-gray-700">
+            <TypeIcon tipo={t} size={11} />{TIPO_LABELS[t] || t}
+          </span>
         )}
-        {hasCanales && (
-          <div className="flex items-center gap-1.5 flex-wrap">
-            <span className="text-[10px] font-bold text-gray-400 uppercase tracking-[0.1em] mr-1 flex-shrink-0">Canal</span>
-            {availableCanales.map(c => (
-              <button
-                key={c}
-                onClick={() => onCanal(c)}
-                className="px-2.5 py-1 rounded-full text-[11px] font-semibold border transition-all duration-150"
-                style={canalFilter.includes(c)
-                  ? { backgroundColor: '#e84530', color: '#fff', borderColor: '#e84530' }
-                  : { backgroundColor: '#fff', color: '#6B7280', borderColor: '#E5E7EB' }
-                }
-              >{c}</button>
-            ))}
-          </div>
-        )}
-        {active > 0 && (
-          <button onClick={onClear} className="text-[11px] font-semibold text-gray-400 hover:text-gray-600 transition-colors underline">
-            Quitar filtros ({active})
-          </button>
-        )}
-      </div>
+      />
+      <FilterDropdown
+        label="Canal"
+        options={availableCanales}
+        selected={canalFilter}
+        onToggle={onCanal}
+        onClearThis={onClearCanal}
+      />
+      {active > 0 && (
+        <button
+          onClick={() => { onClearTipo(); onClearCanal() }}
+          className="text-[11px] font-semibold text-gray-400 hover:text-gray-600 transition-colors ml-1"
+        >
+          Limpiar todo
+        </button>
+      )}
     </div>
   )
 }
@@ -107,7 +130,8 @@ export default function CalendarList({ year, month, publications, onSelect, acti
 
   const toggleTipo  = t => setTipoFilter(prev => prev.includes(t) ? prev.filter(x => x !== t) : [...prev, t])
   const toggleCanal = c => setCanalFilter(prev => prev.includes(c) ? prev.filter(x => x !== c) : [...prev, c])
-  const clearLocal  = () => { setTipoFilter([]); setCanalFilter([]) }
+  const clearTipo   = () => setTipoFilter([])
+  const clearCanal  = () => setCanalFilter([])
 
   const today = new Date()
 
@@ -151,7 +175,8 @@ export default function CalendarList({ year, month, publications, onSelect, acti
         canalFilter={canalFilter}
         onTipo={toggleTipo}
         onCanal={toggleCanal}
-        onClear={clearLocal}
+        onClearTipo={clearTipo}
+        onClearCanal={clearCanal}
       />
 
       {weeks.length === 0 ? (
