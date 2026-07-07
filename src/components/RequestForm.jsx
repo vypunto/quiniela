@@ -1,6 +1,7 @@
 import { useState, useRef, useEffect, useCallback } from 'react'
 import { submitRequest, uploadFile } from '../utils/googleSheets'
 import { TypeIcon } from './Icons'
+import { toast } from '../utils/toast'
 
 const TIPOS = ['imagen', 'video', 'reel', 'carrusel', 'historia', 'texto']
 
@@ -218,6 +219,7 @@ export default function RequestForm({ projects, scriptUrl, onSubmitted }) {
 
     setSending(false)
     setSent(true)
+    toast.success('Petición enviada')
     onSubmitted && onSubmitted(payload)
     setTimeout(() => {
       setSent(false)
