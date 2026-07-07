@@ -230,12 +230,9 @@ export default function App() {
     toast.success('Publicación guardada')
     if (config.requestsScriptUrl) {
       const rowIndex = parseInt(updated.id)
-      console.log('[EditPub] rowIndex:', rowIndex, 'id:', updated.id, 'titulo:', updated.titulo)
       try {
         await updatePublication(config.requestsScriptUrl, rowIndex, updated)
-        console.log('[EditPub] enviado OK → fila sheet', rowIndex + 2)
       } catch (err) {
-        console.error('[EditPub] error:', err)
         toast.error('No se pudo guardar en la hoja')
       }
       setTimeout(async () => { await syncData(true); removePending(updated.id) }, 5000)

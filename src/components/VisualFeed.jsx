@@ -17,6 +17,7 @@ const INSTAGRAM = {
   'CANDELA ALICANTE':      'candelaalicante',
   'TÁVORA TEATRO ABIERTO': 'tavorateatroabierto',
   'CLUB TEMERARIA':        'clubtemeraria',
+  'TEATRO ALICANTE':       'teatroalicante',
 }
 
 
