@@ -17,6 +17,8 @@ import { formatShortDate } from './utils/dateUtils'
 import { getProjectColor } from './utils/colors'
 import { SPREADSHEET_URL, REQUESTS_SHEET_URL, REQUESTS_SCRIPT_URL, PROJECTS } from './config'
 import PublicationEditModal from './components/PublicationEditModal'
+import ToastContainer from './components/ToastContainer'
+import { toast } from './utils/toast'
 
 const now = new Date()
 const Y = now.getFullYear()
@@ -192,6 +194,8 @@ export default function App() {
 
   // Called from RequestsView whenever a petition is saved
   const handleRequestSave = useCallback((updated, prevEstado) => {
+    if (updated.estado === 'Aprobado' && prevEstado !== 'Aprobado') toast.success('Petición aprobada')
+    else if (updated.estado === 'Rechazado' && prevEstado !== 'Rechazado') toast.info('Petición rechazada')
     const pendingId = `approved-${updated.id}`
     if (updated.estado === 'Aprobado') {
       const fecha = updated.fecha instanceof Date ? updated.fecha : (updated.fecha ? new Date(updated.fecha) : null)
@@ -222,6 +226,7 @@ export default function App() {
     addPending(updated.id, updated)
     setSelectedPub(updated)
     setEditingPub(null)
+    toast.success('Publicación guardada')
     if (config.requestsScriptUrl) {
       const rowIndex = parseInt(updated.id)
       console.log('[EditPub] rowIndex:', rowIndex, 'id:', updated.id, 'titulo:', updated.titulo)
@@ -230,6 +235,7 @@ export default function App() {
         console.log('[EditPub] enviado OK → fila sheet', rowIndex + 2)
       } catch (err) {
         console.error('[EditPub] error:', err)
+        toast.error('No se pudo guardar en la hoja')
       }
       setTimeout(async () => { await syncData(true); removePending(updated.id) }, 5000)
     }
@@ -286,6 +292,7 @@ export default function App() {
 
   return (
     <div className="min-h-screen" style={{ backgroundColor: '#F7F8FA' }}>
+      <ToastContainer />
       {/* Ambient background orbs */}
       <div aria-hidden="true" className="fixed inset-0 pointer-events-none overflow-hidden" style={{ zIndex: 0 }}>
         <div style={{

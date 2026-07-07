@@ -4,6 +4,7 @@ import { TypeIcon } from './Icons'
 import { getProjectColor } from '../utils/colors'
 import { DAYS_ES, MONTHS_ES, parseDate } from '../utils/dateUtils'
 import { fetchRequestsData, updateRequest, deleteRequest, uploadFile } from '../utils/googleSheets'
+import { toast } from '../utils/toast'
 import { REQUESTS_SHEET_URL, PROJECTS } from '../config'
 
 const SOLICITANTE_KEY = 'pubcal_solicitante'
@@ -630,6 +631,7 @@ export default function RequestsView({ config, isDemo, isAuth, calendarPubs = []
     const prevEstado = editingReq?.estado
     setRequests(prev => prev.map(r => r.id === updated.id ? updated : r))
     setEditingReq(null)
+    toast.success('Petición guardada')
     const all = requests.map(r => r.id === updated.id ? updated : r)
     onCountChange && onCountChange(all.filter(needsAction).length)
     onRequestSave && onRequestSave(updated, prevEstado)
