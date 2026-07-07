@@ -570,6 +570,7 @@ export default function RequestsView({ config, isDemo, isAuth, calendarPubs = []
   const [editingReq, setEditingReq] = useState(null)
   const [deletingReq, setDeletingReq] = useState(null)
   const [loadingSheet, setLoadingSheet] = useState(false)
+  const [formOpen, setFormOpen] = useState(false)
 
   const projects = useMemo(() => {
     const fromSheet = calendarPubs.map(p => p.proyecto).filter(Boolean)
@@ -666,11 +667,22 @@ export default function RequestsView({ config, isDemo, isAuth, calendarPubs = []
     <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 sm:gap-6">
       {/* Form */}
       <div className="lg:col-span-1">
-        <RequestForm
-          projects={projects}
-          scriptUrl={config.requestsScriptUrl}
-          onSubmitted={() => loadRequests()}
-        />
+        {/* Mobile toggle — hidden on desktop */}
+        <button
+          className="lg:hidden w-full flex items-center justify-between px-5 py-3.5 bg-white rounded-2xl mb-3 text-left"
+          style={{ border: '1px solid #E8EAED', boxShadow: '0 1px 3px rgba(0,0,0,0.04)' }}
+          onClick={() => setFormOpen(f => !f)}
+        >
+          <span className="text-sm font-bold text-gray-800">Nueva petición</span>
+          <span className="text-lg font-bold leading-none" style={{ color: '#fa523c' }}>{formOpen ? '×' : '+'}</span>
+        </button>
+        <div className={formOpen ? '' : 'hidden lg:block'}>
+          <RequestForm
+            projects={projects}
+            scriptUrl={config.requestsScriptUrl}
+            onSubmitted={() => { loadRequests(); setFormOpen(false) }}
+          />
+        </div>
       </div>
 
       {/* List */}
