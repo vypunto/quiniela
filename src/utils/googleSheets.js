@@ -181,20 +181,33 @@ export async function deleteRequest(scriptUrl, rowIndex) {
 }
 
 export async function uploadFile(scriptUrl, nombre, tipo, datos) {
-  const res = await fetchWithTimeout(scriptUrl, {
-    method: 'POST',
-    body: JSON.stringify({ action: 'uploadFile', nombre, tipo, datos }),
-  }, 90000)
-  if (!res.ok) throw new Error(`HTTP ${res.status}`)
-  const text = await res.text()
-  let json
-  try { json = JSON.parse(text) } catch {
-    console.error('uploadFile: respuesta no es JSON:', text.slice(0, 300))
-    throw new Error('Respuesta inválida del script')
+  const body = JSON.stringify({ action: 'uploadFile', nombre, tipo, datos })
+
+  async function parseUploadResponse(res) {
+    if (!res.ok) throw new Error(`HTTP ${res.status}`)
+    const text = await res.text()
+    let json
+    try { json = JSON.parse(text) } catch {
+      console.error('uploadFile: respuesta no es JSON:', text.slice(0, 300))
+      throw new Error('Respuesta inválida del script')
+    }
+    if (!json.url) {
+      console.error('uploadFile: sin URL en respuesta:', JSON.stringify(json).slice(0, 300))
+      throw new Error('El script no devolvió URL')
+    }
+    return json
   }
-  if (!json.url) {
-    console.error('uploadFile: sin URL en respuesta:', JSON.stringify(json).slice(0, 300))
-    throw new Error('El script no devolvió URL')
+
+  // Apps Script returns a 302 redirect that often lacks CORS headers on the first hop.
+  // Try direct first; if blocked by CORS fall back to a proxy that forwards the POST.
+  try {
+    const res = await fetchWithTimeout(scriptUrl, { method: 'POST', body }, 90000)
+    return await parseUploadResponse(res)
+  } catch (e1) {
+    console.warn('uploadFile directo falló:', e1.message, '— reintentando vía proxy CORS')
   }
-  return json
+
+  const proxyUrl = `https://corsproxy.io/?url=${encodeURIComponent(scriptUrl)}`
+  const res = await fetchWithTimeout(proxyUrl, { method: 'POST', body }, 90000)
+  return parseUploadResponse(res)
 }
