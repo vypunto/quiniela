@@ -333,9 +333,7 @@ export default function RequestForm({ projects, scriptUrl, onSubmitted }) {
           {/* Fecha */}
           <div>
             <label className={labelClass}>Fecha deseada <span className="text-[#e84530]">*</span></label>
-            <div className="w-full overflow-hidden rounded-xl">
-              <input type="date" value={form.fecha} onChange={e => set('fecha', e.target.value)} required className={inputClass} style={{ minWidth: 0 }} />
-            </div>
+            <input type="date" value={form.fecha} onChange={e => set('fecha', e.target.value)} required className={`${inputClass} appearance-none`} style={{ width: '100%', minWidth: 0 }} />
           </div>
 
           {/* Título */}

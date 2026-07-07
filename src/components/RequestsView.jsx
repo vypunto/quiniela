@@ -280,9 +280,7 @@ function EditModal({ req, scriptUrl, isAuth, actorName, projects, onSave, onClos
           {/* Fecha */}
           <div>
             <label className="block text-xs font-semibold text-gray-400 uppercase tracking-[0.1em] mb-2">Fecha deseada</label>
-            <div className="w-full overflow-hidden rounded-xl">
-              <input type="date" value={form.fecha} onChange={e => set('fecha', e.target.value)} className={inputClass} style={{ minWidth: 0 }} />
-            </div>
+            <input type="date" value={form.fecha} onChange={e => set('fecha', e.target.value)} className={`${inputClass} appearance-none`} style={{ width: '100%', minWidth: 0 }} />
           </div>
 
           {/* Título */}

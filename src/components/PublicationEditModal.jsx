@@ -128,7 +128,7 @@ export default function PublicationEditModal({ publication: pub, projects = PROJ
           {/* Fecha */}
           <div>
             <label className={labelClass}>Fecha</label>
-            <input type="date" value={form.fecha} onChange={e => set('fecha', e.target.value)} className={inputClass} style={{ minWidth: 0, maxWidth: '100%' }} />
+            <input type="date" value={form.fecha} onChange={e => set('fecha', e.target.value)} className={`${inputClass} appearance-none`} style={{ width: '100%', minWidth: 0 }} />
           </div>
 
           {/* Título */}

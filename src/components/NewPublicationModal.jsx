@@ -126,7 +126,7 @@ export default function NewPublicationModal({ onClose, config, projects, onSaved
               </div>
               <div>
                 <label className={labelClass}>Fecha *</label>
-                <input type="date" name="fecha" value={form.fecha} onChange={handleChange} required className={inputClass} style={{ minWidth: 0, maxWidth: '100%' }} />
+                <input type="date" name="fecha" value={form.fecha} onChange={handleChange} required className={`${inputClass} appearance-none`} style={{ width: '100%', minWidth: 0 }} />
               </div>
             </div>
 
