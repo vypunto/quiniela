@@ -55,39 +55,41 @@ function normalizeHeader(h) {
   } catch { return h.trim() }
 }
 
-function parseCsvLine(line) {
-  const fields = []
+function parseCsvRows(str) {
+  const rows = []
+  let row = []
+  let field = ''
   let i = 0
-  while (i <= line.length) {
-    if (line[i] === '"') {
+  while (i < str.length) {
+    if (str[i] === '"') {
       i++
-      let field = ''
-      while (i < line.length) {
-        if (line[i] === '"' && line[i + 1] === '"') { field += '"'; i += 2 }
-        else if (line[i] === '"') { i++; break }
-        else { field += line[i++] }
+      while (i < str.length) {
+        if (str[i] === '"' && str[i + 1] === '"') { field += '"'; i += 2 }
+        else if (str[i] === '"') { i++; break }
+        else { field += str[i++] }
       }
-      fields.push(field)
-      if (line[i] === ',') i++
+    } else if (str[i] === ',') {
+      row.push(field); field = ''; i++
+    } else if (str[i] === '\r' && str[i + 1] === '\n') {
+      row.push(field); rows.push(row); row = []; field = ''; i += 2
+    } else if (str[i] === '\n') {
+      row.push(field); rows.push(row); row = []; field = ''; i++
     } else {
-      const end = line.indexOf(',', i)
-      if (end === -1) { fields.push(line.slice(i)); break }
-      fields.push(line.slice(i, end))
-      i = end + 1
+      field += str[i++]
     }
   }
-  return fields
+  if (field || row.length) { row.push(field); rows.push(row) }
+  return rows
 }
 
 function safeParse(csv) {
   if (typeof csv !== 'string' || !csv.trim()) return { data: [] }
   try {
     const str = String(csv).replace(/^﻿/, '')
-    const lines = str.split(/\r?\n/)
-    const headers = parseCsvLine(lines[0]).map(normalizeHeader)
-    const rows = lines.slice(1).filter(l => l.trim())
-    const data = rows.map(row => {
-      const vals = parseCsvLine(row)
+    const rows = parseCsvRows(str)
+    if (rows.length < 2) return { data: [] }
+    const headers = rows[0].map(normalizeHeader)
+    const data = rows.slice(1).filter(r => r.some(v => v.trim())).map(vals => {
       const obj = {}
       headers.forEach((h, i) => { obj[h] = vals[i] || '' })
       return obj
