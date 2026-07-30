@@ -185,7 +185,7 @@ export default function RequestForm({ projects, scriptUrl, onSubmitted }) {
 
   const handleSubmit = async e => {
     e.preventDefault()
-    if (!proyectoFinal || !form.fecha || !form.titulo) return
+    if (!proyectoFinal || !form.fecha || !form.titulo || !form.solicitante.trim()) return
 
     setSending(true)
     setError(null)
@@ -334,7 +334,7 @@ export default function RequestForm({ projects, scriptUrl, onSubmitted }) {
 
           {/* Fecha */}
           <div>
-            <label className={labelClass}>Fecha deseada <span className="text-[#e84530]">*</span></label>
+            <label className={labelClass}>Fecha deseada de publicación <span className="text-[#e84530]">*</span></label>
             <input type="date" value={form.fecha} onChange={e => set('fecha', e.target.value)} required className={`${inputClass} appearance-none`} style={{ width: '100%', minWidth: 0 }} />
           </div>
 
@@ -444,12 +444,13 @@ export default function RequestForm({ projects, scriptUrl, onSubmitted }) {
 
           {/* Solicitante */}
           <div>
-            <label className={labelClass}>Tu nombre</label>
+            <label className={labelClass}>Tu nombre <span className="text-[#e84530]">*</span></label>
             <input
               type="text"
               value={form.solicitante}
               onChange={e => set('solicitante', e.target.value)}
               placeholder="¿Quién hace la petición?"
+              required
               className={inputClass}
             />
           </div>
@@ -520,7 +521,7 @@ export default function RequestForm({ projects, scriptUrl, onSubmitted }) {
 
           <button
             type="submit"
-            disabled={sending || !proyectoFinal || !form.fecha || !form.titulo}
+            disabled={sending || !proyectoFinal || !form.fecha || !form.titulo || !form.solicitante.trim()}
             className="w-full py-3 text-sm font-bold rounded-xl transition-all duration-150 disabled:opacity-35 disabled:cursor-not-allowed"
             style={{ backgroundColor: '#e84530', color: '#fff' }}
           >

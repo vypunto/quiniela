@@ -21,11 +21,11 @@ function DayPopover({ date, pubs, anchorRect, onSelect, onClose }) {
   if (!isMobile && anchorRect) {
     const popW = 240
     const popH = Math.min(pubs.length * 44 + 56, 360)
-    let left = anchorRect.left + window.scrollX
-    let top = anchorRect.bottom + window.scrollY + 6
+    let left = anchorRect.left
+    let top = anchorRect.bottom + 6
     if (left + popW > window.innerWidth - 12) left = window.innerWidth - popW - 12
-    if (top + popH > window.innerHeight + window.scrollY - 12) top = anchorRect.top + window.scrollY - popH - 6
-    style = { position: 'fixed', top: anchorRect.bottom + 6, left: Math.max(8, Math.min(left, window.innerWidth - popW - 8)), width: popW, zIndex: 55 }
+    if (top + popH > window.innerHeight - 12) top = anchorRect.top - popH - 6
+    style = { position: 'fixed', top: Math.max(8, top), left: Math.max(8, Math.min(left, window.innerWidth - popW - 8)), width: popW, zIndex: 55 }
   }
 
   return (
@@ -128,9 +128,7 @@ export default function CalendarGrid({ year, month, publications, onSelect, acti
     <div
       className="bg-white rounded-2xl overflow-hidden flex flex-col"
       style={{
-        height: 'calc(100dvh - 270px)',
-        minHeight: '360px',
-        maxHeight: '800px',
+        minHeight: 'calc(100dvh - 270px)',
         border: '1px solid #E8EAED',
         boxShadow: '0 1px 3px rgba(0,0,0,0.04), 0 8px 24px rgba(0,0,0,0.05)',
       }}
@@ -161,7 +159,7 @@ export default function CalendarGrid({ year, month, publications, onSelect, acti
       {/* Grid */}
       <div
         className="grid grid-cols-7 flex-1"
-        style={{ gridTemplateRows: `repeat(${numRows}, 1fr)` }}
+        style={{ gridTemplateRows: `repeat(${numRows}, minmax(90px, 1fr))` }}
       >
         {cells.map((cell, i) => {
           const colIndex = i % 7
