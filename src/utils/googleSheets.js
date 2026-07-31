@@ -174,12 +174,12 @@ export async function updateRequest(scriptUrl, rowIndex, data) {
 }
 
 export async function deleteRequest(scriptUrl, rowIndex) {
-  const res = await fetch(scriptUrl, {
+  await fetch(scriptUrl, {
     method: 'POST',
+    mode: 'no-cors',
     body: JSON.stringify({ action: 'delete', rowIndex }),
   })
-  if (!res.ok) throw new Error(`Error ${res.status}`)
-  return res.json()
+  return { ok: true }
 }
 
 export async function uploadFile(scriptUrl, nombre, tipo, datos) {

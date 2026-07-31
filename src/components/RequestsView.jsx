@@ -655,6 +655,10 @@ export default function RequestsView({ config, isDemo, isAuth, calendarPubs = []
       const saved = JSON.parse(localStorage.getItem('pubcal_requests') || '[]')
       localStorage.setItem('pubcal_requests', JSON.stringify(saved.filter(r => r.id !== req.id)))
     } catch { /* ignore */ }
+    try {
+      const cached = JSON.parse(localStorage.getItem('pubcal_requests_cache') || '[]')
+      localStorage.setItem('pubcal_requests_cache', JSON.stringify(cached.filter(r => r.id !== req.id)))
+    } catch { /* ignore */ }
     if (config.requestsScriptUrl && req.id.startsWith('sheet-')) {
       const rowIndex = parseInt(req.id.replace('sheet-', ''))
       try { await deleteRequest(config.requestsScriptUrl, rowIndex) } catch { /* ignore */ }
