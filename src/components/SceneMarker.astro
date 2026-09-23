@@ -1,0 +1,68 @@
+---
+interface Props {
+  num: string;
+  label: string;
+  dark?: boolean;
+}
+
+const { num, label, dark = false } = Astro.props;
+---
+
+<div class:list={['scene-marker', { 'on-dark': dark }]}>
+  <span class="num">{num}</span>
+  <span class="rule"></span>
+  <span class="label">{label}</span>
+</div>
+
+<style>
+  .scene-marker {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    max-width: var(--container-max);
+    margin: 0 auto 28px;
+    padding: 0 var(--space-8);
+  }
+
+  .num {
+    font-family: var(--font-serif);
+    font-style: italic;
+    font-weight: 500;
+    font-size: 1.1rem;
+    color: var(--color-accent);
+    flex-shrink: 0;
+  }
+
+  .rule {
+    flex: 1;
+    height: 1px;
+    background: var(--color-border);
+  }
+
+  .label {
+    font-size: .74rem;
+    font-weight: 700;
+    letter-spacing: .08em;
+    color: var(--color-text-tertiary);
+    text-transform: uppercase;
+    white-space: nowrap;
+  }
+
+  .scene-marker.on-dark .rule {
+    background: rgba(244, 238, 224, .18);
+  }
+
+  .scene-marker.on-dark .label {
+    color: #CBB9AE;
+  }
+
+  .scene-marker.on-dark .num {
+    color: #F08B6C;
+  }
+
+  @media (max-width: 900px) {
+    .scene-marker {
+      padding: 0 var(--space-4);
+    }
+  }
+</style>

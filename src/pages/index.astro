@@ -1,9 +1,10 @@
 ---
 import Layout from '../components/Layout.astro';
 import PosterCard from '../components/PosterCard.astro';
-import PosterRail from '../components/PosterRail.astro';
 import Poster from '../components/Poster.astro';
-import { getAllMovies, getShowtimes } from '../lib/search/searchEngine';
+import SceneMarker from '../components/SceneMarker.astro';
+import { getAllMovies, getShowtimes, getAllCinemas } from '../lib/search/searchEngine';
+import { haversineDistance } from '../lib/search/distance';
 
 const movies = getAllMovies();
 const moviesForSearch = movies.map(m => ({ title: m.title, slug: m.slug, year: m.year }));
@@ -12,8 +13,8 @@ const today = new Date();
 const todayStr = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}-${String(today.getDate()).padStart(2, '0')}`;
 
 // Ahora en cartelera: movies that have showtimes today
-const allShowtimes = getShowtimes({ date: todayStr });
-const movieIdsWithShowings = new Set(allShowtimes.map(st => st.movieId));
+const allShowtimesToday = getShowtimes({ date: todayStr });
+const movieIdsWithShowings = new Set(allShowtimesToday.map(st => st.movieId));
 const nowShowing = movies.filter(m => movieIdsWithShowings.has(m.id));
 
 // Estrenos: movies with releaseDate in last 30 days
@@ -34,13 +35,20 @@ for (const st of allFutureShowtimes) {
   }
 }
 const sevenDaysOut = new Date(today);
-sevenDaysOut.setDate(sevenDaysOut.getDate() + 4);
+sevenDaysOut.setDate(sevenDaysOut.getDate() + 7);
 const sevenDaysOutStr = `${sevenDaysOut.getFullYear()}-${String(sevenDaysOut.getMonth() + 1).padStart(2, '0')}-${String(sevenDaysOut.getDate()).padStart(2, '0')}`;
+const DAY_MS = 24 * 60 * 60 * 1000;
 const lastDays = movies
   .filter(m => {
     const lastDate = movieLastDate.get(m.id);
     return lastDate && lastDate <= sevenDaysOutStr && lastDate >= todayStr;
   })
+  .map(m => {
+    const lastDate = movieLastDate.get(m.id)!;
+    const daysLeft = Math.max(1, Math.round((new Date(lastDate + 'T12:00:00').getTime() - today.getTime()) / DAY_MS));
+    return { movie: m, daysLeft };
+  })
+  .sort((a, b) => a.daysLeft - b.daysLeft)
   .slice(0, 8);
 
 // Hero pick: highest-rated movie currently showing
@@ -51,119 +59,172 @@ const featuredPool = nowShowing.length ? nowShowing : movies;
 const leadMovie = featuredPool.find(m => m.id !== heroMovie.id) || featuredPool[0];
 const stripMovies = featuredPool.filter(m => m.id !== leadMovie.id).slice(0, 8);
 
-// Spotlight: best-reviewed movie, distinct from the hero pick
-const reviewed = movies.filter(m => m.editorialReview && m.id !== heroMovie.id);
+// Spotlight: best-reviewed movie, distinct from the hero pick and the featured lead
+const reviewed = movies.filter(m => m.editorialReview && m.id !== heroMovie.id && m.id !== leadMovie.id);
 const spotlightMovie = [...reviewed].sort((a, b) => (b.editorialReview!.score) - (a.editorialReview!.score))[0] || heroMovie;
 const spotlightExcerpt = spotlightMovie.editorialReview
-  ? spotlightMovie.editorialReview.text.length > 200
-    ? spotlightMovie.editorialReview.text.slice(0, 197).trimEnd() + '…'
+  ? spotlightMovie.editorialReview.text.length > 220
+    ? spotlightMovie.editorialReview.text.slice(0, 217).trimEnd() + '…'
     : spotlightMovie.editorialReview.text
-  : spotlightMovie.synopsis.slice(0, 197).trimEnd() + '…';
+  : spotlightMovie.synopsis.slice(0, 217).trimEnd() + '…';
+
+// --- Escena 06: Esta semana en el cine — piezas editoriales derivadas de datos reales ---
+const cinemas = getAllCinemas();
+const cinemaById = new Map(cinemas.map(c => [c.id, c]));
+const alreadyFeatured = new Set([heroMovie.id, leadMovie.id, spotlightMovie.id]);
+
+// Pieza A: una sesión en formato especial hoy (dato real de showtimes), evitando repetir protagonistas ya usados
+const specialFormatShowtime = allShowtimesToday.find(st => st.format !== '2D' && !alreadyFeatured.has(st.movieId))
+  || allShowtimesToday.find(st => st.format !== '2D');
+const specialFormatMovie = specialFormatShowtime ? movies.find(m => m.id === specialFormatShowtime.movieId) : undefined;
+const specialFormatCinema = specialFormatShowtime ? cinemaById.get(specialFormatShowtime.cinemaId) : undefined;
+if (specialFormatMovie) alreadyFeatured.add(specialFormatMovie.id);
+
+// Pieza B: la etiqueta editorial que ya tenemos para el estreno más reciente, evitando repetir
+const taggedMovie = newReleases.find(m => m.editorialTags.length > 0 && !alreadyFeatured.has(m.id))
+  || newReleases.find(m => m.editorialTags.length > 0)
+  || featuredPool.find(m => m.editorialTags.length > 0);
+
+// Pieza C: similar por género al spotlight (misma lógica que la ficha de película)
+const similarToSpotlight = movies
+  .filter(m => m.id !== spotlightMovie.id)
+  .map(m => ({ movie: m, score: m.genres.filter(g => spotlightMovie.genres.includes(g)).length }))
+  .filter(m => m.score > 0)
+  .sort((a, b) => b.score - a.score)[0]?.movie;
+
+// --- Escena 08: Cerca de ti — cines reales más próximos al centro de Madrid ---
+const MADRID_CENTER = { lat: 40.4168, lng: -3.7038 };
+const nearbyCinemas = cinemas
+  .map(cinema => ({
+    cinema,
+    distance: haversineDistance(MADRID_CENTER.lat, MADRID_CENTER.lng, cinema.latitude, cinema.longitude),
+  }))
+  .sort((a, b) => a.distance - b.distance)
+  .slice(0, 4)
+  .map(({ cinema, distance }) => {
+    const sts = allShowtimesToday
+      .filter(st => st.cinemaId === cinema.id)
+      .sort((a, b) => a.time.localeCompare(b.time));
+    const byMovie = new Map<string, typeof sts>();
+    for (const st of sts) {
+      const arr = byMovie.get(st.movieId) || [];
+      arr.push(st);
+      byMovie.set(st.movieId, arr);
+    }
+    const [featuredMovieId, featuredShowtimes] = [...byMovie.entries()].sort((a, b) => b[1].length - a[1].length)[0] || [];
+    const featuredMovie = featuredMovieId ? movies.find(m => m.id === featuredMovieId) : undefined;
+    return { cinema, distance, featuredMovie, showtimes: featuredShowtimes || [] };
+  });
 ---
 
 <Layout title="SmallParadiso" description="Busca una película o cuéntanos qué te apetece ver. SmallParadiso encuentra la película y la sesión por ti.">
   <div class="home">
-    <!-- HERO -->
+    <!-- 01 · HERO -->
     <section class="hero">
-      <div class="hero-copy">
-        <p class="hero-issue">Madrid · hoy, {today.toLocaleDateString('es-ES', { day: 'numeric', month: 'long' })}</p>
+      <div class="hero-bg-poster">
+        <Poster title={heroMovie.title} color={heroMovie.posterColor} size="fill" bare />
+      </div>
+      <div class="hero-content">
+        <p class="hero-eyebrow">Madrid · hoy, {today.toLocaleDateString('es-ES', { day: 'numeric', month: 'long' })}</p>
         <h1 class="hero-title">
           <span class="w1">¿Qué te</span>
           <span class="w2">apetece</span>
-          <span class="w3 grad-text">ver?</span>
+          <span class="w3 grad-text">ver hoy?</span>
         </h1>
-        <p class="hero-sub">Busca una película o cuéntanos qué estás buscando.</p>
 
-        <div class="search-box" id="search-box">
-          <svg class="icon" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" aria-hidden="true"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
-          <input
-            type="text"
-            placeholder="Una de terror para el sábado, sobre las nueve…"
-            id="main-search"
-            autocomplete="off"
-            aria-label="Buscar película o describir lo que quieres ver"
-            aria-expanded="false"
-            aria-controls="search-suggestions"
-            aria-autocomplete="list"
-            role="combobox"
-          />
-          <button type="button" class="btn-primary search-submit" id="search-go-btn">
-            Buscar
-            <svg class="arrow" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><line x1="5" y1="12" x2="19" y2="12"></line><polyline points="12 5 19 12 12 19"></polyline></svg>
-            <span class="wipe"></span>
-          </button>
-          <ul class="search-suggestions" id="search-suggestions" role="listbox" aria-label="Sugerencias"></ul>
+        <div class="search-monument">
+          <div class="search-field" id="search-field">
+            <input
+              type="text"
+              placeholder="Una película, un plan, una obsesión…"
+              id="main-search"
+              autocomplete="off"
+              aria-label="Buscar película o describir lo que quieres ver"
+              aria-expanded="false"
+              aria-controls="search-suggestions"
+              aria-autocomplete="list"
+              role="combobox"
+            />
+            <button type="button" class="btn-primary search-submit" id="search-go-btn">
+              Buscar
+              <svg class="arrow" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><line x1="5" y1="12" x2="19" y2="12"></line><polyline points="12 5 19 12 12 19"></polyline></svg>
+              <span class="wipe"></span>
+            </button>
+            <ul class="search-suggestions" id="search-suggestions" role="listbox" aria-label="Sugerencias"></ul>
+          </div>
+          <p class="understood"><span class="rd" aria-hidden="true"></span>"terror el sábado cerca de Chueca" → <b>Terror · Sábado · ~21:00 · Chueca</b></p>
         </div>
 
         <p class="prompts">
           Prueba: <a class="p1" href="/buscar?q=Algo%20parecido%20a%20The%20Substance">algo parecido a The Substance</a> ·
-          <a class="p2" href="/buscar?q=Una%20pel%C3%ADcula%20para%20una%20primera%20cita">una primera cita</a> ·
-          <a class="p1" href="/buscar?q=Terror%20en%20VOSE%20cerca%20de%20Chueca">terror en VOSE cerca de Chueca</a>
+          <a class="p2" href="/buscar?q=Una%20pel%C3%ADcula%20para%20una%20primera%20cita">una primera cita</a>
         </p>
-
         <p class="hero-hint">¿Ya sabes el título? <button class="btn-text" id="title-search-link" type="button">Buscar por nombre →</button></p>
       </div>
 
-      <div class="hero-frame">
-        <Poster title={heroMovie.title} color={heroMovie.posterColor} size="fill" bare />
-        <div class="hero-caption">
-          <span class="hero-tag">Selección SmallParadiso</span>
-          <p><b>{heroMovie.title}</b> — {heroMovie.director}, {heroMovie.year}</p>
-        </div>
+      <div class="hero-credit">
+        <span class="hero-tag">Selección SmallParadiso</span>
+        <p><b>{heroMovie.title}</b> — {heroMovie.director}, {heroMovie.year}</p>
       </div>
     </section>
 
-    <!-- ¿NO SABES QUÉ VER? -->
+    <!-- 02 · DESCUBRIMIENTO -->
     <section class="mood">
-      <p class="mood-label">¿No lo tienes claro?</p>
-      <p class="mood-sentence">
-        Dinos si te apetece algo <a class="mb" href="/buscar?q=Algo%20divertido">divertido</a>,
-        <a class="ms" href="/buscar?q=Algo%20intenso">intenso</a>, romántico, que te haga
-        <a class="mb" href="/buscar?q=Algo%20que%20me%20haga%20pensar">pensar</a>,
-        <a class="ms" href="/buscar?q=Algo%20espectacular">espectacular</a> o directamente raro — y filtramos el resto.
-      </p>
+      <SceneMarker num="02" label="Descubrimiento" />
+      <div class="mood-inner">
+        <p class="mood-label">¿No lo tienes claro?</p>
+        <p class="mood-sentence">
+          Dinos si te apetece algo <a class="mb" href="/buscar?q=Algo%20divertido">divertido</a>,
+          <a class="ms" href="/buscar?q=Algo%20intenso">intenso</a>, romántico, que te haga
+          <a class="mb" href="/buscar?q=Algo%20que%20me%20haga%20pensar">pensar</a>,
+          <a class="ms" href="/buscar?q=Algo%20espectacular">espectacular</a> o directamente raro — y filtramos el resto.
+        </p>
+      </div>
     </section>
 
-    <!-- AHORA EN CARTELERA -->
+    <!-- 03 · AHORA EN CARTELERA -->
     {featuredPool.length > 0 && (
-      <section class="bg-white rail-feature">
-        <div class="rf-copy">
-          <p class="rf-kicker">Ahora en cartelera</p>
-          <h2 class="rf-title">Lo que se puede ver esta noche en Madrid</h2>
-          <p class="rf-sub">{featuredPool.length} películas distintas, actualizado con las sesiones reales de hoy.</p>
-          <a class="btn-text" href="/buscar">Ver todas las salas →</a>
-        </div>
-        <div class="rf-content">
-          <div class="rf-lead">
-            <a href={`/pelicula/${leadMovie.slug}`} class="rf-lead-poster">
-              <Poster title={leadMovie.title} genre={leadMovie.genres[0]} color={leadMovie.posterColor} />
-            </a>
-            <div class="rf-lead-text">
-              <a href={`/pelicula/${leadMovie.slug}`} class="rf-lead-title">{leadMovie.title}</a>
-              <p class="rf-lead-meta">{leadMovie.director.toUpperCase()} · {leadMovie.year}</p>
-              <p class="rf-lead-blurb">{leadMovie.synopsis}</p>
-            </div>
+      <section class="bg-white">
+        <SceneMarker num="03" label="Ahora en cartelera" />
+        <div class="rail-feature">
+          <div class="rf-copy">
+            <p class="rf-kicker">Selección visual</p>
+            <h2 class="rf-title">Lo que se puede ver esta noche en Madrid</h2>
+            <p class="rf-sub">{featuredPool.length} películas distintas, actualizado con las sesiones reales de hoy.</p>
+            <a class="btn-text" href="/buscar">Ver todas las salas →</a>
           </div>
-          {stripMovies.length > 0 && (
-            <div class="rail-scroll">
-              <div class="rail-track">
-                {stripMovies.map(m => (
-                  <PosterCard title={m.title} slug={m.slug} rating={m.rating} genre={m.genres[0]} posterColor={m.posterColor} />
-                ))}
+          <div class="rf-content">
+            <div class="rf-lead">
+              <a href={`/pelicula/${leadMovie.slug}`} class="rf-lead-poster">
+                <Poster title={leadMovie.title} genre={leadMovie.genres[0]} color={leadMovie.posterColor} />
+              </a>
+              <div class="rf-lead-text">
+                <a href={`/pelicula/${leadMovie.slug}`} class="rf-lead-title">{leadMovie.title}</a>
+                <p class="rf-lead-meta">{leadMovie.director.toUpperCase()} · {leadMovie.year}</p>
+                <p class="rf-lead-blurb">{leadMovie.synopsis}</p>
               </div>
             </div>
-          )}
+            {stripMovies.length > 0 && (
+              <div class="rail-scroll">
+                <div class="rail-track">
+                  {stripMovies.map(m => (
+                    <PosterCard title={m.title} slug={m.slug} rating={m.rating} genre={m.genres[0]} posterColor={m.posterColor} />
+                  ))}
+                </div>
+              </div>
+            )}
+          </div>
         </div>
       </section>
     )}
 
-    <!-- SPOTLIGHT — sección oscura -->
+    <!-- 04 · UNA PELÍCULA PARA ESTA NOCHE -->
     <section class="spotlight">
       <div class="grain"></div>
-      <div class="spotlight-inner">
+      <SceneMarker num="04" label="Una película para esta noche" dark />
+      <div class="spotlight-body-wrap">
         <div>
-          <span class="mark" aria-hidden="true"></span>
-          <p class="spotlight-kicker">Esta semana en pantalla grande</p>
+          <p class="spotlight-kicker">La crítica SmallParadiso</p>
           <h2 class="spotlight-title">{spotlightMovie.title}</h2>
           <p class="spotlight-body">{spotlightExcerpt}</p>
           <a class="btn-dark" href={`/pelicula/${spotlightMovie.slug}`}>
@@ -178,23 +239,135 @@ const spotlightExcerpt = spotlightMovie.editorialReview
       </div>
     </section>
 
-    <!-- ESTRENOS -->
+    <!-- 05 · ESTRENOS -->
     {newReleases.length > 0 && (
-      <PosterRail title="Estrenos" subtitle="Lo nuevo que llega a los cines." bg="crema">
-        {newReleases.map(m => (
-          <PosterCard title={m.title} slug={m.slug} rating={m.rating} genre={m.genres[0]} posterColor={m.posterColor} />
-        ))}
-      </PosterRail>
+      <section class="slider-sec">
+        <SceneMarker num="05" label="Estrenos" />
+        <div class="slider-head">
+          <div>
+            <h2 class="slider-title">Recién llegadas a Madrid</h2>
+            <p class="slider-sub">Lo nuevo, esta semana en cartelera.</p>
+          </div>
+          <div class="slider-nav">
+            <button class="slider-arrow" type="button" data-dir="-1" data-target="estrenos-track" aria-label="Anterior">
+              <span class="arrow-icon"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><polyline points="15 18 9 12 15 6"></polyline></svg></span>
+              <span class="wipe"></span>
+            </button>
+            <button class="slider-arrow" type="button" data-dir="1" data-target="estrenos-track" aria-label="Siguiente">
+              <span class="arrow-icon"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><polyline points="9 18 15 12 9 6"></polyline></svg></span>
+              <span class="wipe"></span>
+            </button>
+          </div>
+        </div>
+        <div class="rail-scroll">
+          <div class="rail-track slide-track" id="estrenos-track">
+            {newReleases.map(m => (
+              <PosterCard title={m.title} slug={m.slug} rating={m.rating} genre={m.genres[0]} posterColor={m.posterColor} size="lg" />
+            ))}
+          </div>
+        </div>
+      </section>
     )}
 
-    <!-- LE QUEDAN POCOS DÍAS -->
+    <!-- 06 · ESTA SEMANA EN EL CINE -->
+    <section class="editorial">
+      <SceneMarker num="06" label="Esta semana en el cine" />
+      <h2 class="ed-title">Tres cosas que están pasando en las salas de Madrid</h2>
+      <div class="editorial-grid">
+        {specialFormatMovie && specialFormatCinema && (
+          <div class="ed-piece">
+            <a href={`/pelicula/${specialFormatMovie.slug}`} class="ed-piece-poster">
+              <Poster title={specialFormatMovie.title} color={specialFormatMovie.posterColor} bare />
+            </a>
+            <p class="ed-piece-kicker">Formato especial</p>
+            <p class="ed-piece-quote"><a href={`/pelicula/${specialFormatMovie.slug}`}>{specialFormatMovie.title}</a> se proyecta hoy en <b>{specialFormatShowtime!.format}</b> en {specialFormatCinema.name}.</p>
+            <p class="ed-piece-meta">Sesión de las {specialFormatShowtime!.time}.</p>
+          </div>
+        )}
+        {taggedMovie && (
+          <div class="ed-piece">
+            <a href={`/pelicula/${taggedMovie.slug}`} class="ed-piece-poster">
+              <Poster title={taggedMovie.title} color={taggedMovie.posterColor} bare />
+            </a>
+            <p class="ed-piece-kicker">Por qué verla</p>
+            <p class="ed-piece-quote"><i>{taggedMovie.editorialTags[0].label}.</i></p>
+            <p class="ed-piece-meta">Nuestra ficha de <a href={`/pelicula/${taggedMovie.slug}`}>{taggedMovie.title}</a>.</p>
+          </div>
+        )}
+        {similarToSpotlight && (
+          <div class="ed-piece">
+            <a href={`/pelicula/${similarToSpotlight.slug}`} class="ed-piece-poster">
+              <Poster title={similarToSpotlight.title} color={similarToSpotlight.posterColor} bare />
+            </a>
+            <p class="ed-piece-kicker">Si te gustó {spotlightMovie.title}</p>
+            <p class="ed-piece-quote">Prueba <b>{similarToSpotlight.title}</b>.</p>
+            <p class="ed-piece-meta">{similarToSpotlight.genres.join(' · ')}</p>
+          </div>
+        )}
+      </div>
+    </section>
+
+    <!-- 07 · LE QUEDAN POCOS DÍAS -->
     {lastDays.length > 0 && (
-      <PosterRail title="Le quedan pocos días" subtitle="Si quieres verla en pantalla grande, no la dejes pasar." bg="blanco">
-        {lastDays.map(m => (
-          <PosterCard title={m.title} slug={m.slug} rating={m.rating} genre={m.genres[0]} posterColor={m.posterColor} />
-        ))}
-      </PosterRail>
+      <section class="urgency">
+        <SceneMarker num="07" label="Le quedan pocos días" />
+        <div class="urgency-head">
+          <h2 class="urgency-title">Si quieres verlas en pantalla grande, no las dejes pasar</h2>
+        </div>
+        <div class="rail-scroll">
+          <div class="urgency-track">
+            {lastDays.map(({ movie, daysLeft }) => (
+              <a href={`/pelicula/${movie.slug}`} class="u-card">
+                <Poster title={movie.title} color={movie.posterColor} bare />
+                <p>{movie.title}</p>
+                <span>{daysLeft === 1 ? 'Último día' : `${daysLeft} días`}</span>
+              </a>
+            ))}
+          </div>
+        </div>
+      </section>
     )}
+
+    <!-- 08 · CERCA DE TI -->
+    {nearbyCinemas.length > 0 && (
+      <section class="nearby">
+        <SceneMarker num="08" label="Cerca de ti" />
+        <div class="nearby-head">
+          <h2 class="nearby-title">Lo que hay ahora mismo en el centro de Madrid</h2>
+          <p class="nearby-sub">Cines ordenados por cercanía a Sol — cambia la ubicación cuando busques para ver la tuya.</p>
+        </div>
+        <div class="nearby-grid">
+          {nearbyCinemas.map(({ cinema, distance, featuredMovie, showtimes }) => (
+            <a href={`/cine/${cinema.slug}`} class="nb-cell">
+              <p class="nb-dist">{distance.toFixed(1)} km</p>
+              <p class="nb-name">{cinema.name}</p>
+              <p class="nb-area">{cinema.neighborhood || cinema.city}</p>
+              {featuredMovie ? (
+                <>
+                  <p class="nb-movie">{featuredMovie.title}</p>
+                  <p class="nb-time">{showtimes.slice(0, 3).map(st => st.time).join(' · ')}</p>
+                </>
+              ) : (
+                <p class="nb-time">Sin sesiones hoy</p>
+              )}
+            </a>
+          ))}
+        </div>
+      </section>
+    )}
+
+    <!-- 09 · UNIVERSO SMALLPARADISO -->
+    <section class="universe">
+      <SceneMarker num="09" label="Universo SmallParadiso" />
+      <div class="universe-row">
+        <span class="universe-label">Próximamente</span>
+        <div class="universe-links">
+          <span>Guías de cine en Madrid</span>
+          <span>Entrevistas</span>
+          <span>Historias de sala</span>
+        </div>
+      </div>
+    </section>
   </div>
 
   <script define:vars={{ moviesForSearch }}>
@@ -202,7 +375,7 @@ const spotlightExcerpt = spotlightMovie.editorialReview
   </script>
 
   <script>
-    const searchBox = document.getElementById('search-box') as HTMLDivElement;
+    const searchField = document.getElementById('search-field') as HTMLDivElement;
     const input = document.getElementById('main-search') as HTMLInputElement;
     const suggestions = document.getElementById('search-suggestions') as HTMLUListElement;
     const goBtn = document.getElementById('search-go-btn') as HTMLButtonElement;
@@ -262,8 +435,8 @@ const spotlightExcerpt = spotlightMovie.editorialReview
       }
     }
 
-    input.addEventListener('focus', () => searchBox.classList.add('focused'));
-    input.addEventListener('blur', () => searchBox.classList.remove('focused'));
+    input.addEventListener('focus', () => searchField.classList.add('focused'));
+    input.addEventListener('blur', () => searchField.classList.remove('focused'));
 
     input.addEventListener('input', () => {
       clearTimeout(debounceTimer);
@@ -300,7 +473,7 @@ const spotlightExcerpt = spotlightMovie.editorialReview
     });
 
     document.addEventListener('click', (e) => {
-      if (!(e.target as HTMLElement).closest('#search-box')) {
+      if (!(e.target as HTMLElement).closest('#search-field')) {
         suggestions.classList.remove('visible');
         input.setAttribute('aria-expanded', 'false');
       }
@@ -327,6 +500,15 @@ const spotlightExcerpt = spotlightMovie.editorialReview
       input.focus();
       input.placeholder = 'Escribe el nombre de la película...';
     });
+
+    document.querySelectorAll('.slider-arrow').forEach((btn) => {
+      btn.addEventListener('click', () => {
+        const dir = Number((btn as HTMLElement).dataset.dir || '1');
+        const targetId = (btn as HTMLElement).dataset.target;
+        const track = targetId ? document.getElementById(targetId) : null;
+        track?.scrollBy({ left: dir * 280, behavior: 'smooth' });
+      });
+    });
   </script>
 </Layout>
 
@@ -335,38 +517,56 @@ const spotlightExcerpt = spotlightMovie.editorialReview
     padding-bottom: var(--space-8);
   }
 
-  /* ============ HERO ============ */
+  /* ============ 01 · HERO — 95vh ============ */
   .hero {
-    display: grid;
-    grid-template-columns: 1.15fr 0.85fr;
-    max-width: var(--container-max);
-    margin: 0 auto;
-  }
-
-  .hero-copy {
-    padding: var(--space-20) var(--space-12) var(--space-20) var(--space-8);
+    min-height: 95vh;
     display: flex;
     flex-direction: column;
     justify-content: center;
+    position: relative;
+    max-width: var(--container-max);
+    margin: 0 auto;
+    padding: 64px var(--space-8) 40px;
   }
 
-  .hero-issue {
+  .hero-bg-poster {
+    position: absolute;
+    top: 0; right: 0; bottom: 0;
+    width: 44%;
+    overflow: hidden;
+    z-index: 0;
+  }
+
+  .hero-bg-poster::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(90deg, var(--color-bg) 0%, transparent 18%);
+  }
+
+  .hero-content {
+    position: relative;
+    z-index: 2;
+    max-width: 760px;
+  }
+
+  .hero-eyebrow {
     font-size: .8rem;
     font-weight: 600;
-    letter-spacing: .04em;
+    letter-spacing: .06em;
     color: var(--color-text-tertiary);
     text-transform: uppercase;
-    margin-bottom: var(--space-6);
+    margin-bottom: var(--space-8);
   }
 
   .hero-title {
-    margin-bottom: var(--space-6);
+    margin-bottom: var(--space-10);
   }
 
   .hero-title .w1 {
     display: block;
     font-weight: 400;
-    font-size: clamp(2.3rem, 3.8vw, 3.4rem);
+    font-size: clamp(2rem, 3.2vw, 2.9rem);
     line-height: 1.02;
     color: var(--color-text-secondary);
     letter-spacing: -0.01em;
@@ -374,11 +574,11 @@ const spotlightExcerpt = spotlightMovie.editorialReview
 
   .hero-title .w2 {
     display: block;
-    font-weight: 800;
-    font-size: clamp(2.5rem, 4.2vw, 3.9rem);
-    line-height: .98;
+    font-weight: 900;
+    font-size: clamp(2.6rem, 4.6vw, 4.4rem);
+    line-height: .96;
     color: var(--color-text);
-    letter-spacing: -0.03em;
+    letter-spacing: -0.035em;
   }
 
   .hero-title .w3 {
@@ -386,89 +586,64 @@ const spotlightExcerpt = spotlightMovie.editorialReview
     font-family: var(--font-serif);
     font-style: italic;
     font-weight: 460;
-    font-size: clamp(3.3rem, 5.8vw, 5.4rem);
-    line-height: .95;
-    margin-top: 4px;
+    font-size: clamp(3.6rem, 7vw, 6.6rem);
+    line-height: .92;
+    margin-top: 6px;
     letter-spacing: -0.02em;
   }
 
-  .hero-sub {
-    font-size: var(--text-lg);
-    color: var(--color-text-secondary);
-    max-width: 40ch;
-    margin-bottom: var(--space-8);
+  /* SEARCH — monumental */
+  .search-monument {
+    position: relative;
+    margin-bottom: var(--space-6);
   }
 
-  /* SEARCH */
-  .search-box {
+  .search-field {
     position: relative;
     display: flex;
-    align-items: center;
-    gap: var(--space-3);
-    padding: 8px 8px 8px 24px;
-    border: 2px solid var(--color-text);
-    border-radius: 18px;
-    background: var(--color-bg);
-    margin-bottom: var(--space-6);
-    overflow: hidden;
+    align-items: flex-end;
+    gap: var(--space-5);
+    border-bottom: 3px solid var(--color-text);
+    padding-bottom: var(--space-4);
     transition: border-color .22s var(--ease-wipe);
   }
 
-  .search-box::after {
+  .search-field::after {
     content: '';
     position: absolute;
-    left: 0; bottom: -2px;
-    height: 3px; width: 0%;
+    left: 0; bottom: -3px;
+    height: 4px; width: 0%;
     background: var(--grad-brand);
-    transition: width .28s var(--ease-wipe);
+    transition: width .3s var(--ease-wipe);
   }
 
-  .search-box.focused {
-    border-color: var(--color-burgundy);
+  .search-field.focused {
+    border-color: transparent;
   }
 
-  .search-box.focused::after {
+  .search-field.focused::after {
     width: 100%;
   }
 
-  .search-box .icon {
-    flex-shrink: 0;
-    color: var(--color-text-tertiary);
-  }
-
-  .search-box input {
+  .search-field input {
     flex: 1;
     min-width: 0;
     width: 100%;
-    font-size: 1.18rem;
-    font-weight: 500;
+    font-family: var(--font-serif);
+    font-style: italic;
+    font-weight: 440;
+    font-size: clamp(1.4rem, 2.6vw, 2.1rem);
     color: var(--color-text);
-    padding: var(--space-3) 0;
-    transition: font-weight .2s ease;
+    padding: 6px 0;
   }
 
-  .search-box.focused input {
-    font-weight: 600;
-  }
-
-  .search-box input::placeholder {
+  .search-field input::placeholder {
     color: var(--color-text-tertiary);
-    font-weight: 400;
   }
 
   .search-submit {
     flex-shrink: 0;
-    border-radius: 11px;
-    padding: 13px 20px;
-    background: var(--color-text);
-  }
-
-  .search-submit .wipe {
-    background: var(--color-burgundy);
-  }
-
-  .search-box.focused .search-submit {
-    background: var(--color-accent);
+    margin-bottom: 2px;
   }
 
   .search-suggestions {
@@ -520,12 +695,34 @@ const spotlightExcerpt = spotlightMovie.editorialReview
     font-variant-numeric: tabular-nums;
   }
 
+  .understood {
+    margin-top: var(--space-4);
+    font-size: .82rem;
+    font-weight: 600;
+    color: var(--color-text-tertiary);
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .understood .rd {
+    width: 6px; height: 6px;
+    background: var(--color-accent);
+    border-radius: 50%;
+    flex-shrink: 0;
+  }
+
+  .understood b {
+    color: var(--color-text-secondary);
+    font-weight: 700;
+  }
+
   .prompts {
-    font-size: .92rem;
+    font-size: 1rem;
     font-weight: 500;
     line-height: 1.7;
     color: var(--color-text-tertiary);
-    margin-bottom: var(--space-8);
+    margin-bottom: var(--space-2);
   }
 
   .prompts .p1 {
@@ -556,16 +753,13 @@ const spotlightExcerpt = spotlightMovie.editorialReview
     margin-bottom: 0;
   }
 
-  /* HERO POSTER PANEL */
-  .hero-frame {
+  .hero-credit {
     position: relative;
-  }
-
-  .hero-caption {
-    position: absolute;
-    left: 0; right: 0; bottom: 0;
     z-index: 2;
-    padding: var(--space-6) var(--space-6) var(--space-5);
+    align-self: flex-end;
+    margin-top: var(--space-10);
+    text-align: right;
+    max-width: 280px;
   }
 
   .hero-tag {
@@ -577,28 +771,32 @@ const spotlightExcerpt = spotlightMovie.editorialReview
     background: var(--grad-brand);
     padding: 5px 10px;
     border-radius: 4px;
-    margin-bottom: var(--space-3);
+    margin-bottom: var(--space-2);
     text-transform: uppercase;
   }
 
-  .hero-caption p {
+  .hero-credit p {
     font-size: .84rem;
     font-weight: 500;
-    color: rgba(255,255,255,.85);
+    color: var(--color-text-secondary);
     margin-bottom: 0;
   }
 
-  .hero-caption p b {
+  .hero-credit p b {
     font-weight: 700;
-    color: #fff;
+    color: var(--color-text);
   }
 
-  /* ============ MOOD ============ */
+  /* ============ 02 · DESCUBRIMIENTO ============ */
   .mood {
     max-width: var(--container-max);
     margin: 0 auto;
     border-top: 1px solid var(--color-border);
-    padding: var(--space-14) var(--space-8) var(--space-16);
+    padding: var(--space-16) var(--space-8) var(--space-20);
+  }
+
+  .mood-inner {
+    max-width: 640px;
   }
 
   .mood-label {
@@ -611,11 +809,10 @@ const spotlightExcerpt = spotlightMovie.editorialReview
   }
 
   .mood-sentence {
-    font-size: 1.85rem;
+    font-size: 1.9rem;
     font-weight: 500;
     line-height: 1.4;
     letter-spacing: -0.01em;
-    max-width: 32ch;
     color: var(--color-text);
     margin-bottom: 0;
   }
@@ -648,14 +845,16 @@ const spotlightExcerpt = spotlightMovie.editorialReview
     border-bottom-color: var(--color-accent);
   }
 
-  /* ============ FEATURED RAIL ============ */
+  /* ============ 03 · FEATURED RAIL ============ */
   .rail-feature {
-    padding: var(--space-16) var(--space-8);
+    padding: var(--space-16) var(--space-8) var(--space-20);
     display: grid;
-    grid-template-columns: 0.6fr 1.4fr;
-    gap: var(--space-12);
+    grid-template-columns: 0.55fr 1.45fr;
+    gap: var(--space-16);
     max-width: var(--container-max);
     margin: 0 auto;
+    min-height: 65vh;
+    align-content: center;
   }
 
   .rail-feature > * {
@@ -663,7 +862,7 @@ const spotlightExcerpt = spotlightMovie.editorialReview
   }
 
   .rf-kicker {
-    font-size: .82rem;
+    font-size: .84rem;
     font-weight: 700;
     letter-spacing: .02em;
     color: var(--color-accent);
@@ -672,15 +871,15 @@ const spotlightExcerpt = spotlightMovie.editorialReview
   }
 
   .rf-title {
-    font-size: clamp(2rem, 2.8vw, 2.7rem);
-    font-weight: 800;
-    letter-spacing: -0.02em;
-    line-height: 1.06;
-    margin-bottom: var(--space-4);
+    font-size: clamp(2.2rem, 3.2vw, 3.2rem);
+    font-weight: 900;
+    letter-spacing: -0.025em;
+    line-height: 1.04;
+    margin-bottom: var(--space-5);
   }
 
   .rf-sub {
-    font-size: var(--text-base);
+    font-size: 1.02rem;
     line-height: 1.55;
     color: var(--color-text-secondary);
     max-width: 32ch;
@@ -689,9 +888,9 @@ const spotlightExcerpt = spotlightMovie.editorialReview
 
   .rf-lead {
     display: grid;
-    grid-template-columns: 250px 1fr;
-    gap: var(--space-8);
-    margin-bottom: var(--space-12);
+    grid-template-columns: 280px 1fr;
+    gap: var(--space-9);
+    margin-bottom: var(--space-14);
   }
 
   .rf-lead-poster {
@@ -708,14 +907,14 @@ const spotlightExcerpt = spotlightMovie.editorialReview
     font-family: var(--font-serif);
     font-style: italic;
     font-weight: 500;
-    font-size: 1.9rem;
+    font-size: 2.2rem;
     color: var(--color-text);
     text-decoration: none;
-    margin-bottom: var(--space-2);
+    margin-bottom: var(--space-3);
   }
 
   .rf-lead-meta {
-    font-size: .84rem;
+    font-size: .86rem;
     font-weight: 700;
     letter-spacing: .01em;
     color: var(--color-text-tertiary);
@@ -723,10 +922,10 @@ const spotlightExcerpt = spotlightMovie.editorialReview
   }
 
   .rf-lead-blurb {
-    font-size: var(--text-base);
+    font-size: 1.02rem;
     line-height: 1.6;
     color: var(--color-text-secondary);
-    max-width: 44ch;
+    max-width: 46ch;
     margin-bottom: 0;
   }
 
@@ -740,109 +939,454 @@ const spotlightExcerpt = spotlightMovie.editorialReview
 
   .rail-track {
     display: flex;
-    gap: var(--space-5);
+    gap: var(--space-6);
   }
 
-  /* ============ SPOTLIGHT ============ */
+  /* ============ 04 · SPOTLIGHT — 92vh ============ */
   .spotlight {
     background: var(--grad-dark);
     position: relative;
-    min-height: 600px;
+    min-height: 92vh;
     display: flex;
-    align-items: flex-end;
+    flex-direction: column;
     overflow: hidden;
   }
 
-  .spotlight .grain { opacity: .3; }
+  .spotlight .grain { opacity: .28; }
 
-  .spotlight-inner {
+  .spotlight-body-wrap {
     position: relative;
     z-index: 2;
+    flex: 1;
+    display: grid;
+    grid-template-columns: 1fr 0.95fr;
+    align-items: center;
     max-width: var(--container-max);
     margin: 0 auto;
     width: 100%;
-    padding: var(--space-20) var(--space-8);
-    display: grid;
-    grid-template-columns: 1.1fr 0.9fr;
-    gap: var(--space-12);
-    align-items: end;
+    padding: 20px var(--space-8) var(--space-16);
+    gap: var(--space-14);
   }
 
   .spotlight-kicker {
-    font-size: .8rem;
+    font-size: .82rem;
     font-weight: 700;
     letter-spacing: .06em;
     color: #F08B6C;
     text-transform: uppercase;
-    margin-bottom: var(--space-5);
+    margin-bottom: var(--space-6);
   }
 
   .spotlight-title {
     font-family: var(--font-serif);
     font-weight: 460;
-    font-size: clamp(2.3rem, 4.3vw, 3.7rem);
-    line-height: 1.03;
-    letter-spacing: -0.015em;
+    font-size: clamp(2.8rem, 5.2vw, 5rem);
+    line-height: 1;
+    letter-spacing: -0.02em;
     color: #F4EEE0;
-    margin-bottom: var(--space-5);
-  }
-
-  .spotlight-body {
-    font-size: var(--text-base);
-    line-height: 1.65;
-    color: #CBB9AE;
-    max-width: 44ch;
     margin-bottom: var(--space-6);
   }
 
+  .spotlight-body {
+    font-size: 1.12rem;
+    line-height: 1.7;
+    color: #CBB9AE;
+    max-width: 46ch;
+    margin-bottom: var(--space-7);
+  }
+
   .spotlight-poster {
+    position: relative;
+    width: 100%;
+    max-width: 460px;
     justify-self: end;
-    width: 260px;
+  }
+
+  /* ============ 05 · ESTRENOS ============ */
+  .slider-sec {
+    max-width: var(--container-max);
+    margin: 0 auto;
+    padding: var(--space-16) 0 var(--space-20);
+    min-height: 55vh;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+  }
+
+  .slider-head {
+    padding: 0 var(--space-8);
+    display: flex;
+    align-items: flex-end;
+    justify-content: space-between;
+    margin-bottom: var(--space-10);
+    gap: var(--space-6);
+  }
+
+  .slider-title {
+    font-size: clamp(2.2rem, 3.2vw, 3rem);
+    font-weight: 900;
+    letter-spacing: -0.025em;
+    line-height: 1.03;
+  }
+
+  .slider-sub {
+    font-size: 1rem;
+    line-height: 1.5;
+    color: var(--color-text-secondary);
+    margin-top: var(--space-2);
+  }
+
+  .slider-nav {
+    display: flex;
+    gap: var(--space-2);
+    flex-shrink: 0;
+  }
+
+  .slider-arrow {
+    position: relative;
+    overflow: hidden;
+    isolation: isolate;
+    width: 46px;
+    height: 46px;
+    border-radius: 50%;
+    border: 1.5px solid var(--color-text);
+    background: none;
+    color: var(--color-text);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: color .2s ease;
+  }
+
+  .slider-arrow .arrow-icon { position: relative; z-index: 1; }
+  .slider-arrow .wipe { background: var(--color-text); border-radius: 50%; }
+  .slider-arrow:hover { color: var(--color-bg); }
+  .slider-arrow:hover .wipe { transform: scaleX(1); }
+
+  .slide-track {
+    padding: 0 var(--space-8);
+    scroll-snap-type: x proximity;
+  }
+
+  .slide-track :global(> *) {
+    scroll-snap-align: start;
+  }
+
+  /* ============ 06 · EDITORIAL ============ */
+  .editorial {
+    max-width: var(--container-max);
+    margin: 0 auto;
+    padding: var(--space-16) var(--space-8) var(--space-20);
+  }
+
+  .ed-title {
+    font-size: clamp(2rem, 2.8vw, 2.6rem);
+    font-weight: 900;
+    letter-spacing: -0.02em;
+    line-height: 1.05;
+    max-width: 20ch;
+  }
+
+  .editorial-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: var(--space-12);
+    margin-top: var(--space-10);
+  }
+
+  .ed-piece {
+    border-top: 1px solid var(--color-border);
+    padding-top: var(--space-5);
+  }
+
+  .ed-piece-poster {
+    display: block;
+    width: 88px;
+    margin-bottom: var(--space-5);
+    border-radius: 3px;
+    overflow: hidden;
+  }
+
+  .ed-piece-kicker {
+    font-size: .7rem;
+    font-weight: 700;
+    letter-spacing: .05em;
+    color: var(--color-accent);
+    text-transform: uppercase;
+    margin-bottom: var(--space-3);
+  }
+
+  .ed-piece-quote {
+    font-family: var(--font-serif);
+    font-style: italic;
+    font-weight: 460;
+    font-size: 1.35rem;
+    line-height: 1.32;
+    color: var(--color-text);
+    margin-bottom: var(--space-4);
+  }
+
+  .ed-piece-quote a {
+    color: inherit;
+    text-decoration: none;
+    border-bottom: 1px solid var(--color-border);
+  }
+
+  .ed-piece-quote b {
+    font-style: normal;
+    font-weight: 700;
+    color: var(--color-accent);
+  }
+
+  .ed-piece-meta {
+    font-size: .84rem;
+    font-weight: 500;
+    line-height: 1.4;
+    color: var(--color-text-tertiary);
+  }
+
+  .ed-piece-meta a {
+    color: var(--color-text-secondary);
+    text-decoration: underline;
+  }
+
+  /* ============ 07 · URGENCY ============ */
+  .urgency {
+    background: var(--color-bg-alt);
+    padding: var(--space-16) 0 var(--space-18);
+  }
+
+  .urgency-head {
+    max-width: var(--container-max);
+    margin: 0 auto var(--space-8);
+    padding: 0 var(--space-8);
+  }
+
+  .urgency-title {
+    font-size: 1.6rem;
+    font-weight: 800;
+    letter-spacing: -0.015em;
+  }
+
+  .urgency-track {
+    display: flex;
+    gap: var(--space-5);
+    padding: 0 var(--space-8) var(--space-2);
+    max-width: var(--container-max);
+    margin: 0 auto;
+  }
+
+  .u-card {
+    flex-shrink: 0;
+    width: 126px;
+    text-decoration: none;
+    color: var(--color-text);
+    display: block;
+  }
+
+  .u-card p {
+    font-size: .8rem;
+    font-weight: 600;
+    line-height: 1.3;
+    margin-top: var(--space-3);
+    margin-bottom: 0;
+  }
+
+  .u-card span {
+    display: block;
+    font-size: .72rem;
+    font-weight: 700;
+    color: var(--color-accent);
+    margin-top: 3px;
+  }
+
+  /* ============ 08 · CERCA DE TI ============ */
+  .nearby {
+    max-width: var(--container-max);
+    margin: 0 auto;
+    padding: var(--space-18) var(--space-8) var(--space-20);
+    border-top: 1px solid var(--color-border);
+  }
+
+  .nearby-head {
+    max-width: 640px;
+    margin-bottom: var(--space-10);
+  }
+
+  .nearby-title {
+    font-size: clamp(2rem, 2.8vw, 2.6rem);
+    font-weight: 900;
+    letter-spacing: -0.02em;
+    line-height: 1.08;
+    margin-bottom: var(--space-4);
+  }
+
+  .nearby-sub {
+    font-size: 1rem;
+    color: var(--color-text-secondary);
+    line-height: 1.5;
+    margin-bottom: 0;
+  }
+
+  .nearby-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 1px;
+    background: var(--color-border);
+    border: 1px solid var(--color-border);
+  }
+
+  .nb-cell {
+    background: var(--color-bg);
+    padding: var(--space-6) var(--space-5);
+    display: block;
+    text-decoration: none;
+    color: var(--color-text);
+    transition: background-color .15s ease;
+  }
+
+  .nb-cell:hover {
+    background: var(--color-accent-subtle);
+  }
+
+  .nb-dist {
+    font-size: .78rem;
+    font-weight: 700;
+    color: var(--color-accent);
+    margin-bottom: var(--space-3);
+  }
+
+  .nb-name {
+    font-size: 1.05rem;
+    font-weight: 700;
+    line-height: 1.25;
+    margin-bottom: var(--space-1);
+  }
+
+  .nb-area {
+    font-size: .82rem;
+    color: var(--color-text-tertiary);
+    margin-bottom: var(--space-4);
+  }
+
+  .nb-movie {
+    font-family: var(--font-serif);
+    font-style: italic;
+    font-size: 1rem;
+    color: var(--color-text-secondary);
+    margin-bottom: var(--space-1);
+  }
+
+  .nb-time {
+    font-size: .85rem;
+    font-weight: 700;
+    font-variant-numeric: tabular-nums;
+    margin-bottom: 0;
+  }
+
+  /* ============ 09 · UNIVERSE TEASER ============ */
+  .universe {
+    max-width: var(--container-max);
+    margin: 0 auto;
+    padding: var(--space-14) var(--space-8) var(--space-16);
+  }
+
+  .universe-row {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: var(--space-6);
+    flex-wrap: wrap;
+    border-top: 1px solid var(--color-border);
+    border-bottom: 1px solid var(--color-border);
+    padding: var(--space-6) 0;
+  }
+
+  .universe-label {
+    font-size: .8rem;
+    font-weight: 700;
+    letter-spacing: .04em;
+    color: var(--color-accent);
+    text-transform: uppercase;
+  }
+
+  .universe-links {
+    display: flex;
+    gap: var(--space-8);
+    flex-wrap: wrap;
+    font-family: var(--font-serif);
+    font-style: italic;
+    font-size: 1rem;
+    color: var(--color-text-tertiary);
   }
 
   /* ============ RESPONSIVE ============ */
-  @media (max-width: 900px) {
+  @media (max-width: 1000px) {
     .hero {
-      grid-template-columns: 1fr;
+      min-height: auto;
+      padding: var(--space-8) var(--space-4) var(--space-12);
     }
 
-    .hero-copy {
-      padding: var(--space-10) var(--space-4) var(--space-6);
-    }
-
-    .hero-frame {
-      height: 320px;
+    .hero-bg-poster {
+      position: static;
+      width: 100%;
+      height: 280px;
       order: -1;
+      margin-bottom: var(--space-8);
+      border-radius: 3px;
+      overflow: hidden;
+    }
+
+    .hero-bg-poster::after { display: none; }
+
+    .hero-credit {
+      align-self: flex-start;
+      text-align: left;
+      max-width: none;
+      margin-top: var(--space-6);
     }
 
     .rail-feature {
       grid-template-columns: 1fr;
-      padding: var(--space-10) var(--space-4);
-      gap: var(--space-6);
+      padding: var(--space-12) var(--space-4);
+      gap: var(--space-8);
+      min-height: auto;
     }
 
     .rf-lead {
-      grid-template-columns: 160px 1fr;
-      gap: var(--space-4);
+      grid-template-columns: 150px 1fr;
+      gap: var(--space-5);
     }
 
-    .rf-lead-title { font-size: 1.4rem; }
+    .rf-lead-title { font-size: 1.5rem; }
 
-    .spotlight-inner {
+    .spotlight-body-wrap {
       grid-template-columns: 1fr;
-      padding: var(--space-10) var(--space-4);
+      padding: var(--space-6) var(--space-4) var(--space-12);
+      gap: var(--space-8);
     }
 
     .spotlight-poster {
-      width: 180px;
+      max-width: 220px;
       justify-self: start;
+    }
+
+    .editorial-grid {
+      grid-template-columns: 1fr;
+      gap: var(--space-8);
+    }
+
+    .nearby-grid {
+      grid-template-columns: 1fr 1fr;
     }
   }
 
   @media (max-width: 640px) {
-    .hero-sub { font-size: var(--text-base); }
-    .search-box input { font-size: 1rem; }
-    .mood { padding: var(--space-10) var(--space-4) var(--space-12); }
+    .hero-title .w3 { font-size: 3.3rem; }
+    .search-field input { font-size: 1.3rem; }
     .mood-sentence { font-size: 1.4rem; }
+    .nearby-grid { grid-template-columns: 1fr; }
+    .universe-links { flex-direction: column; gap: var(--space-3); }
   }
 </style>

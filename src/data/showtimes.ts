@@ -181,8 +181,11 @@ export function generateShowtimes(): Showtime[] {
 
   for (const movie of movies) {
     const movieCinemas = getCinemasForMovie(movie.id);
+    // Not every film leaves theaters on the same day — vary how many more
+    // days each one has left, so "last days" listings are meaningful.
+    const runLength = 3 + (hashCode(movie.id + 'run') % 6); // 3 to 8 days
 
-    for (let dayOffset = 0; dayOffset < 8; dayOffset++) {
+    for (let dayOffset = 0; dayOffset < runLength; dayOffset++) {
       const date = addDays(today, dayOffset);
       const dateObj = new Date(date + 'T00:00:00');
       const dayOfWeek = dateObj.getDay(); // 0=Sunday
