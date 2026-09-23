@@ -1,17 +1,19 @@
 ---
 interface Props {
+  heading?: string;
   reasonsYes?: string[];
   reasonsNo?: string[];
 }
 
 const {
+  heading = '¿Te puede gustar?',
   reasonsYes = [],
   reasonsNo = [],
 } = Astro.props;
 ---
 
 <section class="worth-it">
-  <h2 class="worth-it-heading">Merece la pena?</h2>
+  <p class="worth-it-heading">{heading}</p>
 
   <div class="worth-it-columns">
     {reasonsYes.length > 0 && (
@@ -45,10 +47,12 @@ const {
   }
 
   .worth-it-heading {
-    font-size: var(--text-lg);
-    font-weight: 600;
-    margin-bottom: var(--space-4);
-    letter-spacing: -0.01em;
+    font-size: .82rem;
+    font-weight: 800;
+    letter-spacing: .04em;
+    text-transform: uppercase;
+    color: var(--color-accent);
+    margin-bottom: var(--space-5);
   }
 
   .worth-it-columns {
@@ -107,6 +111,6 @@ const {
 
   .worth-item-no::before {
     content: '\2013';
-    color: var(--color-text-tertiary);
+    color: var(--color-accent);
   }
 </style>

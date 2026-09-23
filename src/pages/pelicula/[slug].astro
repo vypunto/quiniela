@@ -1,10 +1,11 @@
 ---
 import Layout from '../../components/Layout.astro';
-import MovieHero from '../../components/MovieHero.astro';
+import Poster from '../../components/Poster.astro';
 import MovieReview from '../../components/MovieReview.astro';
 import MovieWorthIt from '../../components/MovieWorthIt.astro';
 import PosterCard from '../../components/PosterCard.astro';
 import CinemaResult from '../../components/CinemaResult.astro';
+import WatchlistButton from '../../components/WatchlistButton.astro';
 import { getAllMovies, getMovieBySlug, searchSessions } from '../../lib/search/searchEngine';
 
 export function getStaticPaths() {
@@ -21,11 +22,9 @@ if (!movie) {
   return Astro.redirect('/404');
 }
 
-// Get today's date
 const today = new Date();
 const todayStr = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}-${String(today.getDate()).padStart(2, '0')}`;
 
-// Search sessions for this movie, Madrid center, 20km radius
 const results = searchSessions({
   movieId: movie.id,
   date: todayStr,
@@ -37,15 +36,16 @@ const results = searchSessions({
 
 const cinemaResults = results[0]?.cinemaResults || [];
 const totalSessions = results[0]?.totalSessions || 0;
+const cheapestPrice = cinemaResults
+  .flatMap(cr => cr.showtimes.map(st => st.price))
+  .filter((p): p is number => p !== undefined)
+  .sort((a, b) => a - b)[0];
 
-// Duration formatting
 const hours = Math.floor(movie.duration / 60);
 const mins = movie.duration % 60;
 const durationStr = `${hours}h ${mins}min`;
 
-// Similar movies: same genres, excluding current
-const allMovies = getAllMovies();
-const similarMovies = allMovies
+const similarMovies = getAllMovies()
   .filter(m => m.id !== movie.id)
   .map(m => ({
     movie: m,
@@ -53,10 +53,9 @@ const similarMovies = allMovies
   }))
   .filter(m => m.score > 0)
   .sort((a, b) => b.score - a.score)
-  .slice(0, 4)
+  .slice(0, 6)
   .map(m => m.movie);
 
-// Editorial review categories
 const categories = movie.editorialReview ? [
   { name: 'Historia', score: movie.editorialReview.scores.historia },
   { name: 'Dirección', score: movie.editorialReview.scores.direccion },
@@ -65,7 +64,14 @@ const categories = movie.editorialReview ? [
   { name: 'Banda sonora', score: movie.editorialReview.scores.bandaSonora },
 ] : [];
 
-// SEO
+// Discreet, non-scored references — never mirror their ratings or reviews.
+const q = encodeURIComponent(movie.title);
+const externalLinks = [
+  { label: 'FilmAffinity', url: `https://www.filmaffinity.com/es/search.php?stext=${q}` },
+  { label: 'Rotten Tomatoes', url: `https://www.rottentomatoes.com/search?search=${q}` },
+  { label: 'IMDb', url: `https://www.imdb.com/find/?q=${q}` },
+];
+
 const title = `${movie.title} — Sesiones y horarios`;
 const description = `${movie.title} (${movie.year}) de ${movie.director}. ${movie.synopsis.slice(0, 140)}... Encuentra sesiones de cine en Madrid.`;
 
@@ -78,58 +84,108 @@ const jsonLd = {
   duration: `PT${hours}H${mins}M`,
   genre: movie.genres,
   description: movie.synopsis,
-  aggregateRating: {
-    '@type': 'AggregateRating',
-    ratingValue: movie.rating,
-    bestRating: 10,
-    worstRating: 0,
-    ratingCount: 1,
-  },
 };
 ---
 
 <Layout title={title} description={description} jsonLd={jsonLd}>
-  <article class="movie-page container--narrow">
-    <nav class="breadcrumb" aria-label="Breadcrumb">
-      <a href="/">Inicio</a>
-      <span aria-hidden="true">/</span>
-      <span>{movie.title}</span>
-    </nav>
+  <article class="ficha">
+    <div class="ficha-utility">
+      <a href="/" class="btn-text">← Volver</a>
+      <a href="/buscar" class="btn-text">Editar búsqueda</a>
+    </div>
 
-    <MovieHero
-      title={movie.title}
-      year={movie.year}
-      duration={durationStr}
-      genre={movie.genres.join(', ')}
-      director={movie.director}
-      rating={movie.rating}
-      country={movie.country}
-      ageRating={movie.ageRating}
-      synopsis={movie.synopsis}
-      cast={movie.cast}
-      movieId={movie.id}
-    />
-
-    {movie.editorialTags.length > 0 && (
-      <div class="editorial-tags">
-        {movie.editorialTags.map(tag => (
-          <span class="editorial-tag">{tag.label}</span>
-        ))}
+    <div class="ficha-grid">
+      <div class="ficha-poster">
+        <Poster title={movie.title} genre={movie.genres[0]} color={movie.posterColor} />
+        <div class="ficha-watchlist"><WatchlistButton movieId={movie.id} movieTitle={movie.title} /></div>
       </div>
-    )}
 
-    <section class="sessions-section">
-      <h2 class="section-title">Dónde ver {movie.title}</h2>
-      <p class="section-meta">
-        Hoy · Madrid · hasta 20 km
-        {totalSessions > 0 && <span class="session-count"> · {totalSessions} sesiones</span>}
-      </p>
+      <div class="ficha-content">
+        <p class="ficha-kicker">{movie.genres.join(' · ')} · {durationStr} · {movie.year}</p>
+        <h1 class="ficha-title">{movie.title}</h1>
+        <p class="ficha-crew">
+          {movie.director}
+          {movie.cast.length > 0 && <> — con {movie.cast.slice(0, 3).join(', ')}</>}
+        </p>
+
+        {movie.editorialTags.length > 0 && (
+          <div class="ficha-tags">
+            {movie.editorialTags.map(tag => (
+              <span class="ficha-tag">{tag.label}</span>
+            ))}
+          </div>
+        )}
+
+        <div class="ficha-actions">
+          <a class="btn-primary" href="#sessions">
+            Ver sesiones
+            <svg class="arrow" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><line x1="5" y1="12" x2="19" y2="12"></line><polyline points="12 5 19 12 12 19"></polyline></svg>
+            <span class="wipe"></span>
+          </a>
+          {totalSessions > 0 && (
+            <span class="ficha-actions-meta">
+              {totalSessions} sesiones hoy{cheapestPrice !== undefined && ` · desde ${cheapestPrice.toFixed(2).replace('.', ',')} €`}
+            </span>
+          )}
+        </div>
+
+        {movie.editorialReview && (
+          <MovieReview
+            score={movie.editorialReview.score}
+            reviewText={movie.editorialReview.text}
+            categories={categories}
+          />
+        )}
+
+        {movie.worthIt && (
+          <MovieWorthIt
+            heading="¿Te puede gustar?"
+            reasonsYes={movie.worthIt.yes}
+            reasonsNo={movie.worthIt.no}
+          />
+        )}
+
+        <p class="ficha-external">
+          También puedes consultar
+          {externalLinks.map((l, i) => (
+            <>
+              {' '}<a href={l.url} target="_blank" rel="noopener noreferrer">{l.label} ↗</a>{i < externalLinks.length - 1 ? ' ·' : ''}
+            </>
+          ))}
+        </p>
+
+        {similarMovies.length > 0 && (
+          <section class="ficha-similar">
+            <p class="section-label">Si te gusta esta…</p>
+            <div class="similar-scroll">
+              {similarMovies.map(m => (
+                <PosterCard title={m.title} slug={m.slug} rating={m.rating} genre={m.genres[0]} posterColor={m.posterColor} />
+              ))}
+            </div>
+          </section>
+        )}
+      </div>
+    </div>
+
+    <section class="sessions-section" id="sessions">
+      <div class="sessions-head">
+        <div>
+          <span class="mark" aria-hidden="true"></span>
+          <h2 class="sessions-title">Dónde ver <i>{movie.title}</i></h2>
+          <p class="sessions-meta">
+            Hoy · Madrid · hasta 20 km
+            {totalSessions > 0 && ` · ${totalSessions} sesiones`}
+          </p>
+        </div>
+        <a href={`/buscar?pelicula=${movie.slug}&city=madrid&radius=20`} class="btn-text">Editar búsqueda</a>
+      </div>
 
       {cinemaResults.length > 0 ? (
         <div class="sessions-list">
           {cinemaResults.map(cr => (
             <CinemaResult
               cinemaName={cr.cinema.name}
+              cinemaSlug={cr.cinema.slug}
               distance={cr.distance !== undefined ? `${cr.distance.toFixed(1)} km` : ''}
               showtimes={cr.showtimes.map(st => ({
                 time: st.time,
@@ -145,106 +201,185 @@ const jsonLd = {
       ) : (
         <p class="no-sessions">No hay sesiones disponibles hoy. <a href={`/buscar?pelicula=${movie.slug}&city=madrid&radius=20`}>Ver otros días</a></p>
       )}
-
-      <a href={`/buscar?pelicula=${movie.slug}&city=madrid&radius=10`} class="see-all-link">
-        Ver todas las sesiones →
-      </a>
     </section>
-
-    {movie.editorialReview && (
-      <MovieReview
-        score={movie.editorialReview.score}
-        reviewText={movie.editorialReview.text}
-        categories={categories}
-      />
-    )}
-
-    {movie.worthIt && (
-      <MovieWorthIt
-        reasonsYes={movie.worthIt.yes}
-        reasonsNo={movie.worthIt.no}
-      />
-    )}
-
-    {similarMovies.length > 0 && (
-      <section class="similar-section">
-        <h2 class="section-title">Si te gusta esta...</h2>
-        <div class="similar-scroll">
-          {similarMovies.map(m => (
-            <PosterCard
-              title={m.title}
-              slug={m.slug}
-              rating={m.rating}
-              genre={m.genres[0]}
-              posterColor={m.posterColor}
-            />
-          ))}
-        </div>
-      </section>
-    )}
   </article>
 </Layout>
 
 <style>
-  .movie-page {
-    max-width: var(--container-narrow);
+  .ficha {
+    max-width: var(--container-max);
     margin: 0 auto;
     padding: 0 var(--space-4) var(--space-16);
   }
 
-  .breadcrumb {
+  .ficha-utility {
     display: flex;
-    align-items: center;
-    gap: var(--space-2);
-    font-size: var(--text-xs);
-    color: var(--color-text-tertiary);
-    padding: var(--space-4) 0 0;
+    gap: var(--space-6);
+    padding: var(--space-4) 0 var(--space-8);
   }
 
-  .breadcrumb a {
-    color: var(--color-text-tertiary);
-    text-decoration: none;
+  .ficha-grid {
+    display: grid;
+    grid-template-columns: 320px 1fr;
+    gap: var(--space-12);
   }
 
-  .breadcrumb a:hover {
-    color: var(--color-text);
+  .ficha-grid > * {
+    min-width: 0;
   }
 
-  .editorial-tags {
+  .ficha-poster {
+    position: sticky;
+    top: var(--space-8);
+    align-self: start;
+  }
+
+  .ficha-watchlist {
     display: flex;
-    flex-wrap: wrap;
-    gap: var(--space-2);
-    margin-bottom: var(--space-8);
+    justify-content: flex-end;
+    margin-top: var(--space-3);
   }
 
-  .editorial-tag {
-    font-size: var(--text-sm);
-    padding: var(--space-1) var(--space-3);
-    background-color: var(--color-accent-subtle);
-    border-radius: var(--radius-full);
-    color: var(--color-text-secondary);
-  }
-
-  .sessions-section {
-    padding: var(--space-6) 0;
-    border-bottom: 1px solid var(--color-border);
-    margin-bottom: var(--space-6);
-  }
-
-  .section-title {
-    font-size: var(--text-lg);
+  .ficha-kicker {
+    font-size: .85rem;
     font-weight: 600;
-    margin-bottom: var(--space-2);
-  }
-
-  .section-meta {
-    font-size: var(--text-sm);
-    color: var(--color-text-secondary);
+    color: var(--color-text-tertiary);
+    letter-spacing: .01em;
     margin-bottom: var(--space-4);
   }
 
-  .session-count {
+  .ficha-title {
+    font-family: var(--font-serif);
+    font-weight: 500;
+    font-size: clamp(2.3rem, 3.4vw, 3.1rem);
+    letter-spacing: -0.02em;
+    line-height: 1.02;
+    margin-bottom: var(--space-4);
+  }
+
+  .ficha-crew {
+    font-size: var(--text-base);
+    color: var(--color-text-secondary);
+    margin-bottom: var(--space-5);
+  }
+
+  .ficha-tags {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px var(--space-5);
+    margin-bottom: var(--space-6);
+  }
+
+  .ficha-tag {
+    font-size: .88rem;
+    color: var(--color-text-secondary);
+  }
+
+  .ficha-tag::before {
+    content: '—';
+    color: var(--color-accent);
+    margin-right: 7px;
+  }
+
+  .ficha-actions {
+    display: flex;
+    align-items: center;
+    gap: var(--space-5);
+    flex-wrap: wrap;
+    margin-bottom: var(--space-8);
+  }
+
+  .ficha-actions-meta {
+    font-size: .86rem;
+    font-weight: 600;
     color: var(--color-text-tertiary);
+  }
+
+  .ficha-external {
+    font-size: .85rem;
+    font-weight: 500;
+    color: var(--color-text-tertiary);
+    margin: var(--space-8) 0 var(--space-10);
+  }
+
+  .ficha-external a {
+    color: var(--color-text-secondary);
+    text-decoration: none;
+    border-bottom: 1px solid var(--color-border);
+  }
+
+  .ficha-external a:hover {
+    color: var(--color-accent);
+    border-color: var(--color-accent);
+  }
+
+  .section-label {
+    font-size: .82rem;
+    font-weight: 800;
+    letter-spacing: .04em;
+    text-transform: uppercase;
+    color: var(--color-accent);
+    margin-bottom: var(--space-4);
+  }
+
+  .ficha-similar {
+    padding-top: var(--space-6);
+    border-top: 1px solid var(--color-border);
+  }
+
+  .similar-scroll {
+    display: flex;
+    gap: var(--space-5);
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: none;
+    padding-bottom: var(--space-2);
+  }
+
+  .similar-scroll::-webkit-scrollbar {
+    display: none;
+  }
+
+  /* SESSIONS */
+  .sessions-section {
+    max-width: 780px;
+    margin: var(--space-20) auto 0;
+    padding-top: var(--space-12);
+    border-top: 1px solid var(--color-border);
+    scroll-margin-top: var(--space-8);
+  }
+
+  .sessions-head {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    gap: var(--space-4);
+    flex-wrap: wrap;
+  }
+
+  .sessions-title {
+    font-size: 2.2rem;
+    font-weight: 800;
+    letter-spacing: -0.02em;
+    line-height: 1.06;
+    margin-bottom: var(--space-2);
+  }
+
+  .sessions-title i {
+    font-family: var(--font-serif);
+    font-style: italic;
+    font-weight: 500;
+    color: var(--color-accent);
+  }
+
+  .sessions-meta {
+    font-size: var(--text-base);
+    color: var(--color-text-secondary);
+    margin-bottom: 0;
+  }
+
+  .sessions-list {
+    margin-top: var(--space-8);
   }
 
   .no-sessions {
@@ -258,36 +393,19 @@ const jsonLd = {
     text-decoration: underline;
   }
 
-  .see-all-link {
-    display: inline-block;
-    margin-top: var(--space-4);
-    font-size: var(--text-sm);
-    font-weight: 500;
-    color: var(--color-text-secondary);
-    text-decoration: none;
-    transition: color var(--transition-fast);
-  }
+  @media (max-width: 900px) {
+    .ficha-grid {
+      grid-template-columns: 1fr;
+      gap: var(--space-6);
+    }
 
-  .see-all-link:hover {
-    color: var(--color-text);
-  }
+    .ficha-poster {
+      position: static;
+      width: 220px;
+    }
 
-  .similar-section {
-    padding: var(--space-6) 0;
-  }
-
-  .similar-scroll {
-    display: flex;
-    gap: var(--space-3);
-    margin-top: var(--space-4);
-    overflow-x: auto;
-    -webkit-overflow-scrolling: touch;
-    scrollbar-width: none;
-    -ms-overflow-style: none;
-    padding-bottom: var(--space-2);
-  }
-
-  .similar-scroll::-webkit-scrollbar {
-    display: none;
+    .ficha-title {
+      font-size: 2rem;
+    }
   }
 </style>

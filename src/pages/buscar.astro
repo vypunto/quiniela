@@ -44,6 +44,7 @@ const serializedShowtimes = allShowtimes.map(st => ({
   <div class="results-page container--narrow">
     <header class="results-header" id="results-header">
       <a href="/" class="results-back">← Volver</a>
+      <span class="mark" aria-hidden="true"></span>
       <h1 class="results-title" id="results-title">Buscando...</h1>
       <div class="results-meta" id="results-meta"></div>
       <p class="results-count" id="results-count"></p>
@@ -51,7 +52,7 @@ const serializedShowtimes = allShowtimes.map(st => ({
 
     <div class="intent-summary" id="intent-summary" style="display:none;">
       <div class="intent-chips" id="intent-chips"></div>
-      <a href="/" class="intent-edit">Editar búsqueda</a>
+      <a href="/" class="btn-text">Editar búsqueda</a>
     </div>
 
     <SearchFilters />
@@ -92,14 +93,41 @@ const serializedShowtimes = allShowtimes.map(st => ({
       return `${DAY_NAMES[d.getDay()]} ${d.getDate()} ${MONTH_NAMES[d.getMonth()]}`;
     }
 
+    const DAY_INDEX: Record<string, number> = {
+      domingo: 0, lunes: 1, martes: 2, miercoles: 3, jueves: 4, viernes: 5, sabado: 6,
+    };
+
+    function resolveDay(q: string): string | undefined {
+      const now = new Date();
+      if (q.includes('hoy')) return formatDateISO(now);
+      if (q.includes('manana') && !q.includes('por la manana')) {
+        const d = new Date(now); d.setDate(d.getDate() + 1); return formatDateISO(d);
+      }
+      for (const [name, target] of Object.entries(DAY_INDEX)) {
+        if (q.includes(name)) {
+          const d = new Date(now);
+          let ahead = target - d.getDay();
+          if (ahead <= 0) ahead += 7;
+          d.setDate(d.getDate() + ahead);
+          return formatDateISO(d);
+        }
+      }
+      return undefined;
+    }
+
+    function formatDateISO(d: Date): string {
+      return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+    }
+
     // Client-side intent parser
-    function parseQueryIntent(query: string): { genres: string[]; moods: string[]; timeFrom?: string; timeTo?: string; movie?: string } {
+    function parseQueryIntent(query: string): { genres: string[]; moods: string[]; timeFrom?: string; timeTo?: string; movie?: string; date?: string } {
       const q = query.toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g, '');
       const genres: string[] = [];
       const moods: string[] = [];
       let timeFrom: string | undefined;
       let timeTo: string | undefined;
       let movie: string | undefined;
+      const date = resolveDay(q);
 
       const genreMap: Record<string, string> = {
         terror: 'Terror', horror: 'Terror', miedo: 'Terror',
@@ -180,7 +208,7 @@ const serializedShowtimes = allShowtimes.map(st => ({
         if (!moods.includes('familiar')) moods.push('familiar');
       }
 
-      return { genres, moods, timeFrom, timeTo, movie };
+      return { genres, moods, timeFrom, timeTo, movie, date };
     }
 
     interface CinemaGroup {
@@ -197,7 +225,7 @@ const serializedShowtimes = allShowtimes.map(st => ({
       const params = new URLSearchParams(window.location.search);
       const movieSlug = params.get('pelicula') || '';
       const naturalQuery = params.get('q') || '';
-      const dateParam = params.get('date') || '';
+      let dateParam = params.get('date') || '';
       const timeFrom = params.get('from') || '';
       const timeTo = params.get('to') || '';
       const city = params.get('city') || 'madrid';
@@ -250,7 +278,8 @@ const serializedShowtimes = allShowtimes.map(st => ({
             const moodMatch = intent.moods.length === 0 || m.moods.some(mo =>
               intent.moods.includes(mo)
             );
-            return genreMatch || moodMatch;
+            // Both criteria must hold — an empty list is a pass, not a wildcard "or".
+            return genreMatch && moodMatch;
           });
           // Sort by relevance (more matching criteria = higher)
           candidates.sort((a, b) => {
@@ -267,11 +296,13 @@ const serializedShowtimes = allShowtimes.map(st => ({
 
         if (intent.timeFrom) intentTimeFrom = intent.timeFrom;
         if (intent.timeTo) intentTimeTo = intent.timeTo;
+        if (intent.date && !dateParam) dateParam = intent.date;
 
         // Show intent summary
         const chips: string[] = [];
         if (intent.genres.length) chips.push(...intent.genres);
         if (intent.moods.length) chips.push(...intent.moods.map(m => m.charAt(0).toUpperCase() + m.slice(1)));
+        if (intent.date) chips.push(formatDateDisplay(intent.date));
         if (intentTimeFrom) chips.push(`~${intentTimeFrom}`);
         chips.push(city.charAt(0).toUpperCase() + city.slice(1));
 
@@ -416,19 +447,23 @@ const serializedShowtimes = allShowtimes.map(st => ({
               <a href="/cine/${g.cinema.slug}" class="cr-name">${g.cinema.name}</a>
               ${g.movieTitle ? `<span class="cr-movie-title">${g.movieTitle}</span>` : ''}
             </div>
-            <span class="cr-distance">${g.distance.toFixed(1)} km</span>
+            <a href="${g.showtimes[0]?.bookingUrl || g.cinema.bookingBaseUrl}" target="_blank" rel="noopener noreferrer" class="btn-buy">
+              Comprar
+              <svg class="arrow" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><line x1="5" y1="12" x2="19" y2="12"></line><polyline points="12 5 19 12 12 19"></polyline></svg>
+              <span class="wipe"></span>
+            </a>
           </div>
+          <span class="cr-distance">${g.distance.toFixed(1)} km</span>
           <div class="cr-showtimes">
             ${g.showtimes.map(st => `
-              <a href="${st.bookingUrl || g.cinema.bookingBaseUrl}" target="_blank" rel="noopener noreferrer" class="cr-chip">
+              <span class="cr-time-block">
                 <span class="cr-time">${st.time}</span>
-                <span class="cr-meta">· ${st.language}</span>
-                ${st.format !== '2D' ? `<span class="cr-meta">· ${st.format}</span>` : ''}
-                ${st.price !== undefined ? `<span class="cr-price">· ${st.price.toFixed(2).replace('.', ',')} €</span>` : ''}
-              </a>
+                <span class="cr-tag">${st.language}</span>
+                ${st.format !== '2D' ? `<span class="cr-tag">${st.format}</span>` : ''}
+                ${st.price !== undefined ? `<span class="cr-price">${st.price.toFixed(2).replace('.', ',')} €</span>` : ''}
+              </span>
             `).join('')}
           </div>
-          <a href="${g.cinema.bookingBaseUrl}" target="_blank" rel="noopener noreferrer" class="cr-buy">COMPRAR →</a>
         </div>
       `).join('')}</div>`;
     }
@@ -478,8 +513,10 @@ const serializedShowtimes = allShowtimes.map(st => ({
   }
 
   .results-title {
-    font-size: var(--text-3xl);
-    font-weight: 700;
+    font-family: var(--font-serif);
+    font-style: italic;
+    font-weight: 500;
+    font-size: 2.2rem;
     letter-spacing: -0.02em;
     margin-bottom: var(--space-2);
   }
@@ -558,25 +595,28 @@ const serializedShowtimes = allShowtimes.map(st => ({
   }
 
   :global(.cinema-result-card) {
-    padding: var(--space-4) 0;
-    border-bottom: 1px solid var(--color-border);
+    padding: var(--space-6) 0;
+    border-top: 1px solid var(--color-border-alt);
+    display: grid;
+    grid-template-columns: 1fr auto;
+    gap: 4px var(--space-4);
   }
 
   :global(.cinema-result-card:last-child) {
-    border-bottom: none;
+    border-bottom: 1px solid var(--color-border-alt);
   }
 
   :global(.cr-header) {
+    grid-column: 1 / -1;
     display: flex;
     align-items: baseline;
     justify-content: space-between;
     gap: var(--space-3);
-    margin-bottom: var(--space-3);
   }
 
   :global(.cr-name) {
-    font-size: var(--text-base);
-    font-weight: 600;
+    font-size: 1.14rem;
+    font-weight: 700;
     color: var(--color-text);
     text-decoration: none;
     transition: color var(--transition-fast);
@@ -594,65 +634,46 @@ const serializedShowtimes = allShowtimes.map(st => ({
   }
 
   :global(.cr-distance) {
-    font-size: var(--text-xs);
+    font-size: .84rem;
+    font-weight: 500;
     color: var(--color-text-tertiary);
     white-space: nowrap;
     font-variant-numeric: tabular-nums;
   }
 
   :global(.cr-showtimes) {
+    grid-column: 1 / -1;
     display: flex;
     flex-wrap: wrap;
-    gap: var(--space-2);
-    margin-bottom: var(--space-3);
-  }
-
-  :global(.cr-chip) {
-    display: inline-flex;
-    align-items: center;
-    gap: var(--space-1);
-    padding: var(--space-1) var(--space-3);
-    font-size: var(--text-sm);
-    border: 1px solid var(--color-border);
-    border-radius: var(--radius-md);
-    text-decoration: none;
-    color: var(--color-text);
-    transition: background-color var(--transition-fast), border-color var(--transition-fast);
-  }
-
-  :global(.cr-chip:hover) {
-    background-color: var(--color-accent-subtle);
-    border-color: var(--color-accent);
-    color: var(--color-text);
-  }
-
-  :global(.cr-time) {
-    font-weight: 500;
+    gap: 10px var(--space-8);
+    margin-top: var(--space-4);
     font-variant-numeric: tabular-nums;
   }
 
-  :global(.cr-meta) {
-    font-size: var(--text-xs);
+  :global(.cr-time-block) {
+    display: flex;
+    align-items: baseline;
+    gap: 9px;
+  }
+
+  :global(.cr-time) {
+    font-size: 1.14rem;
+    font-weight: 800;
+    color: var(--color-text);
+  }
+
+  :global(.cr-tag) {
+    font-size: .68rem;
+    font-weight: 700;
+    letter-spacing: .04em;
     color: var(--color-text-tertiary);
+    text-transform: uppercase;
   }
 
   :global(.cr-price) {
-    font-size: var(--text-xs);
+    font-size: .9rem;
+    font-weight: 700;
     color: var(--color-text-secondary);
-  }
-
-  :global(.cr-buy) {
-    display: inline-block;
-    font-size: var(--text-xs);
-    font-weight: 600;
-    letter-spacing: 0.06em;
-    color: var(--color-text-secondary);
-    text-decoration: none;
-    transition: color var(--transition-fast);
-  }
-
-  :global(.cr-buy:hover) {
-    color: var(--color-text);
   }
 
   :global(.empty-state) {

@@ -9,138 +9,122 @@ interface Showtime {
 
 interface Props {
   cinemaName: string;
+  cinemaSlug?: string;
   distance: string;
   showtimes: Showtime[];
   website?: string;
 }
 
-const { cinemaName, distance, showtimes = [], website } = Astro.props;
+const { cinemaName, cinemaSlug, distance, showtimes = [], website } = Astro.props;
+const buyUrl = showtimes.find(st => st.url)?.url || website;
 ---
 
-<div class="cinema-result">
-  <div class="cinema-header">
-    <h3 class="cinema-name">{cinemaName}</h3>
-    <span class="cinema-distance">{distance}</span>
+<div class="cinema-row">
+  <div>
+    {cinemaSlug
+      ? <a href={`/cine/${cinemaSlug}`} class="cinema-name">{cinemaName}</a>
+      : <span class="cinema-name">{cinemaName}</span>}
+    <div class="cinema-dist">{distance}</div>
   </div>
 
+  {buyUrl && (
+    <a href={buyUrl} class="btn-buy" target="_blank" rel="noopener noreferrer">
+      Comprar
+      <svg class="arrow" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><line x1="5" y1="12" x2="19" y2="12"></line><polyline points="12 5 19 12 12 19"></polyline></svg>
+      <span class="wipe"></span>
+    </a>
+  )}
+
   {showtimes.length > 0 && (
-    <div class="showtimes-grid">
+    <div class="showtimes">
       {showtimes.map((st) => (
-        <a
-          href={st.url || website || '#'}
-          class="showtime-chip"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <span class="showtime-time">{st.time}</span>
-          {st.language && <span class="showtime-meta">{st.language}</span>}
-          {st.price && <span class="showtime-price">{st.price}</span>}
-        </a>
+        <span class="showtime">
+          <span class="t">{st.time}</span>
+          {st.language && <span class="tag">{st.language}</span>}
+          {st.format && st.format !== '2D' && <span class="tag">{st.format}</span>}
+          {st.price && <span class="price">{st.price}</span>}
+        </span>
       ))}
     </div>
   )}
 
-  {website && (
-    <a href={website} class="buy-link" target="_blank" rel="noopener noreferrer">
-      COMPRAR <span aria-hidden="true">&rarr;</span>
-    </a>
+  {!buyUrl && showtimes.length > 0 && (
+    <p class="no-link-note">Sesión sin enlace de compra disponible.</p>
   )}
 </div>
 
 <style>
-  .cinema-result {
-    padding: var(--space-4) 0;
-    border-bottom: 1px solid var(--color-border);
+  .cinema-row {
+    padding: var(--space-6) 0;
+    border-top: 1px solid var(--color-border-alt);
+    display: grid;
+    grid-template-columns: 1fr auto;
+    gap: 4px var(--space-4);
   }
 
-  .cinema-result:last-child {
-    border-bottom: none;
-  }
-
-  .cinema-header {
-    display: flex;
-    align-items: baseline;
-    justify-content: space-between;
-    gap: var(--space-3);
-    margin-bottom: var(--space-3);
+  .cinema-row:last-child {
+    border-bottom: 1px solid var(--color-border-alt);
   }
 
   .cinema-name {
-    font-size: var(--text-base);
-    font-weight: 600;
-    letter-spacing: -0.01em;
-  }
-
-  .cinema-distance {
-    font-size: var(--text-xs);
-    color: var(--color-text-tertiary);
-    white-space: nowrap;
-    font-variant-numeric: tabular-nums;
-  }
-
-  .showtimes-grid {
-    display: flex;
-    flex-wrap: wrap;
-    gap: var(--space-2);
-    margin-bottom: var(--space-3);
-  }
-
-  .showtime-chip {
-    display: inline-flex;
-    align-items: center;
-    gap: var(--space-1);
-    padding: var(--space-1) var(--space-3);
-    font-size: var(--text-sm);
-    border: 1px solid var(--color-border);
-    border-radius: var(--radius-md);
-    background-color: var(--color-bg);
+    font-size: 1.14rem;
+    font-weight: 700;
     color: var(--color-text);
-    text-decoration: none;
-    transition: background-color var(--transition-fast), border-color var(--transition-fast);
-  }
-
-  .showtime-chip:hover {
-    background-color: var(--color-accent-subtle);
-    border-color: var(--color-accent);
-    color: var(--color-text);
-  }
-
-  .showtime-time {
-    font-weight: 500;
-    font-variant-numeric: tabular-nums;
-  }
-
-  .showtime-meta {
-    color: var(--color-text-tertiary);
-    font-size: var(--text-xs);
-  }
-
-  .showtime-meta::before {
-    content: '\00b7';
-    margin-right: var(--space-1);
-  }
-
-  .showtime-price {
-    color: var(--color-text-secondary);
-    font-size: var(--text-xs);
-  }
-
-  .showtime-price::before {
-    content: '\00b7';
-    margin-right: var(--space-1);
-  }
-
-  .buy-link {
-    display: inline-block;
-    font-size: var(--text-xs);
-    font-weight: 600;
-    letter-spacing: 0.06em;
-    color: var(--color-text-secondary);
     text-decoration: none;
     transition: color var(--transition-fast);
   }
 
-  .buy-link:hover {
+  a.cinema-name:hover {
+    color: var(--color-text-secondary);
+  }
+
+  .cinema-dist {
+    font-size: .84rem;
+    font-weight: 500;
+    color: var(--color-text-tertiary);
+    margin-top: 5px;
+  }
+
+  .showtimes {
+    grid-column: 1 / -1;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px var(--space-8);
+    margin-top: var(--space-4);
+    font-variant-numeric: tabular-nums;
+  }
+
+  .showtime {
+    display: flex;
+    align-items: baseline;
+    gap: 9px;
+  }
+
+  .t {
+    font-size: 1.14rem;
+    font-weight: 800;
     color: var(--color-text);
+  }
+
+  .tag {
+    font-size: .68rem;
+    font-weight: 700;
+    letter-spacing: .04em;
+    color: var(--color-text-tertiary);
+    text-transform: uppercase;
+  }
+
+  .price {
+    font-size: .9rem;
+    font-weight: 700;
+    color: var(--color-text-secondary);
+  }
+
+  .no-link-note {
+    grid-column: 1 / -1;
+    font-size: var(--text-xs);
+    color: var(--color-text-tertiary);
+    margin-top: var(--space-2);
+    margin-bottom: 0;
   }
 </style>
