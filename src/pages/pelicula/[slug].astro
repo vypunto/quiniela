@@ -3,7 +3,7 @@ import Layout from '../../components/Layout.astro';
 import MovieHero from '../../components/MovieHero.astro';
 import MovieReview from '../../components/MovieReview.astro';
 import MovieWorthIt from '../../components/MovieWorthIt.astro';
-import MovieCard from '../../components/MovieCard.astro';
+import PosterCard from '../../components/PosterCard.astro';
 import CinemaResult from '../../components/CinemaResult.astro';
 import { getAllMovies, getMovieBySlug, searchSessions } from '../../lib/search/searchEngine';
 
@@ -113,7 +113,7 @@ const jsonLd = {
     {movie.editorialTags.length > 0 && (
       <div class="editorial-tags">
         {movie.editorialTags.map(tag => (
-          <span class="editorial-tag">{tag.emoji} {tag.label}</span>
+          <span class="editorial-tag">{tag.label}</span>
         ))}
       </div>
     )}
@@ -169,16 +169,14 @@ const jsonLd = {
     {similarMovies.length > 0 && (
       <section class="similar-section">
         <h2 class="section-title">Si te gusta esta...</h2>
-        <div class="similar-grid">
+        <div class="similar-scroll">
           {similarMovies.map(m => (
-            <MovieCard
+            <PosterCard
               title={m.title}
               slug={m.slug}
-              year={m.year}
-              duration={`${Math.floor(m.duration / 60)}h ${m.duration % 60}min`}
-              genre={m.genres[0]}
               rating={m.rating}
-              tags={m.editorialTags.slice(0, 2).map(t => `${t.emoji} ${t.label}`)}
+              genre={m.genres[0]}
+              posterColor={m.posterColor}
             />
           ))}
         </div>
@@ -278,16 +276,18 @@ const jsonLd = {
     padding: var(--space-6) 0;
   }
 
-  .similar-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
-    gap: var(--space-4);
+  .similar-scroll {
+    display: flex;
+    gap: var(--space-3);
     margin-top: var(--space-4);
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: none;
+    -ms-overflow-style: none;
+    padding-bottom: var(--space-2);
   }
 
-  @media (max-width: 640px) {
-    .similar-grid {
-      grid-template-columns: 1fr;
-    }
+  .similar-scroll::-webkit-scrollbar {
+    display: none;
   }
 </style>

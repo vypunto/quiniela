@@ -1,0 +1,83 @@
+---
+interface Props {
+  title: string;
+  subtitle?: string;
+}
+
+const { title, subtitle } = Astro.props;
+---
+
+<section class="poster-rail">
+  <div class="rail-header">
+    <h2 class="rail-title">{title}</h2>
+    {subtitle && <p class="rail-subtitle">{subtitle}</p>}
+  </div>
+  <div class="rail-scroll">
+    <div class="rail-track">
+      <slot />
+    </div>
+  </div>
+</section>
+
+<style>
+  .poster-rail {
+    margin-bottom: var(--space-12);
+  }
+
+  .rail-header {
+    padding: 0 var(--space-4);
+    margin-bottom: var(--space-4);
+    max-width: var(--container-max);
+    margin-left: auto;
+    margin-right: auto;
+  }
+
+  .rail-title {
+    font-size: var(--text-lg);
+    font-weight: 600;
+    letter-spacing: -0.01em;
+    margin-bottom: var(--space-1);
+  }
+
+  .rail-subtitle {
+    font-size: var(--text-sm);
+    color: var(--color-text-secondary);
+    margin-bottom: 0;
+  }
+
+  .rail-scroll {
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: none;
+    -ms-overflow-style: none;
+  }
+
+  .rail-scroll::-webkit-scrollbar {
+    display: none;
+  }
+
+  .rail-track {
+    display: flex;
+    gap: var(--space-3);
+    padding: 0 var(--space-4) var(--space-2);
+    max-width: var(--container-max);
+    margin: 0 auto;
+  }
+
+  .rail-track::after {
+    content: '';
+    flex-shrink: 0;
+    width: var(--space-1);
+  }
+
+  @media (min-width: 768px) {
+    .rail-header {
+      padding: 0 var(--space-8);
+    }
+
+    .rail-track {
+      padding: 0 var(--space-8) var(--space-2);
+      gap: var(--space-4);
+    }
+  }
+</style>

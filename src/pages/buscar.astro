@@ -14,6 +14,7 @@ const serializedMovies = allMovies.map(m => ({
   title: m.title,
   slug: m.slug,
   genres: m.genres,
+  moods: m.moods || [],
 }));
 
 const serializedCinemas = allCinemas.map(c => ({
@@ -42,10 +43,16 @@ const serializedShowtimes = allShowtimes.map(st => ({
 <Layout title="Buscar sesiones" description="Busca sesiones de cine en Madrid. Filtra por película, día, hora, idioma y formato.">
   <div class="results-page container--narrow">
     <header class="results-header" id="results-header">
+      <a href="/" class="results-back">← Volver</a>
       <h1 class="results-title" id="results-title">Buscando...</h1>
       <div class="results-meta" id="results-meta"></div>
       <p class="results-count" id="results-count"></p>
     </header>
+
+    <div class="intent-summary" id="intent-summary" style="display:none;">
+      <div class="intent-chips" id="intent-chips"></div>
+      <a href="/" class="intent-edit">Editar búsqueda</a>
+    </div>
 
     <SearchFilters />
 
@@ -64,7 +71,7 @@ const serializedShowtimes = allShowtimes.map(st => ({
   </script>
 
   <script>
-    interface MovieData { id: string; title: string; slug: string; genres: string[]; }
+    interface MovieData { id: string; title: string; slug: string; genres: string[]; moods: string[]; }
     interface CinemaData { id: string; name: string; slug: string; city: string; lat: number; lng: number; bookingBaseUrl: string; }
     interface ShowtimeData { id: string; movieId: string; cinemaId: string; date: string; time: string; language: string; format: string; price?: number; bookingUrl?: string; }
 
@@ -85,17 +92,111 @@ const serializedShowtimes = allShowtimes.map(st => ({
       return `${DAY_NAMES[d.getDay()]} ${d.getDate()} ${MONTH_NAMES[d.getMonth()]}`;
     }
 
+    // Client-side intent parser
+    function parseQueryIntent(query: string): { genres: string[]; moods: string[]; timeFrom?: string; timeTo?: string; movie?: string } {
+      const q = query.toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g, '');
+      const genres: string[] = [];
+      const moods: string[] = [];
+      let timeFrom: string | undefined;
+      let timeTo: string | undefined;
+      let movie: string | undefined;
+
+      const genreMap: Record<string, string> = {
+        terror: 'Terror', horror: 'Terror', miedo: 'Terror',
+        comedia: 'Comedia', divertida: 'Comedia', divertido: 'Comedia', reir: 'Comedia',
+        drama: 'Drama',
+        accion: 'Aventura', aventura: 'Aventura', aventuras: 'Aventura',
+        'ciencia ficcion': 'Ciencia ficcion', scifi: 'Ciencia ficcion',
+        animacion: 'Animacion', animada: 'Animacion',
+        musical: 'Musical',
+        romance: 'Romance', romantica: 'Romance', romantico: 'Romance',
+        thriller: 'Drama',
+        fantasia: 'Fantasia',
+        historico: 'Historico', historica: 'Historico',
+      };
+
+      const moodMap: Record<string, string> = {
+        divertida: 'divertida', divertido: 'divertida',
+        intensa: 'intensa', intenso: 'intensa',
+        romantica: 'romantica', romantico: 'romantica',
+        pensar: 'reflexiva', reflexionar: 'reflexiva', reflexiva: 'reflexiva',
+        espectacular: 'espectacular',
+        rara: 'rara', raro: 'rara',
+        llorar: 'emotiva', emotiva: 'emotiva',
+        familiar: 'familiar',
+        contemplativa: 'contemplativa',
+      };
+
+      for (const [key, val] of Object.entries(genreMap)) {
+        if (q.includes(key) && !genres.includes(val)) genres.push(val);
+      }
+      for (const [key, val] of Object.entries(moodMap)) {
+        if (q.includes(key) && !moods.includes(val)) moods.push(val);
+      }
+
+      // Time parsing
+      const timeMatch = q.match(/sobre las (\d{1,2})/);
+      if (timeMatch) {
+        let h = parseInt(timeMatch[1]);
+        if (h < 12) h += 12;
+        timeFrom = `${String(h - 1).padStart(2, '0')}:00`;
+        timeTo = `${String(h + 1).padStart(2, '0')}:30`;
+      }
+      if (q.includes('despues de cenar') || q.includes('noche')) {
+        timeFrom = '21:00';
+      }
+      if (q.includes('tarde')) {
+        timeFrom = '16:00';
+        timeTo = '20:00';
+      }
+
+      // "parecido a" / "como"
+      const similarMatch = q.match(/(?:parecido a|como) (.+?)(?:\s*$)/);
+      if (similarMatch) {
+        const movies = (window as any).__ALL_MOVIES__ as MovieData[];
+        const target = similarMatch[1].trim();
+        const found = movies.find(m =>
+          m.title.toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g, '').includes(target)
+        );
+        if (found) {
+          movie = found.slug;
+          for (const g of found.genres) {
+            if (!genres.includes(g)) genres.push(g);
+          }
+          for (const mo of found.moods) {
+            if (!moods.includes(mo)) moods.push(mo);
+          }
+        }
+      }
+
+      // "primera cita" → romántica + divertida
+      if (q.includes('primera cita') || q.includes('cita')) {
+        if (!moods.includes('romantica')) moods.push('romantica');
+        if (!moods.includes('divertida')) moods.push('divertida');
+      }
+
+      // "padre" / "familia" → familiar
+      if (q.includes('padre') || q.includes('madre') || q.includes('familia') || q.includes('hijo')) {
+        if (!moods.includes('familiar')) moods.push('familiar');
+      }
+
+      return { genres, moods, timeFrom, timeTo, movie };
+    }
+
     interface CinemaGroup {
       cinema: CinemaData;
       distance: number;
       showtimes: ShowtimeData[];
+      movieTitle?: string;
     }
 
     let currentResults: CinemaGroup[] = [];
+    let isNaturalQuery = false;
 
     function performSearch() {
       const params = new URLSearchParams(window.location.search);
       const movieSlug = params.get('pelicula') || '';
+      const naturalQuery = params.get('q') || '';
       const dateParam = params.get('date') || '';
       const timeFrom = params.get('from') || '';
       const timeTo = params.get('to') || '';
@@ -108,24 +209,96 @@ const serializedShowtimes = allShowtimes.map(st => ({
       const cinemas = (window as any).__ALL_CINEMAS__ as CinemaData[];
       const showtimes = (window as any).__ALL_SHOWTIMES__ as ShowtimeData[];
 
-      // Find movie
-      const movie = movies.find(m => m.slug === movieSlug);
-      const movieTitle = movie?.title || 'Todas las películas';
+      let movieTitle = 'Todas las películas';
+      let matchedMovieIds: Set<string> | null = null;
+      let intentTimeFrom = timeFrom;
+      let intentTimeTo = timeTo;
+      isNaturalQuery = false;
+
+      const intentSummary = document.getElementById('intent-summary')!;
+      const intentChips = document.getElementById('intent-chips')!;
+
+      if (movieSlug) {
+        // Direct movie search
+        const movie = movies.find(m => m.slug === movieSlug);
+        if (movie) {
+          movieTitle = movie.title;
+          matchedMovieIds = new Set([movie.id]);
+        }
+        intentSummary.style.display = 'none';
+      } else if (naturalQuery) {
+        // Natural language query
+        isNaturalQuery = true;
+        const intent = parseQueryIntent(naturalQuery);
+
+        // Find matching movies by genre/mood
+        let candidates = movies;
+
+        if (intent.movie) {
+          // "parecido a X" — exclude the source movie
+          const source = movies.find(m => m.slug === intent.movie);
+          if (source) {
+            candidates = movies.filter(m => m.id !== source.id);
+          }
+        }
+
+        if (intent.genres.length > 0 || intent.moods.length > 0) {
+          candidates = candidates.filter(m => {
+            const genreMatch = intent.genres.length === 0 || m.genres.some(g =>
+              intent.genres.some(ig => g.toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g, '').includes(ig.toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g, '')))
+            );
+            const moodMatch = intent.moods.length === 0 || m.moods.some(mo =>
+              intent.moods.includes(mo)
+            );
+            return genreMatch || moodMatch;
+          });
+          // Sort by relevance (more matching criteria = higher)
+          candidates.sort((a, b) => {
+            const aScore = (intent.genres.filter(g => a.genres.some(ag => ag.toLowerCase().includes(g.toLowerCase()))).length) +
+                           (intent.moods.filter(mo => a.moods.includes(mo)).length);
+            const bScore = (intent.genres.filter(g => b.genres.some(bg => bg.toLowerCase().includes(g.toLowerCase()))).length) +
+                           (intent.moods.filter(mo => b.moods.includes(mo)).length);
+            return bScore - aScore;
+          });
+        }
+
+        matchedMovieIds = new Set(candidates.map(m => m.id));
+        movieTitle = naturalQuery;
+
+        if (intent.timeFrom) intentTimeFrom = intent.timeFrom;
+        if (intent.timeTo) intentTimeTo = intent.timeTo;
+
+        // Show intent summary
+        const chips: string[] = [];
+        if (intent.genres.length) chips.push(...intent.genres);
+        if (intent.moods.length) chips.push(...intent.moods.map(m => m.charAt(0).toUpperCase() + m.slice(1)));
+        if (intentTimeFrom) chips.push(`~${intentTimeFrom}`);
+        chips.push(city.charAt(0).toUpperCase() + city.slice(1));
+
+        if (chips.length > 0) {
+          intentChips.innerHTML = chips.map(c => `<span class="intent-chip">${c}</span>`).join('');
+          intentSummary.style.display = '';
+        } else {
+          intentSummary.style.display = 'none';
+        }
+      } else {
+        intentSummary.style.display = 'none';
+      }
 
       // Filter showtimes
       let filtered = showtimes;
 
-      if (movie) {
-        filtered = filtered.filter(st => st.movieId === movie.id);
+      if (matchedMovieIds) {
+        filtered = filtered.filter(st => matchedMovieIds!.has(st.movieId));
       }
       if (dateParam) {
         filtered = filtered.filter(st => st.date === dateParam);
       }
-      if (timeFrom) {
-        filtered = filtered.filter(st => st.time >= timeFrom);
+      if (intentTimeFrom) {
+        filtered = filtered.filter(st => st.time >= intentTimeFrom);
       }
-      if (timeTo) {
-        filtered = filtered.filter(st => st.time <= timeTo);
+      if (intentTimeTo) {
+        filtered = filtered.filter(st => st.time <= intentTimeTo);
       }
 
       // Group by cinema and calculate distance
@@ -143,7 +316,23 @@ const serializedShowtimes = allShowtimes.map(st => ({
         const dist = haversine(userLat, userLng, cinema.lat, cinema.lng);
         if (dist > radius) continue;
         sts.sort((a, b) => a.time.localeCompare(b.time));
-        groups.push({ cinema, distance: dist, showtimes: sts });
+
+        // For natural queries, add movie title to each group
+        if (isNaturalQuery) {
+          // Sub-group by movie within cinema
+          const movieMap = new Map<string, ShowtimeData[]>();
+          for (const st of sts) {
+            const arr = movieMap.get(st.movieId) || [];
+            arr.push(st);
+            movieMap.set(st.movieId, arr);
+          }
+          for (const [movieId, movieSts] of movieMap) {
+            const movie = movies.find(m => m.id === movieId);
+            groups.push({ cinema, distance: dist, showtimes: movieSts, movieTitle: movie?.title });
+          }
+        } else {
+          groups.push({ cinema, distance: dist, showtimes: sts });
+        }
       }
 
       groups.sort((a, b) => b.showtimes.length - a.showtimes.length || a.distance - b.distance);
@@ -204,14 +393,16 @@ const serializedShowtimes = allShowtimes.map(st => ({
       if (groups.length === 0) {
         const params = new URLSearchParams(window.location.search);
         const slug = params.get('pelicula') || '';
+        const q = params.get('q') || '';
         const city = params.get('city') || 'madrid';
+        const backParam = slug ? `pelicula=${slug}` : (q ? `q=${encodeURIComponent(q)}` : '');
         container.innerHTML = `
           <div class="empty-state">
             <p class="empty-title">No encontramos sesiones que encajen.</p>
             <p class="empty-sub">Prueba ampliando el radio o cambiando la hora.</p>
             <div class="empty-actions">
-              <a href="/buscar?pelicula=${slug}&city=${city}&radius=20" class="empty-btn">Ampliar radio</a>
-              <a href="/buscar?pelicula=${slug}&city=${city}&radius=20" class="empty-btn">Ver todas las horas</a>
+              <a href="/buscar?${backParam}&city=${city}&radius=20" class="empty-btn">Ampliar radio</a>
+              <a href="/buscar?${backParam}&city=${city}&radius=20" class="empty-btn">Ver todas las horas</a>
               <a href="/" class="empty-btn empty-btn-secondary">Nueva búsqueda</a>
             </div>
           </div>`;
@@ -221,7 +412,10 @@ const serializedShowtimes = allShowtimes.map(st => ({
       container.innerHTML = `<div class="results-list">${groups.map(g => `
         <div class="cinema-result-card">
           <div class="cr-header">
-            <a href="/cine/${g.cinema.slug}" class="cr-name">${g.cinema.name}</a>
+            <div>
+              <a href="/cine/${g.cinema.slug}" class="cr-name">${g.cinema.name}</a>
+              ${g.movieTitle ? `<span class="cr-movie-title">${g.movieTitle}</span>` : ''}
+            </div>
             <span class="cr-distance">${g.distance.toFixed(1)} km</span>
           </div>
           <div class="cr-showtimes">
@@ -253,7 +447,7 @@ const serializedShowtimes = allShowtimes.map(st => ({
   .results-page {
     max-width: var(--container-narrow);
     margin: 0 auto;
-    padding: var(--space-6) var(--space-4) var(--space-16);
+    padding: var(--space-4) var(--space-4) var(--space-16);
   }
 
   .container--narrow {
@@ -262,8 +456,23 @@ const serializedShowtimes = allShowtimes.map(st => ({
     padding: 0 var(--space-4);
   }
 
+  .results-back {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--space-1);
+    font-size: var(--text-xs);
+    color: var(--color-text-tertiary);
+    text-decoration: none;
+    margin-bottom: var(--space-3);
+    transition: color var(--transition-fast);
+  }
+
+  .results-back:hover {
+    color: var(--color-text);
+  }
+
   .results-header {
-    margin-bottom: var(--space-6);
+    margin-bottom: var(--space-4);
     padding-bottom: var(--space-4);
     border-bottom: 1px solid var(--color-border);
   }
@@ -292,6 +501,45 @@ const serializedShowtimes = allShowtimes.map(st => ({
     color: var(--color-text-tertiary);
     margin-top: var(--space-2);
     font-variant-numeric: tabular-nums;
+  }
+
+  /* Intent summary */
+  .intent-summary {
+    display: flex;
+    align-items: center;
+    gap: var(--space-3);
+    margin-bottom: var(--space-4);
+    padding: var(--space-3) var(--space-4);
+    background: var(--color-surface);
+    border-radius: var(--radius-md);
+  }
+
+  :global(.intent-chip) {
+    font-size: var(--text-xs);
+    font-weight: 500;
+    padding: var(--space-1) var(--space-2);
+    background: var(--color-accent-subtle);
+    border-radius: var(--radius-sm);
+    color: var(--color-text-secondary);
+  }
+
+  :global(.intent-chips) {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--space-2);
+    flex: 1;
+  }
+
+  .intent-edit {
+    font-size: var(--text-xs);
+    color: var(--color-text-tertiary);
+    white-space: nowrap;
+    text-decoration: none;
+    transition: color var(--transition-fast);
+  }
+
+  .intent-edit:hover {
+    color: var(--color-text);
   }
 
   .loading-state {
@@ -336,6 +584,13 @@ const serializedShowtimes = allShowtimes.map(st => ({
 
   :global(.cr-name:hover) {
     color: var(--color-text-secondary);
+  }
+
+  :global(.cr-movie-title) {
+    display: block;
+    font-size: var(--text-sm);
+    color: var(--color-text-secondary);
+    margin-top: 2px;
   }
 
   :global(.cr-distance) {

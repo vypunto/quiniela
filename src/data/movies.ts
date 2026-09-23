@@ -16,6 +16,9 @@ export const movies: Movie[] = [
     synopsis: 'Una reimaginacion epica del clasico de Homero, filmada integramente en IMAX. Ulises emprende un viaje de regreso a casa tras la guerra de Troya, enfrentandose a criaturas mitologicas y a los caprichos de los dioses.',
     rating: 8.4,
     ageRating: '12',
+    releaseDate: '2025-07-17',
+    moods: ['espectacular', 'intensa', 'epica'],
+    posterColor: '#1a3a5c',
     editorialTags: [
       { emoji: '🎬', label: 'Imprescindible en IMAX', key: 'imax' },
       { emoji: '🏆', label: 'Candidata a todo', key: 'awards' },
@@ -58,6 +61,9 @@ export const movies: Movie[] = [
     synopsis: 'Una antigua estrella de Hollywood descubre una droga clandestina que promete generar una version mas joven y mejor de uno mismo. Pero hay una regla: debes compartir el tiempo con tu otro yo.',
     rating: 7.8,
     ageRating: '18',
+    releaseDate: '2025-03-14',
+    moods: ['intensa', 'rara', 'provocadora'],
+    posterColor: '#4a1a2e',
     editorialTags: [
       { emoji: '🩸', label: 'Body horror extremo', key: 'bodyhorror' },
       { emoji: '💪', label: 'Demi Moore renacida', key: 'comeback' },
@@ -100,6 +106,9 @@ export const movies: Movie[] = [
     synopsis: 'Barcelona, 1978. Un conductor de autobus del barrio de Torre Baro decide secuestrar su propio autobus, la linea 47, para reivindicar que el transporte publico llegue a los barrios mas olvidados de la ciudad.',
     rating: 7.5,
     ageRating: '7',
+    releaseDate: '2025-02-07',
+    moods: ['emotiva', 'intensa', 'reflexiva'],
+    posterColor: '#3d3428',
     editorialTags: [
       { emoji: '🇪🇸', label: 'Cine español con mayusculas', key: 'spanish' },
       { emoji: '✊', label: 'Historia real', key: 'truestory' },
@@ -142,6 +151,9 @@ export const movies: Movie[] = [
     synopsis: 'La historia jamas contada de las brujas de Oz. Elphaba, una joven incomprendida por su piel verde, y Glinda, la chica mas popular de la universidad, forjan una amistad que cambiara para siempre la tierra de Oz.',
     rating: 7.9,
     ageRating: 'TP',
+    releaseDate: '2025-04-25',
+    moods: ['divertida', 'espectacular', 'emotiva'],
+    posterColor: '#1a4a2e',
     editorialTags: [
       { emoji: '🎵', label: 'Musical epico', key: 'musical' },
       { emoji: '💚', label: 'Cynthia Erivo es Elphaba', key: 'performance' },
@@ -184,6 +196,9 @@ export const movies: Movie[] = [
     synopsis: 'La vida de una mujer nacida en Napoles en 1950, cuya belleza deslumbrante marca cada etapa de su existencia. A traves de decadas, Parthenope navega el amor, la politica, el cine y la identidad napolitana.',
     rating: 7.2,
     ageRating: '16',
+    releaseDate: '2025-01-24',
+    moods: ['contemplativa', 'romantica', 'artistica'],
+    posterColor: '#5c4a1a',
     editorialTags: [
       { emoji: '🇮🇹', label: 'Sorrentino en estado puro', key: 'auteur' },
       { emoji: '🌅', label: 'Napoles como nunca la viste', key: 'naples' },
@@ -226,6 +241,9 @@ export const movies: Movie[] = [
     synopsis: 'Anora, una joven stripper de Brooklyn, ve su vida transformada cuando se casa impulsivamente con el hijo de un oligarca ruso. Pero cuando la familia del novio se entera, envia a sus matones para anular el matrimonio.',
     rating: 8.1,
     ageRating: '18',
+    releaseDate: '2025-01-31',
+    moods: ['divertida', 'intensa', 'emotiva'],
+    posterColor: '#2e1a4a',
     editorialTags: [
       { emoji: '🏆', label: 'Palma de Oro en Cannes', key: 'cannes' },
       { emoji: '😂', label: 'Mas divertida de lo que esperas', key: 'funny' },
@@ -269,6 +287,9 @@ export const movies: Movie[] = [
     synopsis: 'Un gato solitario se ve obligado a compartir un pequeño bote con un grupo de animales diversos tras una gran inundacion. Sin dialogo, la pelicula narra su viaje por un mundo transformado por el agua.',
     rating: 8.3,
     ageRating: 'TP',
+    releaseDate: '2025-05-16',
+    moods: ['contemplativa', 'emotiva', 'familiar'],
+    posterColor: '#1a4a5c',
     editorialTags: [
       { emoji: '🐱', label: 'Sin dialogos, pura emocion', key: 'nodialogue' },
       { emoji: '🌍', label: 'Animacion europea imprescindible', key: 'euroanimation' },
@@ -310,6 +331,9 @@ export const movies: Movie[] = [
     synopsis: 'La historia del grupo Planetas durante la grabacion de su disco Super 8 en Granada. Una inmersion en la escena indie española de finales de los 90, entre la genialidad creativa y la autodestruccion.',
     rating: 7.1,
     ageRating: '12',
+    releaseDate: '2025-03-28',
+    moods: ['intensa', 'artistica', 'reflexiva'],
+    posterColor: '#4a3a1a',
     editorialTags: [
       { emoji: '🎸', label: 'Indie español de los 90', key: 'indie' },
       { emoji: '🎬', label: 'Lacuesta en su mejor momento', key: 'director' },
@@ -352,6 +376,9 @@ export const movies: Movie[] = [
     synopsis: 'Un grupo de antiheroes y villanos reformados del universo Marvel son reclutados por Valentina Allegra de Fontaine para una mision que ninguno de ellos pidio. Cuando descubren que han sido traicionados, deben trabajar juntos para sobrevivir.',
     rating: 6.8,
     ageRating: '12',
+    releaseDate: '2025-09-12',
+    moods: ['divertida', 'espectacular', 'accion'],
+    posterColor: '#1a1a3a',
     editorialTags: [
       { emoji: '🦸', label: 'Marvel vuelve a las trincheras', key: 'marvel' },
       { emoji: '💣', label: 'Accion con personalidad', key: 'action' },
@@ -394,6 +421,9 @@ export const movies: Movie[] = [
     synopsis: 'La vida de Laszlo Toth, un arquitecto hungaro superviviente del Holocausto que emigra a America en 1947. Durante tres decadas, intenta construir su obra maestra mientras lucha contra el trauma, la pobreza y un mecenas manipulador.',
     rating: 8.6,
     ageRating: '16',
+    releaseDate: '2025-02-21',
+    moods: ['intensa', 'reflexiva', 'epica'],
+    posterColor: '#2a2a2a',
     editorialTags: [
       { emoji: '🏗️', label: 'Cine monumental', key: 'epic' },
       { emoji: '🏆', label: 'Adrien Brody para el Oscar', key: 'oscar' },
@@ -437,6 +467,9 @@ export const movies: Movie[] = [
     synopsis: 'Un robot llamado Roz naufraga en una isla desierta y debe aprender a sobrevivir en la naturaleza. Cuando adopta accidentalmente a un polluelo de ganso, descubre su proposito: ser madre.',
     rating: 7.8,
     ageRating: 'TP',
+    releaseDate: '2025-09-05',
+    moods: ['divertida', 'emotiva', 'familiar'],
+    posterColor: '#2a5c3a',
     editorialTags: [
       { emoji: '🤖', label: 'Animacion con alma', key: 'heartfelt' },
       { emoji: '😭', label: 'Vas a llorar', key: 'emotional' },
@@ -478,6 +511,9 @@ export const movies: Movie[] = [
     synopsis: 'Un poderoso narcotraficante mexicano contrata a una abogada para que le ayude a fingir su muerte y comenzar una nueva vida como mujer. Una opera narco-musical sobre identidad, redencion y segundas oportunidades.',
     rating: 7.0,
     ageRating: '16',
+    releaseDate: '2025-06-06',
+    moods: ['intensa', 'rara', 'artistica'],
+    posterColor: '#5c1a3a',
     editorialTags: [
       { emoji: '🎵', label: 'Narco-musical (si, existe)', key: 'narcomusical' },
       { emoji: '🏳️‍⚧️', label: 'Historia trans potente', key: 'trans' },
@@ -520,6 +556,9 @@ export const movies: Movie[] = [
     synopsis: 'La increible historia real de Enric Marco, el hombre que durante años engaño a toda España haciendose pasar por superviviente de los campos de concentracion nazis. Una pelicula sobre la mentira, la memoria y los limites de la empatia.',
     rating: 7.6,
     ageRating: '12',
+    releaseDate: '2025-05-02',
+    moods: ['intensa', 'reflexiva', 'provocadora'],
+    posterColor: '#3a2a1a',
     editorialTags: [
       { emoji: '🎭', label: 'Eduard Fernandez x2', key: 'fernandez' },
       { emoji: '🤥', label: 'Basada en un impostor real', key: 'impostor' },
@@ -562,6 +601,9 @@ export const movies: Movie[] = [
     synopsis: 'Una reimaginacion gotica del clasico de Murnau. En la Alemania de 1838, una joven esposa descubre que un misterioso conde de Transilvania ha desarrollado una obsesion sobrenatural con ella, trayendo la plaga y la muerte a su ciudad.',
     rating: 7.7,
     ageRating: '16',
+    releaseDate: '2025-08-22',
+    moods: ['intensa', 'rara', 'espectacular'],
+    posterColor: '#1a1a1a',
     editorialTags: [
       { emoji: '🧛', label: 'El vampiro definitivo', key: 'vampire' },
       { emoji: '🖤', label: 'Gotico hasta la medula', key: 'gothic' },
@@ -605,6 +647,9 @@ export const movies: Movie[] = [
     synopsis: 'Dos amigas que perdieron el contacto se reencuentran cuando una de ellas recibe un diagnostico terminal. La enferma le pide a su amiga que este en la habitacion de al lado mientras ella toma una decision irreversible.',
     rating: 7.4,
     ageRating: '12',
+    releaseDate: '2025-04-11',
+    moods: ['emotiva', 'reflexiva', 'contemplativa'],
+    posterColor: '#3a4a3a',
     editorialTags: [
       { emoji: '🦁', label: 'Leon de Oro en Venecia', key: 'venice' },
       { emoji: '🎬', label: 'Almodovar en ingles', key: 'almodovar' },

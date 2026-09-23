@@ -13,6 +13,9 @@ export interface Movie {
   synopsis: string;
   rating: number; // 0-10
   ageRating?: string;
+  releaseDate?: string; // YYYY-MM-DD
+  moods?: string[]; // e.g. ['divertida', 'intensa', 'romantica']
+  posterColor?: string; // dominant color hex for placeholder
   editorialTags: EditorialTag[];
   editorialReview?: EditorialReview;
   worthIt?: WorthIt;
@@ -99,4 +102,19 @@ export interface NaturalLanguageQuery {
   date?: string;
   time?: string;
   location?: string;
+}
+
+export interface SearchIntent {
+  query?: string;
+  movie?: string;
+  genre?: string[];
+  mood?: string[];
+  date?: string;
+  timeFrom?: string;
+  timeTo?: string;
+  location?: string;
+  radius?: number;
+  language?: string[];
+  format?: string[];
+  similarTo?: string;
 }
