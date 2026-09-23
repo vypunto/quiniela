@@ -1,0 +1,244 @@
+---
+---
+
+<section class="search-section">
+  <h1 class="search-title">¿Que quieres ver?</h1>
+  <div class="search-input-wrapper">
+    <input
+      type="text"
+      placeholder="Buscar pelicula..."
+      id="movie-search"
+      autocomplete="off"
+      aria-label="Buscar pelicula"
+      aria-expanded="false"
+      aria-controls="search-suggestions"
+      aria-autocomplete="list"
+      role="combobox"
+    />
+    <div class="search-icon" aria-hidden="true">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <circle cx="11" cy="11" r="8"></circle>
+        <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+      </svg>
+    </div>
+    <ul class="search-suggestions" id="search-suggestions" role="listbox" aria-label="Sugerencias de peliculas"></ul>
+  </div>
+</section>
+
+<script>
+  const input = document.getElementById('movie-search') as HTMLInputElement;
+  const suggestions = document.getElementById('search-suggestions') as HTMLUListElement;
+  let activeIndex = -1;
+  let debounceTimer: ReturnType<typeof setTimeout>;
+
+  function getMovies(): Array<{ title: string; slug: string; year?: number }> {
+    return (window as any).__MOVIES__ || [];
+  }
+
+  function slugify(text: string): string {
+    return text.toLowerCase()
+      .normalize('NFD').replace(/[̀-ͯ]/g, '')
+      .replace(/[^a-z0-9]+/g, '-')
+      .replace(/(^-|-$)/g, '');
+  }
+
+  function filterMovies(query: string) {
+    if (!query || query.length < 2) return [];
+    const q = query.toLowerCase();
+    return getMovies()
+      .filter(m => m.title.toLowerCase().includes(q))
+      .slice(0, 8);
+  }
+
+  function renderSuggestions(movies: Array<{ title: string; slug: string; year?: number }>) {
+    if (movies.length === 0) {
+      suggestions.innerHTML = '';
+      suggestions.classList.remove('visible');
+      input.setAttribute('aria-expanded', 'false');
+      return;
+    }
+
+    suggestions.innerHTML = movies.map((m, i) => `
+      <li role="option" id="suggestion-${i}" class="suggestion-item" data-slug="${m.slug || slugify(m.title)}">
+        <span class="suggestion-title">${m.title}</span>
+        ${m.year ? `<span class="suggestion-year">${m.year}</span>` : ''}
+      </li>
+    `).join('');
+
+    suggestions.classList.add('visible');
+    input.setAttribute('aria-expanded', 'true');
+    activeIndex = -1;
+
+    suggestions.querySelectorAll('.suggestion-item').forEach(item => {
+      item.addEventListener('click', () => {
+        const slug = (item as HTMLElement).dataset.slug;
+        window.location.href = `/buscar?pelicula=${slug}`;
+      });
+    });
+  }
+
+  function setActive(index: number) {
+    const items = suggestions.querySelectorAll('.suggestion-item');
+    items.forEach(el => el.classList.remove('active'));
+    if (index >= 0 && index < items.length) {
+      items[index].classList.add('active');
+      items[index].scrollIntoView({ block: 'nearest' });
+      input.setAttribute('aria-activedescendant', `suggestion-${index}`);
+    } else {
+      input.removeAttribute('aria-activedescendant');
+    }
+  }
+
+  input.addEventListener('input', () => {
+    clearTimeout(debounceTimer);
+    debounceTimer = setTimeout(() => {
+      const results = filterMovies(input.value.trim());
+      renderSuggestions(results);
+    }, 150);
+  });
+
+  input.addEventListener('keydown', (e) => {
+    const items = suggestions.querySelectorAll('.suggestion-item');
+    const count = items.length;
+
+    if (e.key === 'ArrowDown') {
+      e.preventDefault();
+      activeIndex = (activeIndex + 1) % count;
+      setActive(activeIndex);
+    } else if (e.key === 'ArrowUp') {
+      e.preventDefault();
+      activeIndex = activeIndex <= 0 ? count - 1 : activeIndex - 1;
+      setActive(activeIndex);
+    } else if (e.key === 'Enter' && activeIndex >= 0) {
+      e.preventDefault();
+      const slug = (items[activeIndex] as HTMLElement).dataset.slug;
+      window.location.href = `/buscar?pelicula=${slug}`;
+    } else if (e.key === 'Escape') {
+      suggestions.classList.remove('visible');
+      input.setAttribute('aria-expanded', 'false');
+      activeIndex = -1;
+    }
+  });
+
+  document.addEventListener('click', (e) => {
+    if (!(e.target as HTMLElement).closest('.search-input-wrapper')) {
+      suggestions.classList.remove('visible');
+      input.setAttribute('aria-expanded', 'false');
+    }
+  });
+</script>
+
+<style>
+  .search-section {
+    text-align: center;
+    padding: var(--space-16) var(--space-4) var(--space-12);
+  }
+
+  .search-title {
+    font-size: var(--text-5xl);
+    font-weight: 700;
+    letter-spacing: -0.03em;
+    margin-bottom: var(--space-8);
+    color: var(--color-text);
+  }
+
+  @media (max-width: 640px) {
+    .search-title {
+      font-size: var(--text-3xl);
+    }
+
+    .search-section {
+      padding: var(--space-10) var(--space-4) var(--space-8);
+    }
+  }
+
+  .search-input-wrapper {
+    position: relative;
+    max-width: 520px;
+    margin: 0 auto;
+  }
+
+  #movie-search {
+    width: 100%;
+    padding: var(--space-4) var(--space-4) var(--space-4) var(--space-12);
+    font-size: var(--text-lg);
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-lg);
+    background-color: var(--color-surface);
+    color: var(--color-text);
+    transition: border-color var(--transition-fast), box-shadow var(--transition-fast);
+  }
+
+  #movie-search::placeholder {
+    color: var(--color-text-tertiary);
+  }
+
+  #movie-search:focus {
+    border-color: var(--color-accent);
+    box-shadow: 0 0 0 3px rgba(17, 17, 17, 0.08);
+  }
+
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) #movie-search:focus {
+      box-shadow: 0 0 0 3px rgba(245, 245, 245, 0.1);
+    }
+  }
+
+  .search-icon {
+    position: absolute;
+    left: var(--space-4);
+    top: 50%;
+    transform: translateY(-50%);
+    color: var(--color-text-tertiary);
+    pointer-events: none;
+  }
+
+  .search-suggestions {
+    position: absolute;
+    top: calc(100% + var(--space-2));
+    left: 0;
+    right: 0;
+    background-color: var(--color-bg);
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-md);
+    box-shadow: var(--shadow-lg);
+    max-height: 360px;
+    overflow-y: auto;
+    z-index: 50;
+    opacity: 0;
+    transform: translateY(-4px);
+    pointer-events: none;
+    transition: opacity var(--transition-fast), transform var(--transition-fast);
+  }
+
+  .search-suggestions.visible {
+    opacity: 1;
+    transform: translateY(0);
+    pointer-events: auto;
+  }
+
+  .suggestion-item {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: var(--space-3) var(--space-4);
+    cursor: pointer;
+    transition: background-color var(--transition-fast);
+  }
+
+  .suggestion-item:hover,
+  .suggestion-item.active {
+    background-color: var(--color-accent-subtle);
+  }
+
+  .suggestion-title {
+    font-size: var(--text-base);
+    font-weight: 500;
+  }
+
+  .suggestion-year {
+    font-size: var(--text-sm);
+    color: var(--color-text-tertiary);
+    font-variant-numeric: tabular-nums;
+  }
+</style>

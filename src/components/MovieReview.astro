@@ -1,0 +1,145 @@
+---
+interface CategoryScore {
+  name: string;
+  score: number;
+}
+
+interface Props {
+  score: number;
+  reviewText: string;
+  categories?: CategoryScore[];
+}
+
+const { score, reviewText, categories = [] } = Astro.props;
+---
+
+<section class="movie-review">
+  <div class="review-header">
+    <h2 class="review-heading">Opinion SmallParadiso</h2>
+    <div class="review-score" aria-label={`Puntuacion ${score} de 10`}>
+      <span class="score-number">{score.toFixed(1)}</span>
+      <span class="score-max">/10</span>
+    </div>
+  </div>
+
+  <div class="review-body">
+    <p>{reviewText}</p>
+  </div>
+
+  {categories.length > 0 && (
+    <div class="category-scores" role="list" aria-label="Puntuaciones por categoria">
+      {categories.map((cat) => (
+        <div class="category-row" role="listitem">
+          <span class="category-name">{cat.name}</span>
+          <div class="category-bar-track">
+            <div
+              class="category-bar-fill"
+              style={`width: ${cat.score * 10}%`}
+              aria-hidden="true"
+            ></div>
+          </div>
+          <span class="category-value">{cat.score}</span>
+        </div>
+      ))}
+    </div>
+  )}
+</section>
+
+<style>
+  .movie-review {
+    padding: var(--space-6) 0;
+    border-bottom: 1px solid var(--color-border);
+    margin-bottom: var(--space-6);
+  }
+
+  .review-header {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: var(--space-4);
+    margin-bottom: var(--space-4);
+  }
+
+  .review-heading {
+    font-size: var(--text-lg);
+    font-weight: 600;
+    letter-spacing: -0.01em;
+  }
+
+  .review-score {
+    display: flex;
+    align-items: baseline;
+    gap: 2px;
+    flex-shrink: 0;
+  }
+
+  .score-number {
+    font-size: var(--text-3xl);
+    font-weight: 700;
+    letter-spacing: -0.02em;
+    line-height: 1;
+    font-variant-numeric: tabular-nums;
+  }
+
+  .score-max {
+    font-size: var(--text-base);
+    color: var(--color-text-tertiary);
+  }
+
+  .review-body {
+    max-width: var(--container-narrow);
+    margin-bottom: var(--space-6);
+  }
+
+  .review-body p {
+    font-size: var(--text-base);
+    line-height: 1.7;
+    color: var(--color-text-secondary);
+  }
+
+  .category-scores {
+    display: grid;
+    gap: var(--space-3);
+    max-width: 400px;
+  }
+
+  .category-row {
+    display: grid;
+    grid-template-columns: 100px 1fr 32px;
+    align-items: center;
+    gap: var(--space-3);
+  }
+
+  .category-name {
+    font-size: var(--text-sm);
+    color: var(--color-text-secondary);
+  }
+
+  .category-bar-track {
+    height: 4px;
+    background-color: var(--color-border);
+    border-radius: var(--radius-full);
+    overflow: hidden;
+  }
+
+  .category-bar-fill {
+    height: 100%;
+    background-color: var(--color-accent);
+    border-radius: var(--radius-full);
+    transition: width var(--transition-slow);
+  }
+
+  .category-value {
+    font-size: var(--text-sm);
+    font-weight: 600;
+    font-variant-numeric: tabular-nums;
+    text-align: right;
+    color: var(--color-text);
+  }
+
+  @media (max-width: 640px) {
+    .category-row {
+      grid-template-columns: 80px 1fr 28px;
+    }
+  }
+</style>

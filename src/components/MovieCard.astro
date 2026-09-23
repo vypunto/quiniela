@@ -1,0 +1,100 @@
+---
+interface Props {
+  title: string;
+  slug: string;
+  year?: number;
+  duration?: string;
+  genre?: string;
+  rating?: number;
+  tags?: string[];
+}
+
+const { title, slug, year, duration, genre, rating, tags = [] } = Astro.props;
+---
+
+<a href={`/pelicula/${slug}`} class="movie-card">
+  <div class="movie-card-body">
+    <div class="movie-card-header">
+      <h3 class="movie-card-title">{title}</h3>
+      {rating && (
+        <span class="movie-card-rating" aria-label={`Puntuacion ${rating} de 10`}>
+          {rating.toFixed(1)}
+        </span>
+      )}
+    </div>
+
+    <p class="movie-card-meta">
+      {[year, duration, genre].filter(Boolean).join(' · ')}
+    </p>
+
+    {tags.length > 0 && (
+      <div class="movie-card-tags">
+        {tags.map(tag => (
+          <span class="movie-tag">{tag}</span>
+        ))}
+      </div>
+    )}
+  </div>
+</a>
+
+<style>
+  .movie-card {
+    display: block;
+    padding: var(--space-4);
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-md);
+    text-decoration: none;
+    color: var(--color-text);
+    transition: background-color var(--transition-fast), box-shadow var(--transition-fast);
+  }
+
+  .movie-card:hover {
+    background-color: var(--color-accent-subtle);
+    box-shadow: var(--shadow-sm);
+    color: var(--color-text);
+  }
+
+  .movie-card-header {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: var(--space-3);
+    margin-bottom: var(--space-1);
+  }
+
+  .movie-card-title {
+    font-size: var(--text-base);
+    font-weight: 600;
+    letter-spacing: -0.01em;
+    line-height: 1.3;
+  }
+
+  .movie-card-rating {
+    flex-shrink: 0;
+    font-size: var(--text-sm);
+    font-weight: 700;
+    font-variant-numeric: tabular-nums;
+    background-color: var(--color-accent);
+    color: var(--color-bg);
+    padding: 2px var(--space-2);
+    border-radius: var(--radius-sm);
+    line-height: 1.4;
+  }
+
+  .movie-card-meta {
+    font-size: var(--text-sm);
+    color: var(--color-text-secondary);
+    margin-bottom: var(--space-2);
+  }
+
+  .movie-card-tags {
+    display: flex;
+    gap: var(--space-2);
+    flex-wrap: wrap;
+  }
+
+  .movie-tag {
+    font-size: var(--text-xs);
+    color: var(--color-text-tertiary);
+  }
+</style>

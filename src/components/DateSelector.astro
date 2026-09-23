@@ -1,0 +1,122 @@
+---
+---
+
+<div class="date-selector" role="group" aria-label="Seleccionar fecha">
+  <div class="date-chips" id="date-chips">
+    <!-- Populated by client-side JS -->
+  </div>
+  <input type="hidden" id="selected-date" name="date" />
+</div>
+
+<script>
+  const DAY_NAMES = ['Domingo', 'Lunes', 'Martes', 'Miercoles', 'Jueves', 'Viernes', 'Sabado'];
+  const MONTH_NAMES = ['ene', 'feb', 'mar', 'abr', 'may', 'jun', 'jul', 'ago', 'sep', 'oct', 'nov', 'dic'];
+
+  function formatDate(date: Date): string {
+    return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')}`;
+  }
+
+  function buildChips() {
+    const container = document.getElementById('date-chips')!;
+    const hidden = document.getElementById('selected-date') as HTMLInputElement;
+    const today = new Date();
+    const chips: Array<{ label: string; sub: string; value: string }> = [];
+
+    for (let i = 0; i < 5; i++) {
+      const d = new Date(today);
+      d.setDate(today.getDate() + i);
+      let label: string;
+      if (i === 0) label = 'Hoy';
+      else if (i === 1) label = 'Manana';
+      else label = DAY_NAMES[d.getDay()];
+      chips.push({
+        label,
+        sub: `${d.getDate()} ${MONTH_NAMES[d.getMonth()]}`,
+        value: formatDate(d),
+      });
+    }
+
+    container.innerHTML = chips.map((c, i) => `
+      <button type="button"
+        class="date-chip${i === 0 ? ' active' : ''}"
+        data-date="${c.value}"
+        aria-pressed="${i === 0 ? 'true' : 'false'}"
+      >
+        <span class="chip-label">${c.label}</span>
+        <span class="chip-sub">${c.sub}</span>
+      </button>
+    `).join('');
+
+    hidden.value = chips[0].value;
+
+    container.addEventListener('click', (e) => {
+      const chip = (e.target as HTMLElement).closest('.date-chip') as HTMLElement | null;
+      if (!chip) return;
+      container.querySelectorAll('.date-chip').forEach(el => {
+        el.classList.remove('active');
+        el.setAttribute('aria-pressed', 'false');
+      });
+      chip.classList.add('active');
+      chip.setAttribute('aria-pressed', 'true');
+      hidden.value = chip.dataset.date || '';
+      chip.dispatchEvent(new CustomEvent('datechange', { bubbles: true, detail: { date: hidden.value } }));
+    });
+  }
+
+  buildChips();
+</script>
+
+<style>
+  .date-selector {
+    margin-bottom: var(--space-6);
+  }
+
+  .date-chips {
+    display: flex;
+    gap: var(--space-2);
+    overflow-x: auto;
+    scrollbar-width: none;
+    -webkit-overflow-scrolling: touch;
+    padding-bottom: var(--space-1);
+  }
+
+  .date-chips::-webkit-scrollbar {
+    display: none;
+  }
+
+  .date-chip {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 2px;
+    padding: var(--space-2) var(--space-4);
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-md);
+    background-color: var(--color-bg);
+    color: var(--color-text);
+    cursor: pointer;
+    white-space: nowrap;
+    flex-shrink: 0;
+    transition: background-color var(--transition-fast), border-color var(--transition-fast);
+  }
+
+  .date-chip:hover {
+    background-color: var(--color-accent-subtle);
+  }
+
+  .date-chip.active {
+    background-color: var(--color-accent);
+    color: var(--color-bg);
+    border-color: var(--color-accent);
+  }
+
+  .chip-label {
+    font-size: var(--text-sm);
+    font-weight: 600;
+  }
+
+  .chip-sub {
+    font-size: var(--text-xs);
+    opacity: 0.7;
+  }
+</style>

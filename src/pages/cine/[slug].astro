@@ -1,0 +1,296 @@
+---
+import Layout from '../../components/Layout.astro';
+import CinemaResult from '../../components/CinemaResult.astro';
+import { getAllCinemas, getCinemaBySlug, getShowtimes, getAllMovies } from '../../lib/search/searchEngine';
+import { haversineDistance } from '../../lib/search/distance';
+import type { Movie, Showtime } from '../../lib/types';
+
+export function getStaticPaths() {
+  const cinemas = getAllCinemas();
+  return cinemas.map(cinema => ({
+    params: { slug: cinema.slug },
+  }));
+}
+
+const { slug } = Astro.params;
+const cinema = getCinemaBySlug(slug);
+
+if (!cinema) {
+  return Astro.redirect('/404');
+}
+
+const today = new Date();
+const todayStr = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}-${String(today.getDate()).padStart(2, '0')}`;
+
+// Get all showtimes for this cinema today
+const allShowtimes = getShowtimes({ cinemaId: cinema.id, date: todayStr });
+const allMovies = getAllMovies();
+
+// Group showtimes by movie
+const movieMap = new Map<string, { movie: Movie; showtimes: Showtime[] }>();
+for (const st of allShowtimes) {
+  const existing = movieMap.get(st.movieId);
+  if (existing) {
+    existing.showtimes.push(st);
+  } else {
+    const movie = allMovies.find(m => m.id === st.movieId);
+    if (movie) {
+      movieMap.set(st.movieId, { movie, showtimes: [st] });
+    }
+  }
+}
+
+// Sort showtimes within each movie by time
+const movieEntries = Array.from(movieMap.values());
+movieEntries.forEach(entry => {
+  entry.showtimes.sort((a, b) => a.time.localeCompare(b.time));
+});
+
+// Distance from Madrid center
+const distFromCenter = haversineDistance(40.4168, -3.7038, cinema.latitude, cinema.longitude);
+
+const title = `${cinema.name} — Sesiones y horarios`;
+const description = `Cartelera de ${cinema.name} en ${cinema.city}. Consulta películas, sesiones y horarios.`;
+
+const jsonLd = {
+  '@context': 'https://schema.org',
+  '@type': 'MovieTheater',
+  name: cinema.name,
+  address: {
+    '@type': 'PostalAddress',
+    streetAddress: cinema.address,
+    addressLocality: cinema.city,
+    addressCountry: 'ES',
+  },
+  geo: {
+    '@type': 'GeoCoordinates',
+    latitude: cinema.latitude,
+    longitude: cinema.longitude,
+  },
+  url: cinema.website,
+};
+---
+
+<Layout title={title} description={description} jsonLd={jsonLd}>
+  <article class="cinema-page container--narrow">
+    <nav class="breadcrumb" aria-label="Breadcrumb">
+      <a href="/">Inicio</a>
+      <span aria-hidden="true">/</span>
+      <span>{cinema.name}</span>
+    </nav>
+
+    <header class="cinema-hero">
+      <h1 class="cinema-title">{cinema.name}</h1>
+      <div class="cinema-info">
+        <p class="cinema-address">{cinema.address}</p>
+        <p class="cinema-city">{cinema.city}{cinema.neighborhood ? ` · ${cinema.neighborhood}` : ''} · {distFromCenter.toFixed(1)} km del centro</p>
+      </div>
+      <a href={cinema.website} class="cinema-link" target="_blank" rel="noopener noreferrer">
+        Web oficial →
+      </a>
+    </header>
+
+    <section class="cinema-sessions">
+      <h2 class="section-title">Hoy en {cinema.name}</h2>
+
+      {movieEntries.length > 0 ? (
+        <div class="movies-list">
+          {movieEntries.map(entry => (
+            <div class="movie-entry">
+              <div class="movie-entry-header">
+                <a href={`/pelicula/${entry.movie.slug}`} class="movie-entry-title">
+                  {entry.movie.title}
+                </a>
+                <span class="movie-entry-meta">
+                  {entry.movie.year} · {entry.movie.genres[0]}
+                  {entry.movie.rating && ` · ${entry.movie.rating.toFixed(1)}`}
+                </span>
+              </div>
+              <div class="showtime-chips">
+                {entry.showtimes.map(st => (
+                  <a
+                    href={st.bookingUrl || cinema.bookingBaseUrl}
+                    class="showtime-chip"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                  >
+                    <span class="st-time">{st.time}</span>
+                    <span class="st-lang">{st.language}</span>
+                    {st.format !== '2D' && <span class="st-format">{st.format}</span>}
+                    {st.price !== undefined && <span class="st-price">{st.price.toFixed(2).replace('.', ',')} €</span>}
+                  </a>
+                ))}
+              </div>
+            </div>
+          ))}
+        </div>
+      ) : (
+        <p class="no-sessions">No hay sesiones programadas para hoy.</p>
+      )}
+    </section>
+  </article>
+</Layout>
+
+<style>
+  .cinema-page {
+    max-width: var(--container-narrow);
+    margin: 0 auto;
+    padding: 0 var(--space-4) var(--space-16);
+  }
+
+  .breadcrumb {
+    display: flex;
+    align-items: center;
+    gap: var(--space-2);
+    font-size: var(--text-xs);
+    color: var(--color-text-tertiary);
+    padding: var(--space-4) 0 0;
+  }
+
+  .breadcrumb a {
+    color: var(--color-text-tertiary);
+    text-decoration: none;
+  }
+
+  .breadcrumb a:hover {
+    color: var(--color-text);
+  }
+
+  .cinema-hero {
+    padding: var(--space-8) 0;
+    border-bottom: 1px solid var(--color-border);
+    margin-bottom: var(--space-6);
+  }
+
+  .cinema-title {
+    font-size: var(--text-3xl);
+    font-weight: 700;
+    letter-spacing: -0.02em;
+    margin-bottom: var(--space-3);
+  }
+
+  .cinema-info {
+    margin-bottom: var(--space-3);
+  }
+
+  .cinema-address {
+    font-size: var(--text-base);
+    color: var(--color-text-secondary);
+    margin-bottom: var(--space-1);
+  }
+
+  .cinema-city {
+    font-size: var(--text-sm);
+    color: var(--color-text-tertiary);
+  }
+
+  .cinema-link {
+    font-size: var(--text-sm);
+    font-weight: 500;
+    color: var(--color-text-secondary);
+    text-decoration: none;
+    transition: color var(--transition-fast);
+  }
+
+  .cinema-link:hover {
+    color: var(--color-text);
+  }
+
+  .cinema-sessions {
+    padding: var(--space-6) 0;
+  }
+
+  .section-title {
+    font-size: var(--text-lg);
+    font-weight: 600;
+    margin-bottom: var(--space-6);
+  }
+
+  .movie-entry {
+    padding: var(--space-4) 0;
+    border-bottom: 1px solid var(--color-border);
+  }
+
+  .movie-entry:last-child {
+    border-bottom: none;
+  }
+
+  .movie-entry-header {
+    margin-bottom: var(--space-3);
+  }
+
+  .movie-entry-title {
+    display: block;
+    font-size: var(--text-base);
+    font-weight: 600;
+    color: var(--color-text);
+    text-decoration: none;
+    margin-bottom: var(--space-1);
+    transition: color var(--transition-fast);
+  }
+
+  .movie-entry-title:hover {
+    color: var(--color-text-secondary);
+  }
+
+  .movie-entry-meta {
+    font-size: var(--text-sm);
+    color: var(--color-text-tertiary);
+  }
+
+  .showtime-chips {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--space-2);
+  }
+
+  .showtime-chip {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--space-1);
+    padding: var(--space-1) var(--space-3);
+    font-size: var(--text-sm);
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-md);
+    text-decoration: none;
+    color: var(--color-text);
+    transition: background-color var(--transition-fast), border-color var(--transition-fast);
+  }
+
+  .showtime-chip:hover {
+    background-color: var(--color-accent-subtle);
+    border-color: var(--color-accent);
+    color: var(--color-text);
+  }
+
+  .st-time {
+    font-weight: 500;
+    font-variant-numeric: tabular-nums;
+  }
+
+  .st-lang,
+  .st-format,
+  .st-price {
+    font-size: var(--text-xs);
+    color: var(--color-text-tertiary);
+  }
+
+  .st-lang::before,
+  .st-format::before,
+  .st-price::before {
+    content: '·';
+    margin-right: var(--space-1);
+  }
+
+  .no-sessions {
+    font-size: var(--text-sm);
+    color: var(--color-text-secondary);
+    padding: var(--space-6) 0;
+  }
+
+  @media (max-width: 640px) {
+    .cinema-title {
+      font-size: var(--text-2xl);
+    }
+  }
+</style>

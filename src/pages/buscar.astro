@@ -1,0 +1,453 @@
+---
+import Layout from '../components/Layout.astro';
+import SearchFilters from '../components/SearchFilters.astro';
+import { getAllMovies, getAllCinemas, getShowtimes } from '../lib/search/searchEngine';
+
+const allMovies = getAllMovies();
+const allCinemas = getAllCinemas();
+const allShowtimes = getShowtimes();
+
+const moviesForSearch = allMovies.map(m => ({ title: m.title, slug: m.slug, year: m.year, id: m.id }));
+
+const serializedMovies = allMovies.map(m => ({
+  id: m.id,
+  title: m.title,
+  slug: m.slug,
+  genres: m.genres,
+}));
+
+const serializedCinemas = allCinemas.map(c => ({
+  id: c.id,
+  name: c.name,
+  slug: c.slug,
+  city: c.city,
+  lat: c.latitude,
+  lng: c.longitude,
+  bookingBaseUrl: c.bookingBaseUrl,
+}));
+
+const serializedShowtimes = allShowtimes.map(st => ({
+  id: st.id,
+  movieId: st.movieId,
+  cinemaId: st.cinemaId,
+  date: st.date,
+  time: st.time,
+  language: st.language,
+  format: st.format,
+  price: st.price,
+  bookingUrl: st.bookingUrl,
+}));
+---
+
+<Layout title="Buscar sesiones" description="Busca sesiones de cine en Madrid. Filtra por película, día, hora, idioma y formato.">
+  <div class="results-page container--narrow">
+    <header class="results-header" id="results-header">
+      <h1 class="results-title" id="results-title">Buscando...</h1>
+      <div class="results-meta" id="results-meta"></div>
+      <p class="results-count" id="results-count"></p>
+    </header>
+
+    <SearchFilters />
+
+    <div id="results-container">
+      <div class="loading-state" id="loading-state">
+        <p>Cargando sesiones...</p>
+      </div>
+    </div>
+  </div>
+
+  <script define:vars={{ serializedMovies, serializedCinemas, serializedShowtimes, moviesForSearch }}>
+    window.__MOVIES__ = moviesForSearch;
+    window.__ALL_MOVIES__ = serializedMovies;
+    window.__ALL_CINEMAS__ = serializedCinemas;
+    window.__ALL_SHOWTIMES__ = serializedShowtimes;
+  </script>
+
+  <script>
+    interface MovieData { id: string; title: string; slug: string; genres: string[]; }
+    interface CinemaData { id: string; name: string; slug: string; city: string; lat: number; lng: number; bookingBaseUrl: string; }
+    interface ShowtimeData { id: string; movieId: string; cinemaId: string; date: string; time: string; language: string; format: string; price?: number; bookingUrl?: string; }
+
+    function haversine(lat1: number, lng1: number, lat2: number, lng2: number): number {
+      const R = 6371;
+      const dLat = (lat2 - lat1) * Math.PI / 180;
+      const dLng = (lng2 - lng1) * Math.PI / 180;
+      const a = Math.sin(dLat/2)**2 + Math.cos(lat1*Math.PI/180) * Math.cos(lat2*Math.PI/180) * Math.sin(dLng/2)**2;
+      return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
+    }
+
+    const DAY_NAMES = ['Domingo','Lunes','Martes','Miércoles','Jueves','Viernes','Sábado'];
+    const MONTH_NAMES = ['enero','febrero','marzo','abril','mayo','junio','julio','agosto','septiembre','octubre','noviembre','diciembre'];
+
+    function formatDateDisplay(dateStr: string): string {
+      if (!dateStr) return '';
+      const d = new Date(dateStr + 'T12:00:00');
+      return `${DAY_NAMES[d.getDay()]} ${d.getDate()} ${MONTH_NAMES[d.getMonth()]}`;
+    }
+
+    interface CinemaGroup {
+      cinema: CinemaData;
+      distance: number;
+      showtimes: ShowtimeData[];
+    }
+
+    let currentResults: CinemaGroup[] = [];
+
+    function performSearch() {
+      const params = new URLSearchParams(window.location.search);
+      const movieSlug = params.get('pelicula') || '';
+      const dateParam = params.get('date') || '';
+      const timeFrom = params.get('from') || '';
+      const timeTo = params.get('to') || '';
+      const city = params.get('city') || 'madrid';
+      const radius = parseFloat(params.get('radius') || '10');
+      const userLat = parseFloat(params.get('lat') || '40.4168');
+      const userLng = parseFloat(params.get('lng') || '-3.7038');
+
+      const movies = (window as any).__ALL_MOVIES__ as MovieData[];
+      const cinemas = (window as any).__ALL_CINEMAS__ as CinemaData[];
+      const showtimes = (window as any).__ALL_SHOWTIMES__ as ShowtimeData[];
+
+      // Find movie
+      const movie = movies.find(m => m.slug === movieSlug);
+      const movieTitle = movie?.title || 'Todas las películas';
+
+      // Filter showtimes
+      let filtered = showtimes;
+
+      if (movie) {
+        filtered = filtered.filter(st => st.movieId === movie.id);
+      }
+      if (dateParam) {
+        filtered = filtered.filter(st => st.date === dateParam);
+      }
+      if (timeFrom) {
+        filtered = filtered.filter(st => st.time >= timeFrom);
+      }
+      if (timeTo) {
+        filtered = filtered.filter(st => st.time <= timeTo);
+      }
+
+      // Group by cinema and calculate distance
+      const cinemaMap = new Map<string, ShowtimeData[]>();
+      for (const st of filtered) {
+        const arr = cinemaMap.get(st.cinemaId) || [];
+        arr.push(st);
+        cinemaMap.set(st.cinemaId, arr);
+      }
+
+      const groups: CinemaGroup[] = [];
+      for (const [cinemaId, sts] of cinemaMap) {
+        const cinema = cinemas.find(c => c.id === cinemaId);
+        if (!cinema) continue;
+        const dist = haversine(userLat, userLng, cinema.lat, cinema.lng);
+        if (dist > radius) continue;
+        sts.sort((a, b) => a.time.localeCompare(b.time));
+        groups.push({ cinema, distance: dist, showtimes: sts });
+      }
+
+      groups.sort((a, b) => b.showtimes.length - a.showtimes.length || a.distance - b.distance);
+      currentResults = groups;
+
+      // Update header
+      const titleEl = document.getElementById('results-title')!;
+      const metaEl = document.getElementById('results-meta')!;
+      titleEl.textContent = movieTitle;
+
+      const metaParts: string[] = [];
+      if (dateParam) metaParts.push(formatDateDisplay(dateParam));
+      metaParts.push(city.charAt(0).toUpperCase() + city.slice(1));
+      metaParts.push(`hasta ${radius} km`);
+      metaEl.innerHTML = metaParts.map(p => `<span>${p}</span>`).join('');
+
+      renderResults();
+    }
+
+    function renderResults() {
+      const container = document.getElementById('results-container')!;
+      const countEl = document.getElementById('results-count')!;
+
+      // Get filter state
+      const langChip = document.querySelector('.filter-chips[data-filter="language"] .filter-chip.active') as HTMLElement;
+      const fmtChip = document.querySelector('.filter-chips[data-filter="format"] .filter-chip.active') as HTMLElement;
+      const sortChip = document.querySelector('.filter-chips[data-filter="sort"] .filter-chip.active') as HTMLElement;
+
+      const lang = langChip?.dataset.value || 'all';
+      const fmt = fmtChip?.dataset.value || 'all';
+      const sort = sortChip?.dataset.value || 'relevancia';
+
+      let groups = currentResults.map(g => {
+        let sts = g.showtimes;
+        if (lang !== 'all') {
+          const langMap: Record<string, string> = { castellano: 'castellano', vo: 'VO', vose: 'VOSE' };
+          sts = sts.filter(s => s.language === langMap[lang]);
+        }
+        if (fmt !== 'all') {
+          sts = sts.filter(s => {
+            if (fmt === '2d') return s.format === '2D';
+            if (fmt === '3d') return s.format === '3D' || s.format === 'IMAX 3D';
+            if (fmt === 'imax') return s.format === 'IMAX' || s.format === 'IMAX 3D';
+            return true;
+          });
+        }
+        return { ...g, showtimes: sts };
+      }).filter(g => g.showtimes.length > 0);
+
+      if (sort === 'cercania') groups.sort((a, b) => a.distance - b.distance);
+      else if (sort === 'hora') groups.sort((a, b) => (a.showtimes[0]?.time || '').localeCompare(b.showtimes[0]?.time || ''));
+      else if (sort === 'precio') groups.sort((a, b) => Math.min(...a.showtimes.map(s => s.price ?? 999)) - Math.min(...b.showtimes.map(s => s.price ?? 999)));
+
+      let total = 0;
+      groups.forEach(g => total += g.showtimes.length);
+      countEl.textContent = total > 0 ? `${total} sesiones encontradas` : '';
+
+      if (groups.length === 0) {
+        const params = new URLSearchParams(window.location.search);
+        const slug = params.get('pelicula') || '';
+        const city = params.get('city') || 'madrid';
+        container.innerHTML = `
+          <div class="empty-state">
+            <p class="empty-title">No encontramos sesiones que encajen.</p>
+            <p class="empty-sub">Prueba ampliando el radio o cambiando la hora.</p>
+            <div class="empty-actions">
+              <a href="/buscar?pelicula=${slug}&city=${city}&radius=20" class="empty-btn">Ampliar radio</a>
+              <a href="/buscar?pelicula=${slug}&city=${city}&radius=20" class="empty-btn">Ver todas las horas</a>
+              <a href="/" class="empty-btn empty-btn-secondary">Nueva búsqueda</a>
+            </div>
+          </div>`;
+        return;
+      }
+
+      container.innerHTML = `<div class="results-list">${groups.map(g => `
+        <div class="cinema-result-card">
+          <div class="cr-header">
+            <a href="/cine/${g.cinema.slug}" class="cr-name">${g.cinema.name}</a>
+            <span class="cr-distance">${g.distance.toFixed(1)} km</span>
+          </div>
+          <div class="cr-showtimes">
+            ${g.showtimes.map(st => `
+              <a href="${st.bookingUrl || g.cinema.bookingBaseUrl}" target="_blank" rel="noopener noreferrer" class="cr-chip">
+                <span class="cr-time">${st.time}</span>
+                <span class="cr-meta">· ${st.language}</span>
+                ${st.format !== '2D' ? `<span class="cr-meta">· ${st.format}</span>` : ''}
+                ${st.price !== undefined ? `<span class="cr-price">· ${st.price.toFixed(2).replace('.', ',')} €</span>` : ''}
+              </a>
+            `).join('')}
+          </div>
+          <a href="${g.cinema.bookingBaseUrl}" target="_blank" rel="noopener noreferrer" class="cr-buy">COMPRAR →</a>
+        </div>
+      `).join('')}</div>`;
+    }
+
+    document.addEventListener('DOMContentLoaded', () => {
+      performSearch();
+    });
+
+    document.addEventListener('filterchange', () => {
+      renderResults();
+    });
+  </script>
+</Layout>
+
+<style>
+  .results-page {
+    max-width: var(--container-narrow);
+    margin: 0 auto;
+    padding: var(--space-6) var(--space-4) var(--space-16);
+  }
+
+  .container--narrow {
+    max-width: var(--container-narrow);
+    margin: 0 auto;
+    padding: 0 var(--space-4);
+  }
+
+  .results-header {
+    margin-bottom: var(--space-6);
+    padding-bottom: var(--space-4);
+    border-bottom: 1px solid var(--color-border);
+  }
+
+  .results-title {
+    font-size: var(--text-3xl);
+    font-weight: 700;
+    letter-spacing: -0.02em;
+    margin-bottom: var(--space-2);
+  }
+
+  .results-meta {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--space-1);
+    font-size: var(--text-sm);
+    color: var(--color-text-secondary);
+  }
+
+  .results-meta :global(span:not(:last-child))::after {
+    content: ' · ';
+  }
+
+  .results-count {
+    font-size: var(--text-sm);
+    color: var(--color-text-tertiary);
+    margin-top: var(--space-2);
+    font-variant-numeric: tabular-nums;
+  }
+
+  .loading-state {
+    text-align: center;
+    padding: var(--space-12) 0;
+    color: var(--color-text-tertiary);
+  }
+
+  .results-list {
+    animation: fadeIn var(--transition-slow) ease;
+  }
+
+  @keyframes fadeIn {
+    from { opacity: 0; transform: translateY(8px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+
+  :global(.cinema-result-card) {
+    padding: var(--space-4) 0;
+    border-bottom: 1px solid var(--color-border);
+  }
+
+  :global(.cinema-result-card:last-child) {
+    border-bottom: none;
+  }
+
+  :global(.cr-header) {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: var(--space-3);
+    margin-bottom: var(--space-3);
+  }
+
+  :global(.cr-name) {
+    font-size: var(--text-base);
+    font-weight: 600;
+    color: var(--color-text);
+    text-decoration: none;
+    transition: color var(--transition-fast);
+  }
+
+  :global(.cr-name:hover) {
+    color: var(--color-text-secondary);
+  }
+
+  :global(.cr-distance) {
+    font-size: var(--text-xs);
+    color: var(--color-text-tertiary);
+    white-space: nowrap;
+    font-variant-numeric: tabular-nums;
+  }
+
+  :global(.cr-showtimes) {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--space-2);
+    margin-bottom: var(--space-3);
+  }
+
+  :global(.cr-chip) {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--space-1);
+    padding: var(--space-1) var(--space-3);
+    font-size: var(--text-sm);
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-md);
+    text-decoration: none;
+    color: var(--color-text);
+    transition: background-color var(--transition-fast), border-color var(--transition-fast);
+  }
+
+  :global(.cr-chip:hover) {
+    background-color: var(--color-accent-subtle);
+    border-color: var(--color-accent);
+    color: var(--color-text);
+  }
+
+  :global(.cr-time) {
+    font-weight: 500;
+    font-variant-numeric: tabular-nums;
+  }
+
+  :global(.cr-meta) {
+    font-size: var(--text-xs);
+    color: var(--color-text-tertiary);
+  }
+
+  :global(.cr-price) {
+    font-size: var(--text-xs);
+    color: var(--color-text-secondary);
+  }
+
+  :global(.cr-buy) {
+    display: inline-block;
+    font-size: var(--text-xs);
+    font-weight: 600;
+    letter-spacing: 0.06em;
+    color: var(--color-text-secondary);
+    text-decoration: none;
+    transition: color var(--transition-fast);
+  }
+
+  :global(.cr-buy:hover) {
+    color: var(--color-text);
+  }
+
+  :global(.empty-state) {
+    text-align: center;
+    padding: var(--space-16) var(--space-4);
+  }
+
+  :global(.empty-title) {
+    font-size: var(--text-xl);
+    font-weight: 600;
+    margin-bottom: var(--space-2);
+  }
+
+  :global(.empty-sub) {
+    font-size: var(--text-base);
+    color: var(--color-text-secondary);
+    margin-bottom: var(--space-6);
+  }
+
+  :global(.empty-actions) {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: var(--space-3);
+  }
+
+  :global(.empty-btn) {
+    padding: var(--space-2) var(--space-4);
+    font-size: var(--text-sm);
+    font-weight: 500;
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-md);
+    color: var(--color-text);
+    text-decoration: none;
+    transition: background-color var(--transition-fast);
+  }
+
+  :global(.empty-btn:hover) {
+    background-color: var(--color-accent-subtle);
+    color: var(--color-text);
+  }
+
+  :global(.empty-btn-secondary) {
+    color: var(--color-text-secondary);
+    border-color: transparent;
+  }
+
+  @media (max-width: 640px) {
+    .results-title {
+      font-size: var(--text-2xl);
+    }
+  }
+</style>

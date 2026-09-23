@@ -1,0 +1,182 @@
+---
+interface Props {
+  title: string;
+  year?: number;
+  duration?: string;
+  genre?: string;
+  director?: string;
+  rating?: number;
+  country?: string;
+  ageRating?: string;
+  synopsis?: string;
+  cast?: string[];
+  movieId: string;
+}
+
+const {
+  title,
+  year,
+  duration,
+  genre,
+  director,
+  rating,
+  country,
+  ageRating,
+  synopsis,
+  cast = [],
+  movieId,
+} = Astro.props;
+
+import WatchlistButton from './WatchlistButton.astro';
+---
+
+<section class="movie-hero">
+  <div class="movie-hero-top">
+    <div class="movie-hero-info">
+      <h1 class="movie-title">{title}</h1>
+
+      <p class="movie-meta">
+        {[year, duration, genre, director].filter(Boolean).join(' · ')}
+      </p>
+
+      {(country || ageRating) && (
+        <p class="movie-meta-secondary">
+          {[country, ageRating].filter(Boolean).join(' · ')}
+        </p>
+      )}
+    </div>
+
+    <div class="movie-hero-aside">
+      {rating && (
+        <div class="rating-block" aria-label={`Puntuacion ${rating} de 10`}>
+          <span class="rating-number">{rating.toFixed(1)}</span>
+          <span class="rating-max">/10</span>
+        </div>
+      )}
+      <WatchlistButton movieId={movieId} movieTitle={title} />
+    </div>
+  </div>
+
+  {synopsis && (
+    <div class="movie-synopsis">
+      <p>{synopsis}</p>
+    </div>
+  )}
+
+  {cast.length > 0 && (
+    <div class="movie-cast">
+      <span class="cast-label">Reparto</span>
+      <span class="cast-list">{cast.join(', ')}</span>
+    </div>
+  )}
+</section>
+
+<style>
+  .movie-hero {
+    padding: var(--space-8) 0 var(--space-6);
+    border-bottom: 1px solid var(--color-border);
+    margin-bottom: var(--space-6);
+  }
+
+  .movie-hero-top {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    gap: var(--space-6);
+    margin-bottom: var(--space-6);
+  }
+
+  .movie-title {
+    font-size: var(--text-4xl);
+    font-weight: 700;
+    letter-spacing: -0.03em;
+    margin-bottom: var(--space-2);
+  }
+
+  .movie-meta {
+    font-size: var(--text-base);
+    color: var(--color-text-secondary);
+    margin-bottom: var(--space-1);
+  }
+
+  .movie-meta-secondary {
+    font-size: var(--text-sm);
+    color: var(--color-text-tertiary);
+    margin-bottom: 0;
+  }
+
+  .movie-hero-aside {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+    gap: var(--space-3);
+    flex-shrink: 0;
+  }
+
+  .rating-block {
+    display: flex;
+    align-items: baseline;
+    gap: 2px;
+  }
+
+  .rating-number {
+    font-size: var(--text-4xl);
+    font-weight: 700;
+    letter-spacing: -0.02em;
+    line-height: 1;
+    font-variant-numeric: tabular-nums;
+  }
+
+  .rating-max {
+    font-size: var(--text-lg);
+    color: var(--color-text-tertiary);
+    font-weight: 400;
+  }
+
+  .movie-synopsis {
+    max-width: var(--container-narrow);
+    margin-bottom: var(--space-4);
+  }
+
+  .movie-synopsis p {
+    font-size: var(--text-lg);
+    line-height: 1.7;
+    color: var(--color-text-secondary);
+  }
+
+  .movie-cast {
+    font-size: var(--text-sm);
+    color: var(--color-text-secondary);
+  }
+
+  .cast-label {
+    font-weight: 500;
+    color: var(--color-text-tertiary);
+    margin-right: var(--space-2);
+    text-transform: uppercase;
+    font-size: var(--text-xs);
+    letter-spacing: 0.05em;
+  }
+
+  @media (max-width: 640px) {
+    .movie-hero-top {
+      flex-direction: column;
+      gap: var(--space-4);
+    }
+
+    .movie-hero-aside {
+      flex-direction: row;
+      align-items: center;
+      width: 100%;
+      justify-content: space-between;
+    }
+
+    .movie-title {
+      font-size: var(--text-3xl);
+    }
+
+    .rating-number {
+      font-size: var(--text-3xl);
+    }
+  }
+</style>

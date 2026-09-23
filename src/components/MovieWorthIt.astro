@@ -1,0 +1,112 @@
+---
+interface Props {
+  reasonsYes?: string[];
+  reasonsNo?: string[];
+}
+
+const {
+  reasonsYes = [],
+  reasonsNo = [],
+} = Astro.props;
+---
+
+<section class="worth-it">
+  <h2 class="worth-it-heading">Merece la pena?</h2>
+
+  <div class="worth-it-columns">
+    {reasonsYes.length > 0 && (
+      <div class="worth-column worth-yes">
+        <h3 class="worth-column-title">Si, si...</h3>
+        <ul class="worth-list">
+          {reasonsYes.map((reason) => (
+            <li class="worth-item worth-item-yes">{reason}</li>
+          ))}
+        </ul>
+      </div>
+    )}
+
+    {reasonsNo.length > 0 && (
+      <div class="worth-column worth-no">
+        <h3 class="worth-column-title">Quiza no, si...</h3>
+        <ul class="worth-list">
+          {reasonsNo.map((reason) => (
+            <li class="worth-item worth-item-no">{reason}</li>
+          ))}
+        </ul>
+      </div>
+    )}
+  </div>
+</section>
+
+<style>
+  .worth-it {
+    padding: var(--space-6) 0;
+    margin-bottom: var(--space-6);
+  }
+
+  .worth-it-heading {
+    font-size: var(--text-lg);
+    font-weight: 600;
+    margin-bottom: var(--space-4);
+    letter-spacing: -0.01em;
+  }
+
+  .worth-it-columns {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: var(--space-6);
+  }
+
+  @media (max-width: 640px) {
+    .worth-it-columns {
+      grid-template-columns: 1fr;
+      gap: var(--space-4);
+    }
+  }
+
+  .worth-column-title {
+    font-size: var(--text-sm);
+    font-weight: 600;
+    margin-bottom: var(--space-3);
+  }
+
+  .worth-yes .worth-column-title {
+    color: var(--color-success);
+  }
+
+  .worth-no .worth-column-title {
+    color: var(--color-text-tertiary);
+  }
+
+  .worth-list {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-2);
+  }
+
+  .worth-item {
+    font-size: var(--text-sm);
+    color: var(--color-text-secondary);
+    line-height: 1.5;
+    padding-left: var(--space-4);
+    position: relative;
+  }
+
+  .worth-item::before {
+    position: absolute;
+    left: 0;
+    font-size: var(--text-xs);
+    line-height: 1.8;
+  }
+
+  .worth-item-yes::before {
+    content: '+';
+    color: var(--color-success);
+    font-weight: 700;
+  }
+
+  .worth-item-no::before {
+    content: '\2013';
+    color: var(--color-text-tertiary);
+  }
+</style>

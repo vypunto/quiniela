@@ -1,0 +1,105 @@
+---
+interface Props {
+  movieId: string;
+  movieTitle: string;
+}
+
+const { movieId, movieTitle } = Astro.props;
+---
+
+<button
+  type="button"
+  class="watchlist-btn"
+  data-movie-id={movieId}
+  data-movie-title={movieTitle}
+  aria-label={`Anadir ${movieTitle} a mi lista`}
+  aria-pressed="false"
+>
+  <svg class="heart-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+    <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"></path>
+  </svg>
+</button>
+
+<script>
+  function getWatchlist(): string[] {
+    try {
+      return JSON.parse(localStorage.getItem('sp-watchlist') || '[]');
+    } catch {
+      return [];
+    }
+  }
+
+  function saveWatchlist(list: string[]) {
+    try {
+      localStorage.setItem('sp-watchlist', JSON.stringify(list));
+    } catch {
+      // Storage unavailable
+    }
+  }
+
+  document.querySelectorAll('.watchlist-btn').forEach((btn) => {
+    const button = btn as HTMLButtonElement;
+    const movieId = button.dataset.movieId || '';
+    const movieTitle = button.dataset.movieTitle || '';
+
+    // Initialize state
+    const watchlist = getWatchlist();
+    if (watchlist.includes(movieId)) {
+      button.classList.add('active');
+      button.setAttribute('aria-pressed', 'true');
+      button.setAttribute('aria-label', `Quitar ${movieTitle} de mi lista`);
+    }
+
+    button.addEventListener('click', () => {
+      const current = getWatchlist();
+      const isInList = current.includes(movieId);
+
+      if (isInList) {
+        saveWatchlist(current.filter(id => id !== movieId));
+        button.classList.remove('active');
+        button.setAttribute('aria-pressed', 'false');
+        button.setAttribute('aria-label', `Anadir ${movieTitle} a mi lista`);
+      } else {
+        current.push(movieId);
+        saveWatchlist(current);
+        button.classList.add('active');
+        button.setAttribute('aria-pressed', 'true');
+        button.setAttribute('aria-label', `Quitar ${movieTitle} de mi lista`);
+      }
+    });
+  });
+</script>
+
+<style>
+  .watchlist-btn {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 40px;
+    height: 40px;
+    border-radius: var(--radius-full);
+    border: 1px solid var(--color-border);
+    background-color: var(--color-bg);
+    color: var(--color-text-tertiary);
+    cursor: pointer;
+    transition: color var(--transition-fast), border-color var(--transition-fast), transform var(--transition-fast);
+  }
+
+  .watchlist-btn:hover {
+    color: var(--color-error);
+    border-color: var(--color-error);
+  }
+
+  .watchlist-btn.active {
+    color: var(--color-error);
+    border-color: var(--color-error);
+  }
+
+  .watchlist-btn.active .heart-icon {
+    fill: var(--color-error);
+  }
+
+  .watchlist-btn:active {
+    transform: scale(0.9);
+  }
+</style>

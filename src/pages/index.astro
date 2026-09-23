@@ -1,0 +1,221 @@
+---
+import Layout from '../components/Layout.astro';
+import SearchBox from '../components/SearchBox.astro';
+import DateSelector from '../components/DateSelector.astro';
+import TimeRange from '../components/TimeRange.astro';
+import LocationSelector from '../components/LocationSelector.astro';
+import MovieCard from '../components/MovieCard.astro';
+import { getAllMovies } from '../lib/search/searchEngine';
+
+const movies = getAllMovies();
+const moviesForSearch = movies.map(m => ({ title: m.title, slug: m.slug, year: m.year }));
+---
+
+<Layout title="SmallParadiso" description="Encuentra sesiones de cine cerca de ti. Busca por película, día, hora y ubicación.">
+  <div class="home">
+    <section class="hero">
+      <p class="hero-sub">Encuentra dónde y cuándo verla.</p>
+    </section>
+
+    <form id="search-form" class="search-form container--narrow" action="/buscar" method="get">
+      <SearchBox />
+      <input type="hidden" id="selected-movie" name="pelicula" value="" />
+
+      <div class="form-section">
+        <h2 class="form-label">¿Cuándo?</h2>
+        <DateSelector />
+      </div>
+
+      <div class="form-section">
+        <h2 class="form-label">¿A qué hora?</h2>
+        <TimeRange />
+      </div>
+
+      <div class="form-section">
+        <h2 class="form-label">¿Dónde?</h2>
+        <LocationSelector />
+      </div>
+
+      <button type="submit" class="cta-button" id="cta-button">
+        ENCONTRAR SESIONES
+      </button>
+    </form>
+
+    <section class="discover container--narrow">
+      <div class="discover-header">
+        <h2 class="discover-title">¿No sabes qué ver?</h2>
+        <p class="discover-sub">Estas películas están ahora en cartelera.</p>
+      </div>
+      <div class="discover-grid">
+        {movies.slice(0, 6).map(movie => (
+          <MovieCard
+            title={movie.title}
+            slug={movie.slug}
+            year={movie.year}
+            duration={`${Math.floor(movie.duration / 60)}h ${movie.duration % 60}min`}
+            genre={movie.genres[0]}
+            rating={movie.rating}
+            tags={movie.editorialTags.slice(0, 2).map(t => `${t.emoji} ${t.label}`)}
+          />
+        ))}
+      </div>
+    </section>
+  </div>
+
+  <script define:vars={{ moviesForSearch }}>
+    window.__MOVIES__ = moviesForSearch;
+  </script>
+
+  <script>
+    const form = document.getElementById('search-form') as HTMLFormElement;
+    const movieInput = document.getElementById('selected-movie') as HTMLInputElement;
+    const searchInput = document.getElementById('movie-search') as HTMLInputElement;
+
+    // When a suggestion is clicked, SearchBox navigates to /buscar?pelicula=slug
+    // We also need to handle the form submit for the full search
+    document.addEventListener('click', (e) => {
+      const item = (e.target as HTMLElement).closest('.suggestion-item') as HTMLElement | null;
+      if (!item) return;
+      e.preventDefault();
+      e.stopPropagation();
+      const slug = item.dataset.slug || '';
+      movieInput.value = slug;
+      searchInput.value = item.querySelector('.suggestion-title')?.textContent || '';
+      const suggestions = document.getElementById('search-suggestions');
+      if (suggestions) {
+        suggestions.classList.remove('visible');
+      }
+    }, true);
+
+    form.addEventListener('submit', (e) => {
+      e.preventDefault();
+
+      const params = new URLSearchParams();
+
+      if (movieInput.value) {
+        params.set('pelicula', movieInput.value);
+      }
+
+      const dateInput = document.getElementById('selected-date') as HTMLInputElement;
+      if (dateInput?.value) {
+        params.set('date', dateInput.value);
+      }
+
+      const timeFrom = document.getElementById('time-from') as HTMLSelectElement;
+      const timeTo = document.getElementById('time-to') as HTMLSelectElement;
+      if (timeFrom?.value) params.set('from', timeFrom.value);
+      if (timeTo?.value) params.set('to', timeTo.value);
+
+      params.set('city', 'madrid');
+
+      const distanceInput = document.getElementById('selected-distance') as HTMLInputElement;
+      if (distanceInput?.value) {
+        params.set('radius', distanceInput.value);
+      }
+
+      const latInput = document.getElementById('selected-lat') as HTMLInputElement;
+      const lngInput = document.getElementById('selected-lng') as HTMLInputElement;
+      if (latInput?.value) params.set('lat', latInput.value);
+      if (lngInput?.value) params.set('lng', lngInput.value);
+
+      window.location.href = `/buscar?${params.toString()}`;
+    });
+  </script>
+</Layout>
+
+<style>
+  .home {
+    padding-bottom: var(--space-16);
+  }
+
+  .hero {
+    text-align: center;
+    padding: 0 var(--space-4);
+    margin-bottom: var(--space-2);
+  }
+
+  .hero-sub {
+    font-size: var(--text-lg);
+    color: var(--color-text-secondary);
+    margin-bottom: 0;
+  }
+
+  .container--narrow {
+    max-width: var(--container-narrow);
+    margin: 0 auto;
+    padding: 0 var(--space-4);
+  }
+
+  .search-form {
+    margin-bottom: var(--space-16);
+  }
+
+  .form-section {
+    margin-bottom: var(--space-2);
+  }
+
+  .form-label {
+    font-size: var(--text-sm);
+    font-weight: 500;
+    color: var(--color-text-secondary);
+    margin-bottom: var(--space-2);
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+  }
+
+  .cta-button {
+    display: block;
+    width: 100%;
+    padding: var(--space-4) var(--space-6);
+    font-size: var(--text-base);
+    font-weight: 600;
+    letter-spacing: 0.06em;
+    color: var(--color-bg);
+    background-color: var(--color-accent);
+    border: none;
+    border-radius: var(--radius-md);
+    cursor: pointer;
+    transition: background-color var(--transition-fast), transform var(--transition-fast);
+    margin-top: var(--space-8);
+  }
+
+  .cta-button:hover {
+    background-color: var(--color-accent-hover);
+  }
+
+  .cta-button:active {
+    transform: scale(0.98);
+  }
+
+  .discover {
+    border-top: 1px solid var(--color-border);
+    padding-top: var(--space-12);
+  }
+
+  .discover-header {
+    margin-bottom: var(--space-6);
+  }
+
+  .discover-title {
+    font-size: var(--text-xl);
+    font-weight: 600;
+    margin-bottom: var(--space-1);
+  }
+
+  .discover-sub {
+    font-size: var(--text-sm);
+    color: var(--color-text-secondary);
+  }
+
+  .discover-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+    gap: var(--space-4);
+  }
+
+  @media (max-width: 640px) {
+    .discover-grid {
+      grid-template-columns: 1fr;
+    }
+  }
+</style>

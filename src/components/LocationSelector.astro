@@ -1,0 +1,151 @@
+---
+---
+
+<div class="location-selector" role="group" aria-label="Ubicacion y distancia">
+  <div class="location-current">
+    <button type="button" class="location-button" id="location-button" aria-label="Cambiar ubicacion">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+        <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path>
+        <circle cx="12" cy="10" r="3"></circle>
+      </svg>
+      <span id="location-name">Madrid</span>
+    </button>
+    <button type="button" class="geo-button" id="geo-button" aria-label="Usar mi ubicacion">
+      Cerca de mi
+    </button>
+  </div>
+
+  <div class="distance-chips" id="distance-chips">
+    <button type="button" class="distance-chip" data-km="2" aria-pressed="false">2 km</button>
+    <button type="button" class="distance-chip" data-km="5" aria-pressed="false">5 km</button>
+    <button type="button" class="distance-chip active" data-km="10" aria-pressed="true">10 km</button>
+    <button type="button" class="distance-chip" data-km="20" aria-pressed="false">20 km</button>
+  </div>
+
+  <input type="hidden" id="selected-distance" name="distance" value="10" />
+  <input type="hidden" id="selected-lat" name="lat" />
+  <input type="hidden" id="selected-lng" name="lng" />
+</div>
+
+<script>
+  const distanceChips = document.getElementById('distance-chips')!;
+  const distanceInput = document.getElementById('selected-distance') as HTMLInputElement;
+  const geoButton = document.getElementById('geo-button')!;
+  const locationName = document.getElementById('location-name')!;
+
+  distanceChips.addEventListener('click', (e) => {
+    const chip = (e.target as HTMLElement).closest('.distance-chip') as HTMLElement | null;
+    if (!chip) return;
+    distanceChips.querySelectorAll('.distance-chip').forEach(el => {
+      el.classList.remove('active');
+      el.setAttribute('aria-pressed', 'false');
+    });
+    chip.classList.add('active');
+    chip.setAttribute('aria-pressed', 'true');
+    distanceInput.value = chip.dataset.km || '10';
+  });
+
+  geoButton.addEventListener('click', () => {
+    if (!navigator.geolocation) {
+      locationName.textContent = 'No disponible';
+      return;
+    }
+
+    geoButton.textContent = 'Buscando...';
+    geoButton.setAttribute('disabled', 'true');
+
+    navigator.geolocation.getCurrentPosition(
+      (pos) => {
+        const latInput = document.getElementById('selected-lat') as HTMLInputElement;
+        const lngInput = document.getElementById('selected-lng') as HTMLInputElement;
+        latInput.value = String(pos.coords.latitude);
+        lngInput.value = String(pos.coords.longitude);
+        locationName.textContent = 'Mi ubicacion';
+        geoButton.textContent = 'Actualizado';
+        setTimeout(() => {
+          geoButton.textContent = 'Cerca de mi';
+          geoButton.removeAttribute('disabled');
+        }, 2000);
+      },
+      () => {
+        geoButton.textContent = 'Error';
+        setTimeout(() => {
+          geoButton.textContent = 'Cerca de mi';
+          geoButton.removeAttribute('disabled');
+        }, 2000);
+      },
+      { enableHighAccuracy: false, timeout: 8000 }
+    );
+  });
+</script>
+
+<style>
+  .location-selector {
+    margin-bottom: var(--space-6);
+  }
+
+  .location-current {
+    display: flex;
+    align-items: center;
+    gap: var(--space-3);
+    margin-bottom: var(--space-3);
+  }
+
+  .location-button {
+    display: flex;
+    align-items: center;
+    gap: var(--space-2);
+    font-size: var(--text-base);
+    font-weight: 500;
+    color: var(--color-text);
+    padding: var(--space-1) 0;
+    cursor: pointer;
+  }
+
+  .geo-button {
+    font-size: var(--text-xs);
+    color: var(--color-text-secondary);
+    padding: var(--space-1) var(--space-3);
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-full);
+    cursor: pointer;
+    transition: background-color var(--transition-fast), color var(--transition-fast);
+  }
+
+  .geo-button:hover {
+    background-color: var(--color-accent-subtle);
+  }
+
+  .geo-button[disabled] {
+    opacity: 0.5;
+    cursor: not-allowed;
+  }
+
+  .distance-chips {
+    display: flex;
+    gap: var(--space-2);
+    flex-wrap: wrap;
+  }
+
+  .distance-chip {
+    padding: var(--space-1) var(--space-3);
+    font-size: var(--text-sm);
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-full);
+    background-color: var(--color-bg);
+    color: var(--color-text-secondary);
+    cursor: pointer;
+    transition: background-color var(--transition-fast), color var(--transition-fast), border-color var(--transition-fast);
+  }
+
+  .distance-chip:hover {
+    background-color: var(--color-accent-subtle);
+    color: var(--color-text);
+  }
+
+  .distance-chip.active {
+    background-color: var(--color-accent);
+    color: var(--color-bg);
+    border-color: var(--color-accent);
+  }
+</style>
