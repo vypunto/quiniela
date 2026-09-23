@@ -6,7 +6,6 @@ import MovieWorthIt from '../../components/MovieWorthIt.astro';
 import MovieCard from '../../components/MovieCard.astro';
 import CinemaResult from '../../components/CinemaResult.astro';
 import { getAllMovies, getMovieBySlug, searchSessions } from '../../lib/search/searchEngine';
-import type { Movie } from '../../lib/types';
 
 export function getStaticPaths() {
   const movies = getAllMovies();

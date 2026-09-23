@@ -37,8 +37,6 @@ function addDays(dateStr: string, days: number): string {
 const TIMES_WEEKDAY = ['16:00', '17:30', '18:15', '19:00', '20:00', '20:30', '21:45', '22:00', '22:30'];
 const TIMES_WEEKEND = ['11:00', '12:00', '12:30', '15:00', '16:00', '16:30', '17:30', '18:00', '19:00', '19:30', '20:00', '20:30', '21:00', '21:45', '22:15', '22:30', '00:00'];
 
-const LANGUAGES: Array<Showtime['language']> = ['castellano', 'VO', 'VOSE'];
-const FORMATS: Array<Showtime['format']> = ['2D', '3D', 'IMAX', 'IMAX 3D', '4DX'];
 
 // Which cinemas have IMAX/3D/4DX capability
 const IMAX_CINEMAS = ['cin-001', 'cin-008', 'cin-009', 'cin-014', 'cin-015'];
@@ -91,8 +89,8 @@ function getCinemasForMovie(movieId: string): string[] {
 }
 
 function getLanguageForShowing(movieId: string, cinemaId: string, seed: string): Showtime['language'] {
-  const movie = movies.find((m) => m.id === movieId);
-  const isSpanish = movie?.country.includes('España');
+  const movieData = movies.find((m) => m.id === movieId);
+  const isSpanish = movieData?.country.includes('España');
   const isArthouse = ARTHOUSE_CINEMAS.includes(cinemaId);
 
   if (isSpanish) {
@@ -109,7 +107,6 @@ function getLanguageForShowing(movieId: string, cinemaId: string, seed: string):
 }
 
 function getFormatForShowing(movieId: string, cinemaId: string, seed: string): Showtime['format'] {
-  const movie = movies.find((m) => m.id === movieId);
   const hasImax = IMAX_CINEMAS.includes(cinemaId);
   const has3d = THREE_D_CINEMAS.includes(cinemaId);
   const has4dx = FOUR_DX_CINEMAS.includes(cinemaId);
