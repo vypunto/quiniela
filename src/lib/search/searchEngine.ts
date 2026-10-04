@@ -110,8 +110,13 @@ export function searchByIntent(intent: SearchIntent): SearchResult[] {
       const similarMovies = allMovies.filter((m) => {
         if (m.id === sourceMovie.id) return false;
         const genreMatch = movieMatchesGenres(m, sourceMovie.genres);
-        const moodMatch = sourceMovie.moods ? movieMatchesMoods(m, sourceMovie.moods) : false;
-        return genreMatch || moodMatch;
+        // Require genre overlap, and mood overlap too whenever the source
+        // has moods — matching either alone is too loose and returns most
+        // of the catalog as "similar".
+        const moodMatch = sourceMovie.moods && sourceMovie.moods.length > 0
+          ? movieMatchesMoods(m, sourceMovie.moods)
+          : true;
+        return genreMatch && moodMatch;
       });
       candidateMovieIds = similarMovies.map((m) => m.id);
     }
@@ -143,8 +148,11 @@ export function searchByIntent(intent: SearchIntent): SearchResult[] {
     }
   }
 
-  // If we have a specific movie from the intent, use that
-  if (intent.movie) {
+  // If we have a specific movie from the intent, use that — unless similarTo
+  // already resolved to the same movie (e.g. "parecido a X" also matches X as
+  // a plain title mention). similarTo means "like X", not "X itself", so it
+  // must win.
+  if (intent.movie && !intent.similarTo) {
     const movie = allMovies.find((m) => m.slug === intent.movie);
     if (movie) {
       candidateMovieIds = [movie.id];

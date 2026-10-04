@@ -44,6 +44,7 @@ const MOOD_MAP: Record<string, string> = {
   raro: 'rara',
   llorar: 'emotiva',
   reir: 'divertida',
+  cita: 'romantica',
 };
 
 // --- Day detection ---

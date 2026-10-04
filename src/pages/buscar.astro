@@ -72,6 +72,9 @@ const serializedShowtimes = allShowtimes.map(st => ({
   </script>
 
   <script>
+    import { parseIntent } from '../lib/search/intentParser';
+    import { searchByIntent } from '../lib/search/searchEngine';
+
     interface MovieData { id: string; title: string; slug: string; genres: string[]; moods: string[]; }
     interface CinemaData { id: string; name: string; slug: string; city: string; lat: number; lng: number; bookingBaseUrl: string; }
     interface ShowtimeData { id: string; movieId: string; cinemaId: string; date: string; time: string; language: string; format: string; price?: number; bookingUrl?: string; }
@@ -91,124 +94,6 @@ const serializedShowtimes = allShowtimes.map(st => ({
       if (!dateStr) return '';
       const d = new Date(dateStr + 'T12:00:00');
       return `${DAY_NAMES[d.getDay()]} ${d.getDate()} ${MONTH_NAMES[d.getMonth()]}`;
-    }
-
-    const DAY_INDEX: Record<string, number> = {
-      domingo: 0, lunes: 1, martes: 2, miercoles: 3, jueves: 4, viernes: 5, sabado: 6,
-    };
-
-    function resolveDay(q: string): string | undefined {
-      const now = new Date();
-      if (q.includes('hoy')) return formatDateISO(now);
-      if (q.includes('manana') && !q.includes('por la manana')) {
-        const d = new Date(now); d.setDate(d.getDate() + 1); return formatDateISO(d);
-      }
-      for (const [name, target] of Object.entries(DAY_INDEX)) {
-        if (q.includes(name)) {
-          const d = new Date(now);
-          let ahead = target - d.getDay();
-          if (ahead <= 0) ahead += 7;
-          d.setDate(d.getDate() + ahead);
-          return formatDateISO(d);
-        }
-      }
-      return undefined;
-    }
-
-    function formatDateISO(d: Date): string {
-      return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
-    }
-
-    // Client-side intent parser
-    function parseQueryIntent(query: string): { genres: string[]; moods: string[]; timeFrom?: string; timeTo?: string; movie?: string; date?: string } {
-      const q = query.toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g, '');
-      const genres: string[] = [];
-      const moods: string[] = [];
-      let timeFrom: string | undefined;
-      let timeTo: string | undefined;
-      let movie: string | undefined;
-      const date = resolveDay(q);
-
-      const genreMap: Record<string, string> = {
-        terror: 'Terror', horror: 'Terror', miedo: 'Terror',
-        comedia: 'Comedia', divertida: 'Comedia', divertido: 'Comedia', reir: 'Comedia',
-        drama: 'Drama',
-        accion: 'Aventura', aventura: 'Aventura', aventuras: 'Aventura',
-        'ciencia ficcion': 'Ciencia ficcion', scifi: 'Ciencia ficcion',
-        animacion: 'Animacion', animada: 'Animacion',
-        musical: 'Musical',
-        romance: 'Romance', romantica: 'Romance', romantico: 'Romance',
-        thriller: 'Drama',
-        fantasia: 'Fantasia',
-        historico: 'Historico', historica: 'Historico',
-      };
-
-      const moodMap: Record<string, string> = {
-        divertida: 'divertida', divertido: 'divertida',
-        intensa: 'intensa', intenso: 'intensa',
-        romantica: 'romantica', romantico: 'romantica',
-        pensar: 'reflexiva', reflexionar: 'reflexiva', reflexiva: 'reflexiva',
-        espectacular: 'espectacular',
-        rara: 'rara', raro: 'rara',
-        llorar: 'emotiva', emotiva: 'emotiva',
-        familiar: 'familiar',
-        contemplativa: 'contemplativa',
-      };
-
-      for (const [key, val] of Object.entries(genreMap)) {
-        if (q.includes(key) && !genres.includes(val)) genres.push(val);
-      }
-      for (const [key, val] of Object.entries(moodMap)) {
-        if (q.includes(key) && !moods.includes(val)) moods.push(val);
-      }
-
-      // Time parsing
-      const timeMatch = q.match(/sobre las (\d{1,2})/);
-      if (timeMatch) {
-        let h = parseInt(timeMatch[1]);
-        if (h < 12) h += 12;
-        timeFrom = `${String(h - 1).padStart(2, '0')}:00`;
-        timeTo = `${String(h + 1).padStart(2, '0')}:30`;
-      }
-      if (q.includes('despues de cenar') || q.includes('noche')) {
-        timeFrom = '21:00';
-      }
-      if (q.includes('tarde')) {
-        timeFrom = '16:00';
-        timeTo = '20:00';
-      }
-
-      // "parecido a" / "como"
-      const similarMatch = q.match(/(?:parecido a|como) (.+?)(?:\s*$)/);
-      if (similarMatch) {
-        const movies = (window as any).__ALL_MOVIES__ as MovieData[];
-        const target = similarMatch[1].trim();
-        const found = movies.find(m =>
-          m.title.toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g, '').includes(target)
-        );
-        if (found) {
-          movie = found.slug;
-          for (const g of found.genres) {
-            if (!genres.includes(g)) genres.push(g);
-          }
-          for (const mo of found.moods) {
-            if (!moods.includes(mo)) moods.push(mo);
-          }
-        }
-      }
-
-      // "primera cita" → romántica + divertida
-      if (q.includes('primera cita') || q.includes('cita')) {
-        if (!moods.includes('romantica')) moods.push('romantica');
-        if (!moods.includes('divertida')) moods.push('divertida');
-      }
-
-      // "padre" / "familia" → familiar
-      if (q.includes('padre') || q.includes('madre') || q.includes('familia') || q.includes('hijo')) {
-        if (!moods.includes('familiar')) moods.push('familiar');
-      }
-
-      return { genres, moods, timeFrom, timeTo, movie, date };
     }
 
     interface CinemaGroup {
@@ -255,43 +140,14 @@ const serializedShowtimes = allShowtimes.map(st => ({
         }
         intentSummary.style.display = 'none';
       } else if (naturalQuery) {
-        // Natural language query
+        // Natural language query — parsed and matched via the shared
+        // SmallParadiso intent architecture (intentParser + searchByIntent),
+        // the same pipeline the rest of the app is meant to use.
         isNaturalQuery = true;
-        const intent = parseQueryIntent(naturalQuery);
+        const intent = parseIntent(naturalQuery, movies);
+        const matches = searchByIntent(intent);
 
-        // Find matching movies by genre/mood
-        let candidates = movies;
-
-        if (intent.movie) {
-          // "parecido a X" — exclude the source movie
-          const source = movies.find(m => m.slug === intent.movie);
-          if (source) {
-            candidates = movies.filter(m => m.id !== source.id);
-          }
-        }
-
-        if (intent.genres.length > 0 || intent.moods.length > 0) {
-          candidates = candidates.filter(m => {
-            const genreMatch = intent.genres.length === 0 || m.genres.some(g =>
-              intent.genres.some(ig => g.toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g, '').includes(ig.toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g, '')))
-            );
-            const moodMatch = intent.moods.length === 0 || m.moods.some(mo =>
-              intent.moods.includes(mo)
-            );
-            // Both criteria must hold — an empty list is a pass, not a wildcard "or".
-            return genreMatch && moodMatch;
-          });
-          // Sort by relevance (more matching criteria = higher)
-          candidates.sort((a, b) => {
-            const aScore = (intent.genres.filter(g => a.genres.some(ag => ag.toLowerCase().includes(g.toLowerCase()))).length) +
-                           (intent.moods.filter(mo => a.moods.includes(mo)).length);
-            const bScore = (intent.genres.filter(g => b.genres.some(bg => bg.toLowerCase().includes(g.toLowerCase()))).length) +
-                           (intent.moods.filter(mo => b.moods.includes(mo)).length);
-            return bScore - aScore;
-          });
-        }
-
-        matchedMovieIds = new Set(candidates.map(m => m.id));
+        matchedMovieIds = new Set(matches.map(r => r.movie.id));
         movieTitle = naturalQuery;
 
         if (intent.timeFrom) intentTimeFrom = intent.timeFrom;
@@ -300,8 +156,8 @@ const serializedShowtimes = allShowtimes.map(st => ({
 
         // Show intent summary
         const chips: string[] = [];
-        if (intent.genres.length) chips.push(...intent.genres);
-        if (intent.moods.length) chips.push(...intent.moods.map(m => m.charAt(0).toUpperCase() + m.slice(1)));
+        if (intent.genre && intent.genre.length) chips.push(...intent.genre);
+        if (intent.mood && intent.mood.length) chips.push(...intent.mood.map(m => m.charAt(0).toUpperCase() + m.slice(1)));
         if (intent.date) chips.push(formatDateDisplay(intent.date));
         if (intentTimeFrom) chips.push(`~${intentTimeFrom}`);
         chips.push(city.charAt(0).toUpperCase() + city.slice(1));
